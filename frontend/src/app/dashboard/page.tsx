@@ -47,13 +47,17 @@ export default function DashboardPage() {
         (train) => new Date(train.endDate) >= now
       );
 
-      // Calculate upcoming deliveries (mock for now)
+      // Calculate upcoming deliveries from task slots
       let upcomingDeliveries = 0;
       for (const train of trains) {
-        const dates = await api.getMealDates(train.id);
-        upcomingDeliveries += dates.filter(
-          (date) => date.status === 'claimed' && new Date(date.date) >= now
-        ).length;
+        try {
+          const slots = await api.getTaskSlots(train.id);
+          upcomingDeliveries += slots.filter(
+            (slot) => slot.status === 'FILLED' && new Date(slot.date) >= now
+          ).length;
+        } catch {
+          // If task slots endpoint fails, continue with 0 for this train
+        }
       }
 
       // Calculate total donations (mock for now)
@@ -61,7 +65,7 @@ export default function DashboardPage() {
       for (const train of trains) {
         const donations = await api.getDonations(train.id);
         totalDonations += donations
-          .filter((d) => d.status === 'completed')
+          .filter((d) => d.status === 'COMPLETED')
           .reduce((sum, d) => sum + d.amount, 0);
       }
 
