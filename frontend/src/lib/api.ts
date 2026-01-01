@@ -15,6 +15,7 @@ import {
   UpdateContributionData,
   SimchaContribution,
   CreateSimchaContributionData,
+  Participant,
   Donation,
   CreateDonationData,
   GiftCard,
@@ -357,6 +358,38 @@ class ApiClient {
   async markGiftCardReceived(trainId: string, giftCardId: string): Promise<GiftCard> {
     const { data } = await this.client.post<GiftCard>(`/chesed-trains/${trainId}/gift-cards/${giftCardId}/received`);
     return data;
+  }
+
+  // ============================================
+  // PARTICIPANT ENDPOINTS (LEGACY)
+  // ============================================
+
+  async createParticipant(
+    trainId: string,
+    participantData: {
+      name: string;
+      email: string;
+      phone?: string;
+      dateId?: string;
+      mealDescription?: string;
+      notes?: string;
+    }
+  ): Promise<Participant> {
+    const payload = {
+      trainId,
+      dateId: participantData.dateId,
+      mealDescription: participantData.mealDescription,
+      notes: participantData.notes,
+      guestName: participantData.name,
+      guestEmail: participantData.email,
+      guestPhone: participantData.phone,
+    };
+    const { data } = await this.client.post<Participant>('/participants', payload);
+    return data;
+  }
+
+  async deleteParticipant(_trainId: string, participantId: string): Promise<void> {
+    await this.client.delete(`/participants/${participantId}`);
   }
 
   // ============================================

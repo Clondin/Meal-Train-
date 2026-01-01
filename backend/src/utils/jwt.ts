@@ -1,8 +1,10 @@
-import jwt from 'jsonwebtoken';
+import jwt, { type SignOptions } from 'jsonwebtoken';
 
-const JWT_SECRET = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
-const JWT_EXPIRES_IN = process.env.JWT_EXPIRES_IN || '7d';
-const REFRESH_TOKEN_EXPIRES_IN = process.env.REFRESH_TOKEN_EXPIRES_IN || '30d';
+const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+const JWT_EXPIRES_IN: SignOptions['expiresIn'] =
+  (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) ?? '7d';
+const REFRESH_TOKEN_EXPIRES_IN: SignOptions['expiresIn'] =
+  (process.env.REFRESH_TOKEN_EXPIRES_IN as SignOptions['expiresIn']) ?? '30d';
 
 interface TokenPayload {
   userId: string;

@@ -31,8 +31,9 @@ model User {
   oauthProviders    OAuthProvider[]
 
   // Relations
-  organizedTrains   ChesedTrain[]     @relation("Organizer")
+  organizedTrains   MealTrain[]     @relation("Organizer")
   adminTrains       TrainAdmin[]
+  participants      Participant[]
   contributions     Contribution[]
   donations         Donation[]
   giftCards         GiftCard[]
@@ -86,7 +87,7 @@ model GuestSession {
 // CHESED TRAIN (MAIN MODEL)
 // ============================================
 
-model ChesedTrain {
+model MealTrain {
   id                  String            @id @default(uuid())
   slug                String            @unique
   title               String
@@ -167,6 +168,8 @@ model ChesedTrain {
 
   // Relations
   admins              TrainAdmin[]
+  dates               MealDate[]
+  participants        Participant[]
   taskSlots           TaskSlot[]
   contributions       Contribution[]
   donations           Donation[]
@@ -181,6 +184,7 @@ model ChesedTrain {
 
 enum TrainType {
   STANDARD        // Regular chesed train (meals primarily)
+  POTLUCK         // Multiple participants per date
   FULL_CHESED     // Meals + non-meal tasks (babysitting, rides, etc.)
   SIMCHA          // Simcha/Kiddush contribution mode
   EVENT           // One-time event coordination
@@ -210,7 +214,7 @@ enum TrainCategory {
 model TrainAdmin {
   id          String      @id @default(uuid())
   trainId     String
-  train       ChesedTrain @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train       MealTrain @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId      String
   user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
   role        AdminRole   @default(ADMIN)
@@ -226,13 +230,73 @@ enum AdminRole {
 }
 
 // ============================================
+// MEAL DATES & PARTICIPANTS (LEGACY SCHEDULING)
+// ============================================
+
+model MealDate {
+  id              String      @id @default(uuid())
+  trainId         String
+  train           MealTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  date            DateTime    @db.Date
+  deliveryTime    String
+  maxParticipants Int         @default(1)
+  notes           String?
+  status          DateStatus  @default(AVAILABLE)
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+
+  participants    Participant[]
+
+  @@unique([trainId, date])
+  @@index([trainId])
+  @@map("meal_dates")
+}
+
+enum DateStatus {
+  AVAILABLE
+  FILLED
+  CLOSED
+  CANCELLED
+}
+
+model Participant {
+  id              String             @id @default(uuid())
+  trainId         String
+  train           MealTrain          @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  dateId          String
+  date            MealDate           @relation(fields: [dateId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?              @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestName       String?
+  guestEmail      String?
+  guestPhone      String?
+  mealDescription String?
+  notes           String?
+  status          ParticipantStatus  @default(CONFIRMED)
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+
+  @@index([trainId])
+  @@index([dateId])
+  @@index([userId])
+  @@map("participants")
+}
+
+enum ParticipantStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+}
+
+// ============================================
 // TASK SLOT (Replaces MealDate - more flexible)
 // ============================================
 
 model TaskSlot {
   id              String          @id @default(uuid())
   trainId         String
-  train           ChesedTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
   
   date            DateTime        @db.Date
   startTime       String?         // Optional time window (HH:mm)
@@ -306,7 +370,7 @@ model Contribution {
   slotId          String
   slot            TaskSlot            @relation(fields: [slotId], references: [id], onDelete: Cascade)
   trainId         String
-  train           ChesedTrain         @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           MealTrain         @relation(fields: [trainId], references: [id], onDelete: Cascade)
   
   // Contributor (user or guest)
   userId          String?
@@ -407,7 +471,7 @@ enum ContributionStatus {
 model SimchaContribution {
   id              String        @id @default(uuid())
   trainId         String
-  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           MealTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
   
   // Contributor
   userId          String?
@@ -460,7 +524,7 @@ enum SimchaItemCategory {
 model Donation {
   id              String        @id @default(uuid())
   trainId         String
-  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           MealTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId          String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -495,7 +559,7 @@ enum PaymentStatus {
 model GiftCard {
   id              String        @id @default(uuid())
   trainId         String
-  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           MealTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId          String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -534,7 +598,7 @@ model Notification {
   userId      String?
   user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   trainId     String?
-  train       ChesedTrain?      @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train       MealTrain?      @relation(fields: [trainId], references: [id], onDelete: Cascade)
 
   type        NotificationType
   title       String
