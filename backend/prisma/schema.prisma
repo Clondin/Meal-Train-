@@ -1,0 +1,340 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String    @id @default(uuid())
+  email             String    @unique
+  password          String?
+  firstName         String?
+  lastName          String?
+  phone             String?
+  avatar            String?
+  emailVerified     Boolean   @default(false)
+  verificationToken String?
+  resetToken        String?
+  resetTokenExpiry  DateTime?
+  timezone          String    @default("America/New_York")
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // OAuth connections
+  oauthProviders    OAuthProvider[]
+
+  // Relations
+  organizedTrains   MealTrain[]     @relation("Organizer")
+  adminTrains       TrainAdmin[]
+  participations    Participant[]
+  donations         Donation[]
+  giftCards         GiftCard[]
+  sessions          Session[]
+  notifications     Notification[]
+
+  @@map("users")
+}
+
+model OAuthProvider {
+  id         String   @id @default(uuid())
+  provider   String   // google, facebook
+  providerId String
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+
+  @@unique([provider, providerId])
+  @@map("oauth_providers")
+}
+
+model Session {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  expiresAt DateTime
+  userAgent String?
+  ipAddress String?
+  createdAt DateTime @default(now())
+
+  @@map("sessions")
+}
+
+model MealTrain {
+  id                  String            @id @default(uuid())
+  slug                String            @unique
+  title               String
+  description         String?
+  story               String?           // Recipient's story
+  coverImage          String?
+
+  // Recipient info
+  recipientName       String
+  recipientEmail      String?
+  recipientPhone      String?
+  recipientAddress    String?
+  recipientCity       String?
+  recipientState      String?
+  recipientZip        String?
+  recipientCountry    String            @default("USA")
+
+  // Preferences
+  dietaryPreferences  String?
+  allergies           String?
+  foodLikes           String?
+  foodDislikes        String?
+  deliveryInstructions String?
+  householdSize       Int               @default(1)
+
+  // Schedule
+  startDate           DateTime
+  endDate             DateTime
+  defaultDeliveryTime String            @default("18:00")
+  timezone            String            @default("America/New_York")
+
+  // Settings
+  isPublic            Boolean           @default(false)
+  allowDonations      Boolean           @default(true)
+  allowGiftCards      Boolean           @default(true)
+  donationGoal        Decimal?          @db.Decimal(10, 2)
+  requireApproval     Boolean           @default(false)
+  showParticipantList Boolean           @default(true)
+  enableReminders     Boolean           @default(true)
+  reminderHours       Int               @default(24)
+
+  // Type and status
+  trainType           TrainType         @default(STANDARD)
+  status              TrainStatus       @default(ACTIVE)
+  category            TrainCategory     @default(OTHER)
+
+  // Organization/Organizer
+  organizerId         String
+  organizer           User              @relation("Organizer", fields: [organizerId], references: [id])
+
+  createdAt           DateTime          @default(now())
+  updatedAt           DateTime          @updatedAt
+
+  // Relations
+  admins              TrainAdmin[]
+  dates               MealDate[]
+  participants        Participant[]
+  donations           Donation[]
+  giftCards           GiftCard[]
+  notifications       Notification[]
+
+  @@index([slug])
+  @@index([organizerId])
+  @@map("meal_trains")
+}
+
+enum TrainType {
+  STANDARD    // One volunteer per date
+  POTLUCK     // Multiple volunteers per date
+  PRO         // Organization managed
+}
+
+enum TrainStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  CANCELLED
+}
+
+enum TrainCategory {
+  NEW_BABY
+  ILLNESS
+  SURGERY
+  LOSS
+  INJURY
+  OTHER
+}
+
+model TrainAdmin {
+  id          String    @id @default(uuid())
+  trainId     String
+  train       MealTrain @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        AdminRole @default(ADMIN)
+  createdAt   DateTime  @default(now())
+
+  @@unique([trainId, userId])
+  @@map("train_admins")
+}
+
+enum AdminRole {
+  ADMIN
+  MODERATOR
+}
+
+model MealDate {
+  id              String          @id @default(uuid())
+  trainId         String
+  train           MealTrain       @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  date            DateTime        @db.Date
+  deliveryTime    String          @default("18:00")
+  maxParticipants Int             @default(1)
+  notes           String?
+  status          DateStatus      @default(AVAILABLE)
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+
+  // Relations
+  participants    Participant[]
+
+  @@unique([trainId, date])
+  @@index([trainId, date])
+  @@map("meal_dates")
+}
+
+enum DateStatus {
+  AVAILABLE
+  FILLED
+  CLOSED
+  CANCELLED
+}
+
+model Participant {
+  id              String        @id @default(uuid())
+  trainId         String
+  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  dateId          String
+  date            MealDate      @relation(fields: [dateId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Guest info (if not registered)
+  guestName       String?
+  guestEmail      String?
+  guestPhone      String?
+
+  // Meal details
+  mealDescription String?
+  notes           String?
+
+  // Status
+  status          ParticipantStatus @default(CONFIRMED)
+  reminderSent    Boolean           @default(false)
+  reminderSentAt  DateTime?
+
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([trainId])
+  @@index([dateId])
+  @@map("participants")
+}
+
+enum ParticipantStatus {
+  PENDING     // Awaiting approval
+  CONFIRMED
+  CANCELLED
+  NO_SHOW
+}
+
+model Donation {
+  id              String        @id @default(uuid())
+  trainId         String
+  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Donor info
+  donorName       String
+  donorEmail      String
+  isAnonymous     Boolean       @default(false)
+
+  // Payment
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("USD")
+  stripePaymentId String?
+  status          PaymentStatus @default(PENDING)
+
+  // Message
+  message         String?
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([trainId])
+  @@map("donations")
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+model GiftCard {
+  id              String        @id @default(uuid())
+  trainId         String
+  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  // Purchaser info
+  purchaserName   String
+  purchaserEmail  String
+
+  // Gift card details
+  amount          Decimal       @db.Decimal(10, 2)
+  currency        String        @default("USD")
+  vendor          String        // e.g., "DoorDash", "UberEats", "GrubHub"
+  code            String?
+  message         String?
+
+  // Payment
+  stripePaymentId String?
+  status          PaymentStatus @default(PENDING)
+
+  // Delivery
+  deliveredAt     DateTime?
+  deliveryEmail   String?       // Email to send gift card to
+
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([trainId])
+  @@map("gift_cards")
+}
+
+model Notification {
+  id          String            @id @default(uuid())
+  userId      String?
+  user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  trainId     String?
+  train       MealTrain?        @relation(fields: [trainId], references: [id], onDelete: Cascade)
+
+  type        NotificationType
+  title       String
+  message     String
+  data        Json?             // Additional data
+
+  email       String?           // For non-user notifications
+  read        Boolean           @default(false)
+  sent        Boolean           @default(false)
+  sentAt      DateTime?
+
+  createdAt   DateTime          @default(now())
+
+  @@index([userId])
+  @@index([trainId])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  TRAIN_CREATED
+  PARTICIPANT_SIGNED_UP
+  PARTICIPANT_CANCELLED
+  DONATION_RECEIVED
+  GIFT_CARD_RECEIVED
+  REMINDER
+  TRAIN_UPDATED
+  TRAIN_COMPLETED
+}
