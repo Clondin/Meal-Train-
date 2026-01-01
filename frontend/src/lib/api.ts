@@ -4,9 +4,9 @@ import {
   AuthResponse,
   LoginCredentials,
   RegisterData,
-  MealTrain,
-  CreateMealTrainData,
-  UpdateMealTrainData,
+  ChesedTrain,
+  CreateChesedTrainData,
+  UpdateChesedTrainData,
   MealDate,
   CreateMealDateData,
   ClaimMealDateData,
@@ -153,54 +153,54 @@ class ApiClient {
     return data;
   }
 
-  // ===== Meal Train Endpoints =====
+  // ===== Chesed Train Endpoints =====
 
-  async getMealTrains(): Promise<MealTrain[]> {
-    const { data } = await this.client.get<MealTrain[]>('/meal-trains');
+  async getChesedTrains(): Promise<ChesedTrain[]> {
+    const { data } = await this.client.get<ChesedTrain[]>('/chesed-trains');
     return data;
   }
 
-  async getMealTrain(id: string): Promise<MealTrain> {
-    const { data } = await this.client.get<MealTrain>(`/meal-trains/${id}`);
+  async getChesedTrain(id: string): Promise<ChesedTrain> {
+    const { data } = await this.client.get<ChesedTrain>(`/chesed-trains/${id}`);
     return data;
   }
 
-  async createMealTrain(trainData: CreateMealTrainData): Promise<MealTrain> {
-    const { data } = await this.client.post<MealTrain>('/meal-trains', trainData);
+  async createChesedTrain(trainData: CreateChesedTrainData): Promise<ChesedTrain> {
+    const { data } = await this.client.post<ChesedTrain>('/chesed-trains', trainData);
     return data;
   }
 
-  async updateMealTrain(id: string, trainData: UpdateMealTrainData): Promise<MealTrain> {
-    const { data } = await this.client.patch<MealTrain>(`/meal-trains/${id}`, trainData);
+  async updateChesedTrain(id: string, trainData: UpdateChesedTrainData): Promise<ChesedTrain> {
+    const { data } = await this.client.patch<ChesedTrain>(`/chesed-trains/${id}`, trainData);
     return data;
   }
 
-  async deleteMealTrain(id: string): Promise<void> {
-    await this.client.delete(`/meal-trains/${id}`);
+  async deleteChesedTrain(id: string): Promise<void> {
+    await this.client.delete(`/chesed-trains/${id}`);
   }
 
-  async getMyMealTrains(): Promise<MealTrain[]> {
-    const { data } = await this.client.get<MealTrain[]>('/meal-trains/my-trains');
+  async getMyChesedTrains(): Promise<ChesedTrain[]> {
+    const { data } = await this.client.get<ChesedTrain[]>('/chesed-trains/my-trains');
     return data;
   }
 
   // ===== Meal Date Endpoints =====
 
   async getMealDates(trainId: string): Promise<MealDate[]> {
-    const { data } = await this.client.get<MealDate[]>(`/meal-trains/${trainId}/meal-dates`);
+    const { data } = await this.client.get<MealDate[]>(`/chesed-trains/${trainId}/meal-dates`);
     return data;
   }
 
   async getMealDate(trainId: string, dateId: string): Promise<MealDate> {
     const { data } = await this.client.get<MealDate>(
-      `/meal-trains/${trainId}/meal-dates/${dateId}`
+      `/chesed-trains/${trainId}/meal-dates/${dateId}`
     );
     return data;
   }
 
   async createMealDate(trainId: string, dateData: CreateMealDateData): Promise<MealDate> {
     const { data } = await this.client.post<MealDate>(
-      `/meal-trains/${trainId}/meal-dates`,
+      `/chesed-trains/${trainId}/meal-dates`,
       dateData
     );
     return data;
@@ -212,7 +212,7 @@ class ApiClient {
     claimData: ClaimMealDateData
   ): Promise<MealDate> {
     const { data } = await this.client.post<MealDate>(
-      `/meal-trains/${trainId}/meal-dates/${dateId}/claim`,
+      `/chesed-trains/${trainId}/meal-dates/${dateId}/claim`,
       claimData
     );
     return data;
@@ -220,7 +220,7 @@ class ApiClient {
 
   async unclaimMealDate(trainId: string, dateId: string): Promise<MealDate> {
     const { data } = await this.client.post<MealDate>(
-      `/meal-trains/${trainId}/meal-dates/${dateId}/unclaim`
+      `/chesed-trains/${trainId}/meal-dates/${dateId}/unclaim`
     );
     return data;
   }
@@ -231,19 +231,19 @@ class ApiClient {
     dateData: Partial<CreateMealDateData>
   ): Promise<MealDate> {
     const { data } = await this.client.patch<MealDate>(
-      `/meal-trains/${trainId}/meal-dates/${dateId}`,
+      `/chesed-trains/${trainId}/meal-dates/${dateId}`,
       dateData
     );
     return data;
   }
 
   async deleteMealDate(trainId: string, dateId: string): Promise<void> {
-    await this.client.delete(`/meal-trains/${trainId}/meal-dates/${dateId}`);
+    await this.client.delete(`/chesed-trains/${trainId}/meal-dates/${dateId}`);
   }
 
   async markMealDateDelivered(trainId: string, dateId: string): Promise<MealDate> {
     const { data } = await this.client.post<MealDate>(
-      `/meal-trains/${trainId}/meal-dates/${dateId}/delivered`
+      `/chesed-trains/${trainId}/meal-dates/${dateId}/delivered`
     );
     return data;
   }
@@ -252,14 +252,14 @@ class ApiClient {
 
   async getParticipants(trainId: string): Promise<Participant[]> {
     const { data } = await this.client.get<Participant[]>(
-      `/meal-trains/${trainId}/participants`
+      `/chesed-trains/${trainId}/participants`
     );
     return data;
   }
 
   async getParticipant(trainId: string, participantId: string): Promise<Participant> {
     const { data } = await this.client.get<Participant>(
-      `/meal-trains/${trainId}/participants/${participantId}`
+      `/chesed-trains/${trainId}/participants/${participantId}`
     );
     return data;
   }
@@ -269,7 +269,7 @@ class ApiClient {
     participantData: CreateParticipantData
   ): Promise<Participant> {
     const { data } = await this.client.post<Participant>(
-      `/meal-trains/${trainId}/participants`,
+      `/chesed-trains/${trainId}/participants`,
       participantData
     );
     return data;
@@ -281,33 +281,33 @@ class ApiClient {
     participantData: Partial<CreateParticipantData>
   ): Promise<Participant> {
     const { data } = await this.client.patch<Participant>(
-      `/meal-trains/${trainId}/participants/${participantId}`,
+      `/chesed-trains/${trainId}/participants/${participantId}`,
       participantData
     );
     return data;
   }
 
   async deleteParticipant(trainId: string, participantId: string): Promise<void> {
-    await this.client.delete(`/meal-trains/${trainId}/participants/${participantId}`);
+    await this.client.delete(`/chesed-trains/${trainId}/participants/${participantId}`);
   }
 
   // ===== Donation Endpoints =====
 
   async getDonations(trainId: string): Promise<Donation[]> {
-    const { data } = await this.client.get<Donation[]>(`/meal-trains/${trainId}/donations`);
+    const { data } = await this.client.get<Donation[]>(`/chesed-trains/${trainId}/donations`);
     return data;
   }
 
   async getDonation(trainId: string, donationId: string): Promise<Donation> {
     const { data } = await this.client.get<Donation>(
-      `/meal-trains/${trainId}/donations/${donationId}`
+      `/chesed-trains/${trainId}/donations/${donationId}`
     );
     return data;
   }
 
   async createDonation(trainId: string, donationData: CreateDonationData): Promise<Donation> {
     const { data } = await this.client.post<Donation>(
-      `/meal-trains/${trainId}/donations`,
+      `/chesed-trains/${trainId}/donations`,
       donationData
     );
     return data;
@@ -318,7 +318,7 @@ class ApiClient {
     amount: number
   ): Promise<{ clientSecret: string }> {
     const { data } = await this.client.post<{ clientSecret: string }>(
-      `/meal-trains/${trainId}/donations/payment-intent`,
+      `/chesed-trains/${trainId}/donations/payment-intent`,
       { amount }
     );
     return data;
@@ -326,7 +326,7 @@ class ApiClient {
 
   async confirmDonation(trainId: string, donationId: string): Promise<Donation> {
     const { data } = await this.client.post<Donation>(
-      `/meal-trains/${trainId}/donations/${donationId}/confirm`
+      `/chesed-trains/${trainId}/donations/${donationId}/confirm`
     );
     return data;
   }
@@ -334,20 +334,20 @@ class ApiClient {
   // ===== Gift Card Endpoints =====
 
   async getGiftCards(trainId: string): Promise<GiftCard[]> {
-    const { data } = await this.client.get<GiftCard[]>(`/meal-trains/${trainId}/gift-cards`);
+    const { data } = await this.client.get<GiftCard[]>(`/chesed-trains/${trainId}/gift-cards`);
     return data;
   }
 
   async getGiftCard(trainId: string, giftCardId: string): Promise<GiftCard> {
     const { data } = await this.client.get<GiftCard>(
-      `/meal-trains/${trainId}/gift-cards/${giftCardId}`
+      `/chesed-trains/${trainId}/gift-cards/${giftCardId}`
     );
     return data;
   }
 
   async createGiftCard(trainId: string, giftCardData: CreateGiftCardData): Promise<GiftCard> {
     const { data } = await this.client.post<GiftCard>(
-      `/meal-trains/${trainId}/gift-cards`,
+      `/chesed-trains/${trainId}/gift-cards`,
       giftCardData
     );
     return data;
@@ -359,26 +359,26 @@ class ApiClient {
     giftCardData: Partial<CreateGiftCardData>
   ): Promise<GiftCard> {
     const { data } = await this.client.patch<GiftCard>(
-      `/meal-trains/${trainId}/gift-cards/${giftCardId}`,
+      `/chesed-trains/${trainId}/gift-cards/${giftCardId}`,
       giftCardData
     );
     return data;
   }
 
   async deleteGiftCard(trainId: string, giftCardId: string): Promise<void> {
-    await this.client.delete(`/meal-trains/${trainId}/gift-cards/${giftCardId}`);
+    await this.client.delete(`/chesed-trains/${trainId}/gift-cards/${giftCardId}`);
   }
 
   async markGiftCardSent(trainId: string, giftCardId: string): Promise<GiftCard> {
     const { data } = await this.client.post<GiftCard>(
-      `/meal-trains/${trainId}/gift-cards/${giftCardId}/sent`
+      `/chesed-trains/${trainId}/gift-cards/${giftCardId}/sent`
     );
     return data;
   }
 
   async markGiftCardReceived(trainId: string, giftCardId: string): Promise<GiftCard> {
     const { data } = await this.client.post<GiftCard>(
-      `/meal-trains/${trainId}/gift-cards/${giftCardId}/received`
+      `/chesed-trains/${trainId}/gift-cards/${giftCardId}/received`
     );
     return data;
   }

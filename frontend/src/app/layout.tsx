@@ -8,36 +8,38 @@ const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfa
 
 export const metadata: Metadata = {
   title: {
-    default: 'MealTrain - Organize Meal Deliveries with Love',
-    template: '%s | MealTrain',
+    default: 'Chesed Train - Organize Kosher Meal Deliveries with Love',
+    template: '%s | Chesed Train by Kosher.com',
   },
   description:
-    'Organize and coordinate meal deliveries for friends, family, and community members during times of need. Create meal trains, manage schedules, and show support.',
+    'Organize and coordinate kosher meal deliveries for friends, family, and community members. A Chesed project by Kosher.com offering support during times of need.',
   keywords: [
+    'chesed train',
     'meal train',
-    'meal delivery',
+    'kosher meals',
     'community support',
     'food coordination',
     'meal schedule',
     'help neighbors',
+    'kosher.com',
   ],
-  authors: [{ name: 'MealTrain' }],
-  creator: 'MealTrain',
+  authors: [{ name: 'Chesed Train by Kosher.com' }],
+  creator: 'Kosher.com',
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: 'https://mealtrain.com',
-    title: 'MealTrain - Organize Meal Deliveries with Love',
+    url: 'https://chesedtrain.com',
+    title: 'Chesed Train - Organize Kosher Meal Deliveries with Love',
     description:
-      'Organize and coordinate meal deliveries for friends, family, and community members during times of need.',
-    siteName: 'MealTrain',
+      'Organize and coordinate kosher meal deliveries for friends, family, and community members. A Chesed project by Kosher.com offering support during times of need.',
+    siteName: 'Chesed Train',
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'MealTrain - Organize Meal Deliveries with Love',
+    title: 'Chesed Train - Organize Kosher Meal Deliveries with Love',
     description:
-      'Organize and coordinate meal deliveries for friends, family, and community members during times of need.',
-    creator: '@mealtrain',
+      'Organize and coordinate kosher meal deliveries for friends, family, and community members. A Chesed project by Kosher.com offering support during times of need.',
+    creator: '@chesedtrain',
   },
   robots: {
     index: true,

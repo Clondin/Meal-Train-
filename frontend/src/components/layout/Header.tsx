@@ -14,14 +14,19 @@ export default function Header() {
         <div className="flex w-full items-center justify-between py-4">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/" className="flex items-center gap-2 group">
+            <Link href="/" className="flex items-center gap-3 group">
               <div className="relative p-1">
                 <HeartIcon className="h-8 w-8 text-primary group-hover:scale-110 transition-transform duration-300" />
                 <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
               </div>
-              <span className="text-2xl font-serif font-bold text-foreground tracking-tight group-hover:text-primary transition-colors">
-                MealTrain
-              </span>
+              <div className="flex flex-col">
+                <span className="text-2xl font-serif font-bold text-foreground tracking-tight group-hover:text-primary transition-colors leading-none">
+                  Chesed Train
+                </span>
+                <span className="text-[0.65rem] font-medium text-muted-foreground uppercase tracking-widest pl-0.5">
+                  by Kosher.com
+                </span>
+              </div>
             </Link>
           </div>
 
@@ -50,13 +55,13 @@ export default function Header() {
               href="/search"
               className="px-4 py-2 text-sm font-medium text-foreground bg-secondary/50 hover:bg-secondary rounded-full transition-colors"
             >
-              Find a Meal Train
+              Find a Chesed Train
             </Link>
             <Link
               href="/create"
               className="px-6 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-full hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md shadow-primary/20"
             >
-              Start a Meal Train
+              Start a Chesed Train
             </Link>
           </div>
 
@@ -110,14 +115,14 @@ export default function Header() {
                   className="block w-full text-center px-4 py-3 text-sm font-medium text-foreground bg-secondary rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Find Meal Train
+                  Find a Chesed Train
                 </Link>
                 <Link
                   href="/create"
                   className="block w-full text-center px-4 py-3 text-sm font-medium text-primary-foreground bg-primary rounded-lg shadow-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  Start a Meal Train
+                  Start a Chesed Train
                 </Link>
               </div>
             </div>

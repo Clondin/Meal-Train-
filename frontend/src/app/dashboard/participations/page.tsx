@@ -105,7 +105,7 @@ export default function ParticipationsPage() {
       <div>
         <h1 className="text-2xl font-bold text-gray-900">My Participations</h1>
         <p className="text-gray-600 mt-1">
-          Meal trains you've signed up to help with
+          Chesed trains you've signed up to help with
         </p>
       </div>
 
@@ -115,13 +115,13 @@ export default function ParticipationsPage() {
             <CalendarIcon className="w-12 h-12 mx-auto text-gray-400 mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No participations yet</h3>
             <p className="text-gray-600 mb-4">
-              You haven't signed up for any meal trains yet.
+              You haven't signed up for any chesed trains yet.
             </p>
             <Link
               href="/"
               className="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              Find a Meal Train
+              Find a Chesed Train
             </Link>
           </CardBody>
         </Card>

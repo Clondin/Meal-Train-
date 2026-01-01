@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
 import { api } from '@/lib/api';
 import { Card, CardHeader, CardBody, Button, Badge, Spinner } from '@/components/ui';
-import { MealTrain, Participant } from '@/types';
+import { ChesedTrain, Participant } from '@/types';
 import { cn } from '@/lib/utils';
 
 interface DashboardStats {
@@ -17,7 +17,7 @@ interface DashboardStats {
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
-  const [myTrains, setMyTrains] = useState<MealTrain[]>([]);
+  const [myTrains, setMyTrains] = useState<ChesedTrain[]>([]);
   const [myParticipations, setMyParticipations] = useState<Participant[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalTrains: 0,
@@ -37,8 +37,8 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
 
-      // Load user's organized meal trains
-      const trains = await api.getMyMealTrains();
+      // Load user's organized chesed trains
+      const trains = await api.getMyChesedTrains();
       setMyTrains(trains);
 
       // Calculate stats
@@ -109,7 +109,7 @@ export default function DashboardPage() {
           Welcome back, {user?.name}!
         </h1>
         <p className="mt-2 text-gray-600">
-          Here's what's happening with your meal trains
+          Here's what's happening with your chesed trains
         </p>
       </div>
 
@@ -279,12 +279,12 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* My Organized Meal Trains */}
+        {/* My Organized Chesed Trains */}
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-bold text-gray-900">
-                My Organized Meal Trains
+                My Organized Chesed Trains
               </h2>
               <Link href="/dashboard/trains">
                 <Button variant="ghost" size="sm">
@@ -297,7 +297,7 @@ export default function DashboardPage() {
             {myTrains.length === 0 ? (
               <div className="text-center py-6">
                 <p className="text-gray-500 mb-4">
-                  You haven't organized any meal trains yet
+                  You haven't organized any chesed trains yet
                 </p>
                 <Link href="/trains/create">
                   <Button size="sm">Create Your First Train</Button>

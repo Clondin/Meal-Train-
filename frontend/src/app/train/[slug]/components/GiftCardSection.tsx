@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 
 interface GiftCardSectionProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 // Popular gift card retailers
@@ -173,7 +173,7 @@ function GiftCardModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  train: MealTrain;
+  train: ChesedTrain;
 }) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);

@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MealTrain, MealDate } from '@/types';
+import { ChesedTrain, MealDate } from '@/types';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -15,7 +15,7 @@ import toast from 'react-hot-toast';
 interface DateSignupModalProps {
   isOpen: boolean;
   onClose: () => void;
-  train: MealTrain;
+  train: ChesedTrain;
   selectedDate: Date;
 }
 
@@ -136,11 +136,10 @@ export default function DateSignupModal({
                 key={type}
                 type="button"
                 onClick={() => setMealType(type)}
-                className={`px-4 py-2 rounded-md border-2 font-medium transition-colors capitalize ${
-                  mealType === type
+                className={`px-4 py-2 rounded-md border-2 font-medium transition-colors capitalize ${mealType === type
                     ? 'border-blue-600 bg-blue-50 text-blue-700'
                     : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                }`}
+                  }`}
               >
                 {type}
               </button>

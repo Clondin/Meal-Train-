@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
 import {
@@ -13,7 +13,7 @@ import {
 } from 'react-icons/fa';
 
 interface ShareButtonsProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 export default function ShareButtons({ train }: ShareButtonsProps) {
@@ -28,7 +28,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
   };
 
   const shareUrl = getShareUrl();
-  const shareTitle = `${train.recipientName}'s Meal Train`;
+  const shareTitle = `${train.recipientName}'s Chesed Train`;
   const shareDescription = (train.description || '').substring(0, 200);
 
   // Copy link to clipboard
@@ -64,7 +64,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
   const handleEmailShare = () => {
     const subject = encodeURIComponent(shareTitle);
     const body = encodeURIComponent(
-      `Hi,\n\nI wanted to share this meal train with you:\n\n${shareTitle}\n\n${shareDescription}\n\nYou can view and sign up here: ${shareUrl}\n\nThank you!`
+      `Hi,\n\nI wanted to share this chesed train with you:\n\n${shareTitle}\n\n${shareDescription}\n\nYou can view and sign up here: ${shareUrl}\n\nThank you!`
     );
     window.location.href = `mailto:?subject=${subject}&body=${body}`;
   };
@@ -98,7 +98,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div className="flex-1">
           <h3 className="text-sm font-semibold text-gray-900 mb-1">
-            Share this Meal Train
+            Share this Chesed Train
           </h3>
           <p className="text-sm text-gray-600">
             Help spread the word and get more support

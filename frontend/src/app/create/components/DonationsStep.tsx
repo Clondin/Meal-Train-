@@ -4,13 +4,13 @@ import React from 'react';
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface DonationsStepProps {
-  register: UseFormRegister<MealTrainFormData>;
-  errors: FieldErrors<MealTrainFormData>;
-  watch: UseFormWatch<MealTrainFormData>;
-  setValue: UseFormSetValue<MealTrainFormData>;
+  register: UseFormRegister<ChesedTrainFormData>;
+  errors: FieldErrors<ChesedTrainFormData>;
+  watch: UseFormWatch<ChesedTrainFormData>;
+  setValue: UseFormSetValue<ChesedTrainFormData>;
 }
 
 const trainTypeOptions = [
@@ -38,12 +38,12 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Donations & Settings</h2>
         <p className="text-sm text-gray-600">
-          Configure donation options and meal train type
+          Configure donation options and chesed train type
         </p>
       </div>
 
       <Select
-        label="Meal Train Type"
+        label="Chesed Train Type"
         value={trainType}
         onChange={(value) => {
           const event = {

@@ -5,11 +5,11 @@ import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface RecipientStepProps {
-  register: UseFormRegister<MealTrainFormData>;
-  errors: FieldErrors<MealTrainFormData>;
+  register: UseFormRegister<ChesedTrainFormData>;
+  errors: FieldErrors<ChesedTrainFormData>;
   onImageUpload?: (url: string) => void;
   defaultImage?: string;
 }
@@ -164,7 +164,7 @@ export const RecipientStep: React.FC<RecipientStepProps> = ({
               </Button>
             </label>
             <p className="mt-1 text-xs text-gray-500">
-              Optional: Add a cover photo for the meal train
+              Optional: Add a cover photo for the chesed train
             </p>
           </div>
         </div>
@@ -176,7 +176,7 @@ export const RecipientStep: React.FC<RecipientStepProps> = ({
           required: 'Description is required',
         })}
         error={errors.description?.message}
-        placeholder="Tell people why you're organizing this meal train and any important details they should know..."
+        placeholder="Tell people why you're organizing this chesed train and any important details they should know..."
         rows={6}
       />
     </div>

@@ -154,7 +154,7 @@ export default function DonationReport({ trainId, donations, onUpdate }: Donatio
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">No donations yet</h3>
             <p className="text-gray-500">
-              Donations will appear here when people contribute to this meal train
+              Donations will appear here when people contribute to this chesed train
             </p>
           </div>
         </Card>

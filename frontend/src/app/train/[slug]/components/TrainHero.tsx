@@ -1,9 +1,9 @@
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 
 interface TrainHeroProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 export default function TrainHero({ train }: TrainHeroProps) {
@@ -36,7 +36,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
           {/* Category Badge */}
           <div className="mb-4">
             <Badge variant="info" size="md" className="bg-white/20 text-white border-white/30">
-              Meal Train
+              Chesed Train
             </Badge>
           </div>
 

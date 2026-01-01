@@ -7,7 +7,7 @@ import { format } from 'date-fns';
 import { MagnifyingGlassIcon, FunnelIcon, MapPinIcon, CalendarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { Button, Input, Select, Card, CardBody, Badge, Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { MealTrain } from '@/types';
+import type { ChesedTrain } from '@/types';
 
 const CATEGORIES = [
   { value: '', label: 'All Categories' },
@@ -48,7 +48,7 @@ export default function SearchPage() {
 
   const [query, setQuery] = useState(initialQuery);
   const [category, setCategory] = useState(initialCategory);
-  const [trains, setTrains] = useState<MealTrain[]>([]);
+  const [trains, setTrains] = useState<ChesedTrain[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -67,7 +67,7 @@ export default function SearchPage() {
       params.set('page', page.toString());
       params.set('limit', '12');
 
-      const response = await api.get<{ trains: MealTrain[]; pagination: { pages: number } }>(`/trains?${params.toString()}`);
+      const response = await api.get<{ trains: ChesedTrain[]; pagination: { pages: number } }>(`/trains?${params.toString()}`);
       setTrains(response.data.trains);
       setTotalPages(response.data.pagination.pages);
     } catch (error) {
@@ -88,7 +88,7 @@ export default function SearchPage() {
       {/* Header */}
       <div className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 py-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-6">Find a Meal Train</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-6">Find a Chesed Train</h1>
 
           <form onSubmit={handleSearch} className="flex flex-col md:flex-row gap-4">
             <div className="flex-1 relative">
@@ -138,23 +138,23 @@ export default function SearchPage() {
         ) : trains.length === 0 ? (
           <div className="text-center py-16">
             <MagnifyingGlassIcon className="w-16 h-16 mx-auto text-gray-300 mb-4" />
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">No meal trains found</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">No chesed trains found</h2>
             <p className="text-gray-600 mb-6">
               {query || category
                 ? 'Try adjusting your search or filters'
-                : 'There are no public meal trains at this time'}
+                : 'There are no public chesed trains at this time'}
             </p>
             <Link
               href="/create"
               className="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
             >
-              Create a Meal Train
+              Create a Chesed Train
             </Link>
           </div>
         ) : (
           <>
             <p className="text-gray-600 mb-6">
-              Found {trains.length} meal train{trains.length !== 1 ? 's' : ''}
+              Found {trains.length} chesed train{trains.length !== 1 ? 's' : ''}
             </p>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

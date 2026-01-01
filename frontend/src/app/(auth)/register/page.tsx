@@ -105,7 +105,7 @@ export default function RegisterPage() {
               Create an Account
             </h1>
             <p className="text-gray-600">
-              Join MealTrain and start organizing meal support
+              Join Chesed Train and start organizing meal support
             </p>
           </div>
 

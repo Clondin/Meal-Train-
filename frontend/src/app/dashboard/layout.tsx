@@ -107,7 +107,7 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">MealTrain</span>
+              <span className="text-xl font-bold text-blue-600">Chesed Train</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}

@@ -4,65 +4,71 @@
 
 @layer base {
   :root {
-    --background: 30 20% 98%;
-    --foreground: 20 10% 20%;
-    
+    /* Kosher.com Branding - Fresh & Vibrant */
+    --background: 0 0% 100%;
+    --foreground: 295 50% 10%;
+    /* Very dark purple/black */
+
     --card: 0 0% 100%;
-    --card-foreground: 20 10% 20%;
-    
+    --card-foreground: 295 50% 10%;
+
     --popover: 0 0% 100%;
-    --popover-foreground: 20 10% 20%;
-    
-    --primary: 15 75% 55%;
-    --primary-foreground: 30 20% 98%;
-    
-    --secondary: 25 20% 90%;
-    --secondary-foreground: 20 10% 20%;
-    
-    --muted: 30 20% 94%;
-    --muted-foreground: 25 10% 45%;
-    
-    --accent: 15 75% 96%;
-    --accent-foreground: 15 75% 45%;
-    
+    --popover-foreground: 295 50% 10%;
+
+    /* Primary: Deep Royal Purple */
+    --primary: 295 70% 30%;
+    --primary-foreground: 0 0% 100%;
+
+    /* Secondary: Light Lavender/Pinkish bg */
+    --secondary: 300 30% 96%;
+    --secondary-foreground: 295 70% 30%;
+
+    --muted: 300 10% 96%;
+    --muted-foreground: 295 20% 40%;
+
+    /* Accent: Vibrant Grapefruit/Pink */
+    --accent: 350 85% 65%;
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    
-    --border: 30 15% 90%;
-    --input: 30 15% 90%;
-    --ring: 15 75% 55%;
-    
-    --radius: 1rem;
+
+    --border: 295 20% 90%;
+    --input: 295 20% 90%;
+    --ring: 295 70% 30%;
+
+    --radius: 0.75rem;
   }
 
   .dark {
-    --background: 20 10% 10%;
-    --foreground: 30 20% 90%;
-    
-    --card: 20 10% 12%;
-    --card-foreground: 30 20% 90%;
-    
-    --popover: 20 10% 12%;
-    --popover-foreground: 30 20% 90%;
-    
-    --primary: 15 75% 60%;
-    --primary-foreground: 20 10% 10%;
-    
-    --secondary: 20 10% 20%;
-    --secondary-foreground: 30 20% 90%;
-    
-    --muted: 20 10% 20%;
-    --muted-foreground: 25 10% 60%;
-    
-    --accent: 20 10% 20%;
-    --accent-foreground: 30 20% 90%;
-    
+    --background: 295 50% 5%;
+    --foreground: 300 20% 96%;
+
+    --card: 295 50% 8%;
+    --card-foreground: 300 20% 96%;
+
+    --popover: 295 50% 8%;
+    --popover-foreground: 300 20% 96%;
+
+    --primary: 295 60% 50%;
+    /* Lighter purple for dark mode */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 295 30% 15%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 295 30% 15%;
+    --muted-foreground: 295 20% 65%;
+
+    --accent: 350 80% 60%;
+    --accent-foreground: 0 0% 100%;
+
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-    
-    --border: 20 10% 20%;
-    --input: 20 10% 20%;
-    --ring: 15 75% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 295 30% 18%;
+    --input: 295 30% 18%;
+    --ring: 295 60% 50%;
   }
 }
 
@@ -121,6 +127,7 @@
   from {
     opacity: 0;
   }
+
   to {
     opacity: 1;
   }
@@ -136,6 +143,7 @@
     transform: translateY(-100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;
@@ -152,6 +160,7 @@
     transform: translateY(100%);
     opacity: 0;
   }
+
   to {
     transform: translateY(0);
     opacity: 1;

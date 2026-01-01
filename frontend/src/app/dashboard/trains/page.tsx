@@ -4,14 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Card, Button, Badge, Input, Select, Spinner } from '@/components/ui';
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import { cn } from '@/lib/utils';
 
 type FilterStatus = 'all' | 'active' | 'completed';
 
 export default function TrainsPage() {
-  const [trains, setTrains] = useState<MealTrain[]>([]);
-  const [filteredTrains, setFilteredTrains] = useState<MealTrain[]>([]);
+  const [trains, setTrains] = useState<ChesedTrain[]>([]);
+  const [filteredTrains, setFilteredTrains] = useState<ChesedTrain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -29,10 +29,10 @@ export default function TrainsPage() {
     try {
       setLoading(true);
       setError(null);
-      const data = await api.getMyMealTrains();
+      const data = await api.getMyChesedTrains();
       setTrains(data);
     } catch (err: any) {
-      setError(err.message || 'Failed to load meal trains');
+      setError(err.message || 'Failed to load chesed trains');
     } finally {
       setLoading(false);
     }
@@ -73,7 +73,7 @@ export default function TrainsPage() {
     });
   };
 
-  const getTrainStatus = (train: MealTrain): { label: string; variant: 'success' | 'neutral' } => {
+  const getTrainStatus = (train: ChesedTrain): { label: string; variant: 'success' | 'neutral' } => {
     const now = new Date();
     const endDate = new Date(train.endDate);
 
@@ -83,7 +83,7 @@ export default function TrainsPage() {
     return { label: 'Completed', variant: 'neutral' };
   };
 
-  const getTrainStats = (train: MealTrain) => {
+  const getTrainStats = (train: ChesedTrain) => {
     const totalDates = train.dates?.length || 0;
     const claimedDates = train.dates?.filter((d) => d.status === 'claimed' || d.status === 'delivered').length || 0;
     const participants = train.participants?.length || 0;
@@ -113,9 +113,9 @@ export default function TrainsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900">My Meal Trains</h1>
+            <h1 className="text-3xl font-bold text-gray-900">My Chesed Trains</h1>
             <p className="mt-2 text-gray-600">
-              Manage all your organized meal trains
+              Manage all your organized chesed trains
             </p>
           </div>
           <Link href="/trains/create">
@@ -187,12 +187,12 @@ export default function TrainsPage() {
               </svg>
             </div>
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              {searchQuery || statusFilter !== 'all' ? 'No trains found' : 'No meal trains yet'}
+              {searchQuery || statusFilter !== 'all' ? 'No trains found' : 'No chesed trains yet'}
             </h3>
             <p className="text-gray-500 mb-4">
               {searchQuery || statusFilter !== 'all'
                 ? 'Try adjusting your filters'
-                : 'Get started by creating your first meal train'}
+                : 'Get started by creating your first chesed train'}
             </p>
             {!searchQuery && statusFilter === 'all' && (
               <Link href="/trains/create">
@@ -276,7 +276,7 @@ export default function TrainsPage() {
       {/* Results count */}
       {filteredTrains.length > 0 && (
         <div className="mt-6 text-center text-sm text-gray-500">
-          Showing {filteredTrains.length} of {trains.length} meal train{trains.length !== 1 ? 's' : ''}
+          Showing {filteredTrains.length} of {trains.length} chesed train{trains.length !== 1 ? 's' : ''}
         </div>
       )}
     </div>

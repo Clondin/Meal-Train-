@@ -11,8 +11,8 @@ const navigation = {
   product: [
     { name: 'How It Works', href: '#how-it-works' },
     { name: 'Use Cases', href: '#use-cases' },
-    { name: 'Create Meal Train', href: '/create' },
-    { name: 'Find Meal Train', href: '/search' },
+    { name: 'Create Chesed Train', href: '/create' },
+    { name: 'Find Chesed Train', href: '/search' },
     { name: 'Pricing', href: '/pricing' },
   ],
   support: [
@@ -40,22 +40,22 @@ const navigation = {
 const socialLinks = [
   {
     name: 'Facebook',
-    href: 'https://facebook.com/mealtrain',
+    href: 'https://facebook.com/chesedtrain',
     icon: FaFacebookF,
   },
   {
     name: 'Twitter',
-    href: 'https://twitter.com/mealtrain',
+    href: 'https://twitter.com/chesedtrain',
     icon: FaTwitter,
   },
   {
     name: 'Instagram',
-    href: 'https://instagram.com/mealtrain',
+    href: 'https://instagram.com/chesedtrain',
     icon: FaInstagram,
   },
   {
     name: 'LinkedIn',
-    href: 'https://linkedin.com/company/mealtrain',
+    href: 'https://linkedin.com/company/chesedtrain',
     icon: FaLinkedinIn,
   },
 ];
@@ -75,13 +75,13 @@ export default function Footer() {
                 <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
               </div>
               <span className="text-2xl font-serif font-bold text-background tracking-tight">
-                MealTrain
+                Chesed Train
               </span>
             </Link>
             <p className="text-sm leading-6 text-background/70">
               Bringing communities together through the simple act of sharing
-              meals. Organize meal deliveries for friends, family, and neighbors
-              during times of need.
+              kosher meals. Organize support for friends, family, and neighbors
+              during times of need. A service by Kosher.com.
             </p>
             <div className="flex space-x-6">
               {socialLinks.map((item) => {
@@ -178,7 +178,7 @@ export default function Footer() {
         </div>
         <div className="mt-16 border-t border-background/10 pt-8 sm:mt-20 lg:mt-24">
           <p className="text-xs leading-5 text-background/50 text-center">
-            &copy; {new Date().getFullYear()} MealTrain. All rights reserved.
+            &copy; {new Date().getFullYear()} Chesed Train. All rights reserved.
             Made with <HeartIcon className="inline h-4 w-4 text-primary" /> for
             communities everywhere.
           </p>

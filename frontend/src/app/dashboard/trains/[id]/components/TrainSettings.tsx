@@ -6,10 +6,10 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import { Button, Input, Textarea, Select, Modal } from '@/components/ui';
 import { api } from '@/lib/api';
-import type { MealTrain } from '@/types';
+import type { ChesedTrain } from '@/types';
 
 interface TrainSettingsProps {
-  train: MealTrain;
+  train: ChesedTrain;
   onUpdate: () => void;
 }
 
@@ -97,7 +97,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
   const onSubmit = async (data: SettingsFormData) => {
     setIsLoading(true);
     try {
-      await api.updateMealTrain(train.slug, {
+      await api.updateChesedTrain(train.slug, {
         ...data,
         status: selectedStatus,
       });
@@ -112,17 +112,17 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
 
   const handleDelete = async () => {
     if (deleteConfirmation !== train.title) {
-      toast.error('Please type the meal train title to confirm');
+      toast.error('Please type the chesed train title to confirm');
       return;
     }
 
     setIsLoading(true);
     try {
-      await api.deleteMealTrain(train.slug);
-      toast.success('Meal train deleted');
+      await api.deleteChesedTrain(train.slug);
+      toast.success('Chesed train deleted');
       router.push('/dashboard/trains');
     } catch (error: any) {
-      toast.error(error.response?.data?.error || 'Failed to delete meal train');
+      toast.error(error.response?.data?.error || 'Failed to delete chesed train');
     } finally {
       setIsLoading(false);
     }
@@ -136,17 +136,17 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
         {/* Status Section */}
         <div className="bg-white rounded-lg border p-6">
-          <h3 className="text-lg font-semibold mb-4">Meal Train Status</h3>
+          <h3 className="text-lg font-semibold mb-4">Chesed Train Status</h3>
           <Select
             label="Status"
             options={STATUS_OPTIONS}
             value={selectedStatus}
-            onChange={(value) => setSelectedStatus(String(value) as MealTrain['status'])}
+            onChange={(value) => setSelectedStatus(String(value) as ChesedTrain['status'])}
           />
           <p className="text-sm text-gray-500 mt-2">
             {selectedStatus === 'ACTIVE' && 'Volunteers can sign up for dates.'}
             {selectedStatus === 'PAUSED' && 'Temporarily hide from public. No new sign-ups.'}
-            {selectedStatus === 'COMPLETED' && 'Mark this meal train as complete.'}
+            {selectedStatus === 'COMPLETED' && 'Mark this chesed train as complete.'}
           </p>
         </div>
 
@@ -305,7 +305,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
                 {...register('isPublic')}
                 className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
               />
-              <span>Make meal train public (visible in search)</span>
+              <span>Make chesed train public (visible in search)</span>
             </label>
 
             <label className="flex items-center gap-3">
@@ -364,11 +364,11 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
       <div className="bg-red-50 rounded-lg border border-red-200 p-6">
         <h3 className="text-lg font-semibold text-red-800 mb-2">Danger Zone</h3>
         <p className="text-red-600 text-sm mb-4">
-          Deleting a meal train is permanent and cannot be undone. All associated data including
+          Deleting a chesed train is permanent and cannot be undone. All associated data including
           participants, donations, and gift cards will be deleted.
         </p>
         <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
-          Delete Meal Train
+          Delete Chesed Train
         </Button>
       </div>
 
@@ -376,12 +376,12 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
       <Modal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
-        title="Delete Meal Train"
+        title="Delete Chesed Train"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-gray-600">
-            This action cannot be undone. This will permanently delete the meal train
+            This action cannot be undone. This will permanently delete the chesed train
             <strong className="text-gray-900"> {train.title}</strong> and all associated data.
           </p>
           <Input

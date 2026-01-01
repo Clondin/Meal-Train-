@@ -313,7 +313,7 @@ export default function ProfilePage() {
 
         <p className="text-red-600 text-sm mb-4">
           Permanently delete your account and all associated data. This action cannot be undone.
-          Your meal trains will be deleted, and your participations will be anonymized.
+          Your chesed trains will be deleted, and your participations will be anonymized.
         </p>
 
         <Button variant="danger" onClick={() => setShowDeleteModal(true)}>
@@ -332,7 +332,7 @@ export default function ProfilePage() {
           <div className="bg-red-50 border border-red-200 rounded-lg p-4">
             <p className="text-red-800 font-medium">Warning: This action is irreversible</p>
             <ul className="text-red-600 text-sm mt-2 list-disc list-inside space-y-1">
-              <li>All your meal trains will be deleted</li>
+              <li>All your chesed trains will be deleted</li>
               <li>All your donations will be anonymized</li>
               <li>All your participations will be anonymized</li>
               <li>You will lose access to your account</li>

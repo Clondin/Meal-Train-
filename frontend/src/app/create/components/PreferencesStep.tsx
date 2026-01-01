@@ -4,11 +4,11 @@ import React from 'react';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface PreferencesStepProps {
-  register: UseFormRegister<MealTrainFormData>;
-  errors: FieldErrors<MealTrainFormData>;
+  register: UseFormRegister<ChesedTrainFormData>;
+  errors: FieldErrors<ChesedTrainFormData>;
 }
 
 export const PreferencesStep: React.FC<PreferencesStepProps> = ({

@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Card, Button, Badge, Spinner } from '@/components/ui';
-import { MealTrain, MealDate, Participant, Donation } from '@/types';
+import { ChesedTrain, MealDate, Participant, Donation } from '@/types';
 import { cn } from '@/lib/utils';
 import DateManager from './components/DateManager';
 import ParticipantManager from './components/ParticipantManager';
@@ -19,7 +19,7 @@ export default function TrainDetailPage() {
   const router = useRouter();
   const trainId = params.id as string;
 
-  const [train, setTrain] = useState<MealTrain | null>(null);
+  const [train, setTrain] = useState<ChesedTrain | null>(null);
   const [dates, setDates] = useState<MealDate[]>([]);
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
@@ -37,7 +37,7 @@ export default function TrainDetailPage() {
       setError(null);
 
       const [trainData, datesData, participantsData, donationsData] = await Promise.all([
-        api.getMealTrain(trainId),
+        api.getChesedTrain(trainId),
         api.getMealDates(trainId),
         api.getParticipants(trainId),
         api.getDonations(trainId),
@@ -48,7 +48,7 @@ export default function TrainDetailPage() {
       setParticipants(participantsData);
       setDonations(donationsData);
     } catch (err: any) {
-      setError(err.message || 'Failed to load meal train data');
+      setError(err.message || 'Failed to load chesed train data');
       if (err.statusCode === 404) {
         router.push('/dashboard/trains');
       }
@@ -129,7 +129,7 @@ export default function TrainDetailPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
             </div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Meal Train</h3>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Chesed Train</h3>
             <p className="text-gray-500 mb-4">{error}</p>
             <Link href="/dashboard/trains">
               <Button>Back to Trains</Button>

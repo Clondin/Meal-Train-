@@ -1,13 +1,13 @@
 'use client';
 
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import { Avatar } from '@/components/ui/Avatar';
 import { Badge } from '@/components/ui/Badge';
 import { Card } from '@/components/ui/Card';
 import { format, isBefore, startOfToday } from 'date-fns';
 
 interface ParticipantListProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 export default function ParticipantList({ train }: ParticipantListProps) {

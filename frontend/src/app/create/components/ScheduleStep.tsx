@@ -5,12 +5,12 @@ import { UseFormRegister, FieldErrors, UseFormWatch } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Select } from '@/components/ui/Select';
 import { format, addDays, eachDayOfInterval, parseISO } from 'date-fns';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface ScheduleStepProps {
-  register: UseFormRegister<MealTrainFormData>;
-  errors: FieldErrors<MealTrainFormData>;
-  watch: UseFormWatch<MealTrainFormData>;
+  register: UseFormRegister<ChesedTrainFormData>;
+  errors: FieldErrors<ChesedTrainFormData>;
+  watch: UseFormWatch<ChesedTrainFormData>;
 }
 
 const timeOptions = [
@@ -80,7 +80,7 @@ export const ScheduleStep: React.FC<ScheduleStepProps> = ({
       </div>
 
       <Input
-        label="Meal Train Title"
+        label="Chesed Train Title"
         {...register('title', {
           required: 'Title is required',
         })}

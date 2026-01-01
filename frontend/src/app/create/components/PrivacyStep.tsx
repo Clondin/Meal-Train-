@@ -3,13 +3,13 @@
 import React from 'react';
 import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface PrivacyStepProps {
-  register: UseFormRegister<MealTrainFormData>;
-  errors: FieldErrors<MealTrainFormData>;
-  watch: UseFormWatch<MealTrainFormData>;
-  setValue: UseFormSetValue<MealTrainFormData>;
+  register: UseFormRegister<ChesedTrainFormData>;
+  errors: FieldErrors<ChesedTrainFormData>;
+  watch: UseFormWatch<ChesedTrainFormData>;
+  setValue: UseFormSetValue<ChesedTrainFormData>;
 }
 
 export const PrivacyStep: React.FC<PrivacyStepProps> = ({
@@ -36,7 +36,7 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Privacy & Settings</h2>
         <p className="text-sm text-gray-600">
-          Control who can see and participate in this meal train
+          Control who can see and participate in this chesed train
         </p>
       </div>
 
@@ -45,7 +45,7 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <h3 className="text-base font-semibold text-gray-900">
-              Public Meal Train
+              Public Chesed Train
             </h3>
             <p className="text-sm text-gray-600 mt-1">
               {isPublic
@@ -221,7 +221,7 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
             </h3>
             <div className="mt-2 text-sm text-gray-600">
               <p>
-                We recommend starting with a public meal train and participant
+                We recommend starting with a public chesed train and participant
                 visibility enabled. This makes it easier for friends and family to
                 coordinate and see what dates are available.
               </p>

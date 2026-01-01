@@ -21,9 +21,9 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
           </Link>
           <Link href="/" className="flex items-center gap-2">
             <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-              <span className="text-white font-bold text-lg">M</span>
+              <span className="text-white font-bold text-lg">C</span>
             </div>
-            <span className="text-xl font-bold text-gray-900">MealTrain</span>
+            <span className="text-xl font-bold text-gray-900">Chesed Train</span>
           </Link>
         </div>
       </div>
@@ -38,7 +38,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       {/* Footer */}
       <div className="w-full px-4 py-6">
         <div className="max-w-md mx-auto text-center text-sm text-gray-500">
-          <p>&copy; {new Date().getFullYear()} MealTrain. All rights reserved.</p>
+          <p>&copy; {new Date().getFullYear()} Chesed Train. All rights reserved.</p>
         </div>
       </div>
     </div>

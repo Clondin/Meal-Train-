@@ -4,10 +4,10 @@ import React from 'react';
 import { UseFormWatch } from 'react-hook-form';
 import { Button } from '@/components/ui/Button';
 import { format, parseISO } from 'date-fns';
-import { MealTrainFormData } from '../page';
+import { ChesedTrainFormData } from '../page';
 
 interface ReviewStepProps {
-  watch: UseFormWatch<MealTrainFormData>;
+  watch: UseFormWatch<ChesedTrainFormData>;
   onEdit: (step: number) => void;
   isSubmitting: boolean;
 }
@@ -42,7 +42,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Review & Submit</h2>
         <p className="text-sm text-gray-600">
-          Review your meal train details before creating
+          Review your chesed train details before creating
         </p>
       </div>
 
@@ -303,11 +303,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           </div>
           <div className="ml-3">
             <h3 className="text-sm font-medium text-blue-800">
-              Ready to create your meal train?
+              Ready to create your chesed train?
             </h3>
             <div className="mt-2 text-sm text-blue-700">
               <p>
-                Once you create the meal train, you'll be able to share it with
+                Once you create the chesed train, you'll be able to share it with
                 friends and family. You can always edit these details later.
               </p>
             </div>
@@ -322,7 +322,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           isLoading={isSubmitting}
           className="px-8"
         >
-          Create Meal Train
+          Create Chesed Train
         </Button>
       </div>
     </div>

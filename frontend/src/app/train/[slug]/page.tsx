@@ -1,5 +1,5 @@
 import { notFound } from 'next/navigation';
-import { MealTrain } from '@/types';
+import { ChesedTrain } from '@/types';
 import TrainHero from './components/TrainHero';
 import MealCalendar from './components/MealCalendar';
 import ParticipantList from './components/ParticipantList';
@@ -13,11 +13,11 @@ interface PageProps {
   };
 }
 
-// Fetch meal train data on the server
-async function getMealTrain(slug: string): Promise<MealTrain | null> {
+// Fetch chesed train data on the server
+async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
   try {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
-    const response = await fetch(`${apiUrl}/meal-trains/${slug}`, {
+    const response = await fetch(`${apiUrl}/chesed-trains/${slug}`, {
       cache: 'no-store', // Always get fresh data
     });
 
@@ -27,13 +27,13 @@ async function getMealTrain(slug: string): Promise<MealTrain | null> {
 
     return response.json();
   } catch (error) {
-    console.error('Error fetching meal train:', error);
+    console.error('Error fetching chesed train:', error);
     return null;
   }
 }
 
 export default async function TrainPage({ params }: PageProps) {
-  const train = await getMealTrain(params.slug);
+  const train = await getChesedTrain(params.slug);
 
   if (!train) {
     notFound();
@@ -139,16 +139,16 @@ function TabNavigation({ trainId }: { trainId: string }) {
 
 // Generate metadata for the page
 export async function generateMetadata({ params }: PageProps) {
-  const train = await getMealTrain(params.slug);
+  const train = await getChesedTrain(params.slug);
 
   if (!train) {
     return {
-      title: 'Meal Train Not Found',
+      title: 'Chesed Train Not Found',
     };
   }
 
   return {
-    title: `${train.recipientName}'s Meal Train`,
+    title: `${train.recipientName}'s Chesed Train`,
     description: train.description,
   };
 }

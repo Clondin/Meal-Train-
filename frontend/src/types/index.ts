@@ -30,8 +30,8 @@ export interface RegisterData {
   phone?: string;
 }
 
-// Meal Train Types
-export interface MealTrain {
+// Chesed Train Types
+export interface ChesedTrain {
   id: string;
   slug: string;
   title: string;
@@ -81,7 +81,7 @@ export interface MealTrain {
   updatedAt: string;
 }
 
-export interface CreateMealTrainData {
+export interface CreateChesedTrainData {
   recipientName: string;
   recipientAddress: string;
   recipientPhone?: string;
@@ -96,7 +96,7 @@ export interface CreateMealTrainData {
   deliveryInstructions?: string;
 }
 
-export interface UpdateMealTrainData extends Partial<CreateMealTrainData> {
+export interface UpdateChesedTrainData extends Partial<CreateChesedTrainData> {
   title?: string;
   description?: string;
   story?: string;

@@ -34,7 +34,7 @@ export default function Home() {
           <div className="animate-fade-in space-y-8">
             <div className="inline-flex items-center rounded-full bg-white/10 backdrop-blur-md border border-white/20 px-6 py-2 text-sm font-medium text-white shadow-lg ring-1 ring-inset ring-white/10 mb-8">
               <SparklesIcon className="mr-2 h-4 w-4 text-amber-300" />
-              <span className="tracking-wide">Trusted by 1M+ families worldwide</span>
+              <span className="tracking-wide">A Project of the Kosher.com Community</span>
             </div>
 
             <h1 className="text-5xl md:text-7xl lg:text-8xl font-serif font-bold tracking-tight text-white mb-6 drop-shadow-lg">
@@ -45,7 +45,7 @@ export default function Home() {
             </h1>
 
             <p className="mt-6 text-xl leading-8 text-gray-100 max-w-2xl mx-auto font-light tracking-wide shadow-black drop-shadow-md">
-              Organize meal deliveries with love. Whether it's a new baby, an illness, or a loss, bring your community together when it matters most.
+              Organize kosher meal deliveries with love. Whether it's a new baby, an illness, or a loss, bring your community together when it matters most.
             </p>
 
             <div className="mt-10 flex items-center justify-center gap-6 flex-col sm:flex-row">
@@ -53,14 +53,14 @@ export default function Home() {
                 href="/create"
                 className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-full hover:bg-primary/90 transition-all duration-300 shadow-[0_0_20px_rgba(234,88,12,0.3)] hover:shadow-[0_0_30px_rgba(234,88,12,0.5)] hover:-translate-y-1"
               >
-                Start a Meal Train
+                Start a Chesed Train
                 <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
                 href="/search"
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/20 transition-all duration-300 hover:-translate-y-1"
               >
-                Find a Meal Train
+                Find a Chesed Train
               </Link>
             </div>
           </div>
@@ -228,20 +228,20 @@ export default function Home() {
             Ready to spread the love?
           </h2>
           <p className="text-xl text-muted-foreground mb-12">
-            Create a Meal Train today. It's free, easy, and makes a world of difference.
+            Create a Chesed Train today. It's free, easy, and makes a world of difference.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
               href="/create"
               className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-full hover:bg-primary/90 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
-              Start a Meal Train
+              Start a Chesed Train
             </Link>
             <Link
               href="/search"
               className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-all"
             >
-              Find a Meal Train
+              Find a Chesed Train
             </Link>
           </div>
         </div>

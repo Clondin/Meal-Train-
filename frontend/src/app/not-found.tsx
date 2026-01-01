@@ -50,7 +50,7 @@ export default function NotFound() {
             className="inline-flex items-center justify-center gap-2 px-6 py-3 bg-white text-gray-700 font-medium rounded-lg border hover:bg-gray-50 transition-colors"
           >
             <MagnifyingGlassIcon className="w-5 h-5" />
-            Find Meal Train
+            Find Chesed Train
           </Link>
         </div>
 
@@ -64,7 +64,7 @@ export default function NotFound() {
             className="inline-flex items-center gap-2 text-primary-600 font-medium hover:text-primary-700"
           >
             <PlusCircleIcon className="w-5 h-5" />
-            Create a Meal Train
+            Create a Chesed Train
           </Link>
         </div>
       </div>

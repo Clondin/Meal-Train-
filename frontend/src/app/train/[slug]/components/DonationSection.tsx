@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { MealTrain, Donation } from '@/types';
+import { ChesedTrain, Donation } from '@/types';
 import { Button } from '@/components/ui/Button';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/Input';
@@ -18,7 +18,7 @@ import { Elements, CardElement, useStripe, useElements } from '@stripe/react-str
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
 interface DonationSectionProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 export default function DonationSection({ train }: DonationSectionProps) {
@@ -110,7 +110,7 @@ export default function DonationSection({ train }: DonationSectionProps) {
             No donations yet
           </h3>
           <p className="text-gray-600 mb-4">
-            Be the first to support this meal train!
+            Be the first to support this chesed train!
           </p>
           <Button onClick={() => setIsModalOpen(true)}>
             Make a Donation
@@ -138,7 +138,7 @@ function DonationModal({
 }: {
   isOpen: boolean;
   onClose: () => void;
-  train: MealTrain;
+  train: ChesedTrain;
 }) {
   const router = useRouter();
   const stripe = useStripe();
@@ -221,7 +221,7 @@ function DonationModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Make a Donation"
-      description="Support this meal train with a monetary donation"
+      description="Support this chesed train with a monetary donation"
       size="lg"
     >
       <form onSubmit={handleSubmit} className="space-y-4">

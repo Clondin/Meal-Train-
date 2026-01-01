@@ -123,7 +123,7 @@ export default function ParticipantManager({
         <div>
           <h2 className="text-xl font-semibold text-gray-900">Participants</h2>
           <p className="text-sm text-gray-500 mt-1">
-            Manage all participants for this meal train
+            Manage all participants for this chesed train
           </p>
         </div>
         <div className="flex gap-2">

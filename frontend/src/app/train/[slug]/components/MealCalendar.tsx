@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { MealTrain, MealDate } from '@/types';
+import { ChesedTrain, MealDate } from '@/types';
 import {
   format,
   startOfMonth,
@@ -22,7 +22,7 @@ import DateSignupModal from './DateSignupModal';
 import { cn } from '@/lib/utils';
 
 interface MealCalendarProps {
-  train: MealTrain;
+  train: ChesedTrain;
 }
 
 export default function MealCalendar({ train }: MealCalendarProps) {
@@ -177,8 +177,8 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                         status === 'available'
                           ? 'success'
                           : status === 'filled'
-                          ? 'info'
-                          : 'neutral'
+                            ? 'info'
+                            : 'neutral'
                       }
                       size="sm"
                       className="w-full text-xs"

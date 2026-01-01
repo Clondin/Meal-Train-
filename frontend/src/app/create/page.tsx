@@ -15,7 +15,7 @@ import { ReviewStep } from './components/ReviewStep';
 import api from '@/lib/api';
 
 // Extended form data type to include all wizard fields
-export interface MealTrainFormData {
+export interface ChesedTrainFormData {
   // Recipient details
   recipientName: string;
   recipientEmail?: string;
@@ -65,7 +65,7 @@ const steps: Step[] = [
   { id: 6, name: 'review', label: 'Review' },
 ];
 
-export default function CreateMealTrainPage() {
+export default function CreateChesedTrainPage() {
   const router = useRouter();
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +77,7 @@ export default function CreateMealTrainPage() {
     watch,
     setValue,
     trigger,
-  } = useForm<MealTrainFormData>({
+  } = useForm<ChesedTrainFormData>({
     defaultValues: {
       defaultDeliveryTime: '18:00',
       timezone: 'America/New_York',
@@ -94,7 +94,7 @@ export default function CreateMealTrainPage() {
   });
 
   // Field validation by step
-  const stepFields: Record<number, (keyof MealTrainFormData)[]> = {
+  const stepFields: Record<number, (keyof ChesedTrainFormData)[]> = {
     1: ['recipientName', 'recipientAddress', 'city', 'state', 'zip', 'description'],
     2: ['title', 'startDate', 'endDate'],
     3: [], // All optional fields
@@ -137,7 +137,7 @@ export default function CreateMealTrainPage() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
-  const onSubmit = async (data: MealTrainFormData) => {
+  const onSubmit = async (data: ChesedTrainFormData) => {
     // Validate all steps before submission
     for (let step = 1; step <= 5; step++) {
       const isValid = await validateStep(step);
@@ -151,7 +151,7 @@ export default function CreateMealTrainPage() {
     setIsSubmitting(true);
 
     try {
-      // Transform form data to match API CreateMealTrainData interface
+      // Transform form data to match API CreateChesedTrainData interface
       const mealTrainData = {
         recipientName: data.recipientName,
         recipientEmail: data.recipientEmail,
@@ -167,15 +167,15 @@ export default function CreateMealTrainPage() {
         deliveryInstructions: data.deliveryInstructions,
       };
 
-      const mealTrain = await api.createMealTrain(mealTrainData);
+      const mealTrain = await api.createChesedTrain(mealTrainData);
 
-      toast.success('Meal train created successfully!');
+      toast.success('Chesed Train created successfully!');
 
-      // Redirect to the meal train page
+      // Redirect to the chesed train page
       router.push(`/train/${mealTrain.id}`);
     } catch (error: any) {
-      console.error('Failed to create meal train:', error);
-      toast.error(error.message || 'Failed to create meal train');
+      console.error('Failed to create chesed train:', error);
+      toast.error(error.message || 'Failed to create chesed train');
     } finally {
       setIsSubmitting(false);
     }
@@ -244,10 +244,10 @@ export default function CreateMealTrainPage() {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900">
-            Create a Meal Train
+            Create a Chesed Train
           </h1>
           <p className="mt-2 text-gray-600">
-            Coordinate meal deliveries for friends and family in need
+            Coordinate kosher meal deliveries for friends and family in need
           </p>
         </div>
 
@@ -303,7 +303,7 @@ export default function CreateMealTrainPage() {
           <p className="text-sm text-gray-500">
             Need help? Check out our{' '}
             <a href="/help" className="text-blue-600 hover:text-blue-800">
-              guide to creating a meal train
+              guide to creating a chesed train
             </a>
           </p>
         </div>
