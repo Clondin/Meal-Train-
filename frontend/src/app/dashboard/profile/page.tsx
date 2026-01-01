@@ -7,6 +7,7 @@ import { UserCircleIcon, KeyIcon, TrashIcon, LinkIcon } from '@heroicons/react/2
 import { Button, Input, Select, Modal, Avatar } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
 import { api } from '@/lib/api';
+import type { User } from '@/types';
 
 interface ProfileFormData {
   firstName: string;
@@ -66,7 +67,7 @@ export default function ProfilePage() {
   const onProfileSubmit = async (data: ProfileFormData) => {
     setIsLoading(true);
     try {
-      const response = await api.patch('/users/profile', {
+      const response = await api.patch<{ user: User }>('/users/profile', {
         ...data,
         timezone: selectedTimezone,
       });
@@ -185,11 +186,11 @@ export default function ProfilePage() {
             label="Timezone"
             options={TIMEZONES}
             value={selectedTimezone}
-            onChange={setSelectedTimezone}
+            onChange={(value) => setSelectedTimezone(String(value))}
           />
 
           <div className="flex justify-end">
-            <Button type="submit" loading={isLoading}>
+            <Button type="submit" isLoading={isLoading}>
               Save Changes
             </Button>
           </div>
@@ -238,7 +239,7 @@ export default function ProfilePage() {
           />
 
           <div className="flex justify-end">
-            <Button type="submit" loading={isChangingPassword}>
+            <Button type="submit" isLoading={isChangingPassword}>
               Change Password
             </Button>
           </div>
@@ -352,7 +353,7 @@ export default function ProfilePage() {
             <Button
               variant="danger"
               onClick={handleDeleteAccount}
-              loading={isDeleting}
+              isLoading={isDeleting}
               disabled={deleteConfirmation !== 'DELETE'}
             >
               Delete Account Forever

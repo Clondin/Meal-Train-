@@ -410,6 +410,58 @@ class ApiClient {
     });
     return data;
   }
+
+  // ===== User Endpoints =====
+
+  async getUserParticipations(): Promise<{ participations: Participant[] }> {
+    const { data } = await this.client.get<{ participations: Participant[] }>('/users/participations');
+    return data;
+  }
+
+  async getUserDonations(): Promise<{ donations: Donation[] }> {
+    const { data } = await this.client.get<{ donations: Donation[] }>('/users/donations');
+    return data;
+  }
+
+  async updateUserProfile(profileData: Partial<User>): Promise<{ user: User }> {
+    const { data } = await this.client.patch<{ user: User }>('/users/profile', profileData);
+    return data;
+  }
+
+  async changePassword(currentPassword: string, newPassword: string): Promise<{ message: string }> {
+    const { data } = await this.client.post<{ message: string }>('/users/change-password', {
+      currentPassword,
+      newPassword,
+    });
+    return data;
+  }
+
+  async deleteAccount(): Promise<{ message: string }> {
+    const { data } = await this.client.delete<{ message: string }>('/users/account');
+    return data;
+  }
+
+  // ===== Generic HTTP Methods =====
+
+  async get<T>(url: string): Promise<{ data: T }> {
+    const response = await this.client.get<T>(url);
+    return { data: response.data };
+  }
+
+  async post<T>(url: string, body?: unknown): Promise<{ data: T }> {
+    const response = await this.client.post<T>(url, body);
+    return { data: response.data };
+  }
+
+  async patch<T>(url: string, body?: unknown): Promise<{ data: T }> {
+    const response = await this.client.patch<T>(url, body);
+    return { data: response.data };
+  }
+
+  async delete<T>(url: string): Promise<{ data: T }> {
+    const response = await this.client.delete<T>(url);
+    return { data: response.data };
+  }
 }
 
 // Export singleton instance

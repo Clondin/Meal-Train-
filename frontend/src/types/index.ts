@@ -2,10 +2,15 @@
 export interface User {
   id: string;
   email: string;
-  name: string;
+  firstName?: string;
+  lastName?: string;
+  name?: string;
   phone?: string;
+  avatar?: string;
+  timezone?: string;
+  emailVerified?: boolean;
   createdAt: string;
-  updatedAt: string;
+  updatedAt?: string;
 }
 
 export interface AuthResponse {
@@ -28,24 +33,50 @@ export interface RegisterData {
 // Meal Train Types
 export interface MealTrain {
   id: string;
+  slug: string;
+  title: string;
+  description?: string;
+  story?: string;
+  coverImage?: string;
   recipientName: string;
-  recipientAddress: string;
+  recipientAddress?: string;
+  recipientCity?: string;
+  recipientState?: string;
+  recipientZip?: string;
   recipientPhone?: string;
   recipientEmail?: string;
   startDate: string;
   endDate: string;
-  description: string;
-  dietaryRestrictions?: string;
-  allergyInfo?: string;
-  householdSize?: number;
-  preferredMealTime?: string;
-  specialInstructions?: string;
-  coordinatorId: string;
-  coordinator?: User;
-  mealDates?: MealDate[];
+  defaultDeliveryTime?: string;
+  timezone?: string;
+  dietaryPreferences?: string;
+  allergies?: string;
+  foodLikes?: string;
+  foodDislikes?: string;
+  deliveryInstructions?: string;
+  householdSize: number;
+  isPublic: boolean;
+  allowDonations: boolean;
+  allowGiftCards: boolean;
+  donationGoal?: number | string;
+  requireApproval: boolean;
+  showParticipantList: boolean;
+  enableReminders: boolean;
+  reminderHours: number;
+  trainType: 'STANDARD' | 'POTLUCK' | 'PRO';
+  status: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+  category: 'NEW_BABY' | 'ILLNESS' | 'SURGERY' | 'LOSS' | 'INJURY' | 'OTHER';
+  organizerId: string;
+  organizer?: User;
+  dates?: MealDate[];
   participants?: Participant[];
   donations?: Donation[];
   giftCards?: GiftCard[];
+  _count?: {
+    participants?: number;
+    donations?: number;
+    dates?: number;
+  };
   createdAt: string;
   updatedAt: string;
 }

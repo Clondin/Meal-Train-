@@ -354,7 +354,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
 
         {/* Submit Button */}
         <div className="flex justify-end gap-4">
-          <Button type="submit" loading={isLoading}>
+          <Button type="submit" isLoading={isLoading}>
             Save Changes
           </Button>
         </div>
@@ -397,7 +397,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
             <Button
               variant="danger"
               onClick={handleDelete}
-              loading={isLoading}
+              isLoading={isLoading}
               disabled={deleteConfirmation !== train.title}
             >
               Delete Forever

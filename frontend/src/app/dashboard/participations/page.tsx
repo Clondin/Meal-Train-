@@ -44,7 +44,7 @@ export default function ParticipationsPage() {
 
   const fetchParticipations = async () => {
     try {
-      const response = await api.get('/users/participations');
+      const response = await api.get<{ participations: Participation[] }>('/users/participations');
       setParticipations(response.data.participations);
     } catch (error) {
       toast.error('Failed to load participations');
@@ -117,9 +117,12 @@ export default function ParticipationsPage() {
             <p className="text-gray-600 mb-4">
               You haven't signed up for any meal trains yet.
             </p>
-            <Button as={Link} href="/">
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-md bg-primary-600 px-4 py-2 text-sm font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
+            >
               Find a Meal Train
-            </Button>
+            </Link>
           </CardBody>
         </Card>
       ) : (
@@ -178,14 +181,12 @@ export default function ParticipationsPage() {
                           )}
                         </div>
                         <div className="flex gap-2">
-                          <Button
-                            as={Link}
+                          <Link
                             href={`/train/${participation.train.slug}`}
-                            variant="outline"
-                            size="sm"
+                            className="inline-flex items-center justify-center rounded-md border border-gray-300 bg-white px-3 py-1.5 text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2"
                           >
                             View Train
-                          </Button>
+                          </Link>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -295,7 +296,7 @@ export default function ParticipationsPage() {
               <Button
                 variant="danger"
                 onClick={handleCancel}
-                loading={isCancelling}
+                isLoading={isCancelling}
               >
                 Yes, Cancel
               </Button>
