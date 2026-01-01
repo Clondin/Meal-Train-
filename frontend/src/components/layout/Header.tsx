@@ -37,7 +37,7 @@ export default function Header() {
               </Link>
             ))}
             <Link
-              href="/signin"
+              href="/login"
               className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
             >
               Sign In
@@ -47,13 +47,13 @@ export default function Header() {
           {/* Desktop CTA Buttons */}
           <div className="hidden lg:flex lg:items-center lg:space-x-4">
             <Link
-              href="/meal-trains/find"
+              href="/search"
               className="px-4 py-2 text-sm font-medium text-foreground bg-secondary/50 hover:bg-secondary rounded-full transition-colors"
             >
               Find a Meal Train
             </Link>
             <Link
-              href="/meal-trains/create"
+              href="/create"
               className="px-6 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-full hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md shadow-primary/20"
             >
               Start a Meal Train
@@ -98,7 +98,7 @@ export default function Header() {
                 Use Cases
               </Link>
               <Link
-                href="/signin"
+                href="/login"
                 className="block text-base font-medium text-foreground hover:text-primary"
                 onClick={() => setMobileMenuOpen(false)}
               >
@@ -106,14 +106,14 @@ export default function Header() {
               </Link>
               <div className="pt-4 grid gap-3">
                 <Link
-                  href="/meal-trains/find"
+                  href="/search"
                   className="block w-full text-center px-4 py-3 text-sm font-medium text-foreground bg-secondary rounded-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >
                   Find Meal Train
                 </Link>
                 <Link
-                  href="/meal-trains/create"
+                  href="/create"
                   className="block w-full text-center px-4 py-3 text-sm font-medium text-primary-foreground bg-primary rounded-lg shadow-lg"
                   onClick={() => setMobileMenuOpen(false)}
                 >

@@ -11,8 +11,8 @@ const navigation = {
   product: [
     { name: 'How It Works', href: '#how-it-works' },
     { name: 'Use Cases', href: '#use-cases' },
-    { name: 'Create Meal Train', href: '/meal-trains/create' },
-    { name: 'Find Meal Train', href: '/meal-trains/find' },
+    { name: 'Create Meal Train', href: '/create' },
+    { name: 'Find Meal Train', href: '/search' },
     { name: 'Pricing', href: '/pricing' },
   ],
   support: [

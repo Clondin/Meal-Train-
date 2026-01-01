@@ -50,14 +50,14 @@ export default function Home() {
 
             <div className="mt-10 flex items-center justify-center gap-6 flex-col sm:flex-row">
               <Link
-                href="/meal-trains/create"
+                href="/create"
                 className="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-full hover:bg-primary/90 transition-all duration-300 shadow-[0_0_20px_rgba(234,88,12,0.3)] hover:shadow-[0_0_30px_rgba(234,88,12,0.5)] hover:-translate-y-1"
               >
                 Start a Meal Train
                 <ArrowRightIcon className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Link>
               <Link
-                href="/meal-trains/find"
+                href="/search"
                 className="inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 backdrop-blur-md border border-white/30 rounded-full hover:bg-white/20 transition-all duration-300 hover:-translate-y-1"
               >
                 Find a Meal Train
@@ -190,7 +190,7 @@ export default function Home() {
               </ul>
 
               <div className="pt-8">
-                <Link href="/meal-trains/create" className="text-primary font-medium hover:text-primary/80 inline-flex items-center text-lg group">
+                <Link href="/create" className="text-primary font-medium hover:text-primary/80 inline-flex items-center text-lg group">
                   Explore all features
                   <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </Link>
@@ -232,16 +232,16 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6">
             <Link
-              href="/meal-trains/create"
+              href="/create"
               className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-primary-foreground bg-primary rounded-full hover:bg-primary/90 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-1"
             >
-              start a Meal Train
+              Start a Meal Train
             </Link>
             <Link
-              href="/meal-trains/find"
+              href="/search"
               className="w-full sm:w-auto px-8 py-4 text-lg font-semibold text-foreground bg-secondary hover:bg-secondary/80 rounded-full transition-all"
             >
-              View Demo
+              Find a Meal Train
             </Link>
           </div>
         </div>
