@@ -1,16 +1,17 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { ChesedTrain, MealDate } from '@/types';
+import { ChesedTrain, TaskSlot, TaskType, MealCategory, MealComponent, CreateContributionData } from '@/types';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
-import { Select } from '@/components/ui/Select';
 import { format } from 'date-fns';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import SplitMealSignup from './SplitMealSignup';
+import KosherMetadataForm from './KosherMetadataForm';
 
 interface DateSignupModalProps {
   isOpen: boolean;
@@ -27,22 +28,41 @@ export default function DateSignupModal({
 }: DateSignupModalProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const [isGuest, setIsGuest] = useState(false);
+  const [activeSlot, setActiveSlot] = useState<TaskSlot | null>(null);
 
   // Form state
-  const [mealType, setMealType] = useState<'breakfast' | 'lunch' | 'dinner'>('dinner');
-  const [mealDescription, setMealDescription] = useState('');
+  const [mealCategory, setMealCategory] = useState<MealCategory | undefined>(undefined);
+  const [mealComponent, setMealComponent] = useState<MealComponent>('FULL_MEAL');
+  const [itemDescription, setItemDescription] = useState('');
   const [notes, setNotes] = useState('');
   const [guestName, setGuestName] = useState('');
   const [guestEmail, setGuestEmail] = useState('');
   const [guestPhone, setGuestPhone] = useState('');
 
-  // Check if user is logged in (in a real app, this would check auth state)
+  const [kashrusSettings, setKashrusSettings] = useState({
+    isCholovYisroel: false,
+    isPasYisroel: false,
+    isYoshon: false,
+    isGlatt: true,
+  });
+
+  // Find slot for selected date
+  useEffect(() => {
+    const slots = (train.taskSlots || []).filter(slot =>
+      format(new Date(slot.date), 'yyyy-MM-dd') === format(selectedDate, 'yyyy-MM-dd')
+    );
+    // For now, just pick the first available or first slot
+    if (slots.length > 0) {
+      setActiveSlot(slots[0]);
+    } else {
+      setActiveSlot(null);
+    }
+  }, [selectedDate, train.taskSlots]);
+
+  // Auth check
   const checkAuthStatus = () => {
-    // This is a simplified check - in production, use your auth store
     if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth-token');
-      return !!token;
+      return !!localStorage.getItem('auth-token');
     }
     return false;
   };
@@ -54,63 +74,42 @@ export default function DateSignupModal({
     setIsLoading(true);
 
     try {
-      // Find if there's already a meal date for this day
-      const existingMealDate = train.dates?.find((md) => {
-        const mdDate = new Date(md.date);
-        return (
-          mdDate.getFullYear() === selectedDate.getFullYear() &&
-          mdDate.getMonth() === selectedDate.getMonth() &&
-          mdDate.getDate() === selectedDate.getDate()
-        );
-      });
+      let slotId = activeSlot?.id;
 
-      if (existingMealDate) {
-        // Claim existing meal date
-        await api.claimMealDate(train.id, existingMealDate.id, {
-          notes: `${mealDescription}${notes ? `\n\n${notes}` : ''}`,
-        });
-
-        // If guest, create participant
-        if (!isLoggedIn && guestName && guestEmail) {
-          await api.createParticipant(train.id, {
-            name: guestName,
-            email: guestEmail,
-            phone: guestPhone,
-          });
-        }
-
-        toast.success('Successfully signed up for this meal!');
-      } else {
-        // Create new meal date
-        const newMealDate = await api.createMealDate(train.id, {
+      // If no slot exists, create one (default dinner)
+      if (!slotId) {
+        const newSlot = await api.post<TaskSlot>(`/chesed-trains/${train.id}/task-slots`, {
           date: selectedDate.toISOString(),
-          mealType,
-          notes: `${mealDescription}${notes ? `\n\n${notes}` : ''}`,
+          taskType: 'MEAL_DINNER',
         });
-
-        // Claim it
-        await api.claimMealDate(train.id, newMealDate.id, {
-          notes: `${mealDescription}${notes ? `\n\n${notes}` : ''}`,
-        });
-
-        // If guest, create participant
-        if (!isLoggedIn && guestName && guestEmail) {
-          await api.createParticipant(train.id, {
-            name: guestName,
-            email: guestEmail,
-            phone: guestPhone,
-          });
-        }
-
-        toast.success('Successfully signed up for this meal!');
+        slotId = newSlot.data.id;
       }
 
-      // Refresh the page to show updated data
+      // Prepare contribution data
+      const contributionData: any = {
+        slotId,
+        mealComponent,
+        mealCategory,
+        itemDescription,
+        notes,
+        ...kashrusSettings,
+      };
+
+      if (!isLoggedIn) {
+        contributionData.guestName = guestName;
+        contributionData.guestEmail = guestEmail;
+        contributionData.guestPhone = guestPhone;
+      }
+
+      // Create contribution
+      await api.post(`/chesed-trains/${train.id}/contributions`, contributionData);
+
+      toast.success('Successfully signed up!');
       router.refresh();
       onClose();
     } catch (error: any) {
-      console.error('Error signing up for meal:', error);
-      toast.error(error.message || 'Failed to sign up for meal. Please try again.');
+      console.error('Error signing up:', error);
+      toast.error(error.message || 'Failed to sign up. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -120,116 +119,99 @@ export default function DateSignupModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Sign Up for Meal"
-      description={`${format(selectedDate, 'EEEE, MMMM d, yyyy')}`}
+      title={activeSlot ? `Sign Up: ${format(selectedDate, 'MMM d')}` : "Choose a Task"}
+      description={activeSlot ? `${activeSlot.taskType.replace('MEAL_', '').replace('_', ' ')}` : "Select what you can do"}
       size="lg"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
-        {/* Meal Type */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Meal Type
-          </label>
-          <div className="grid grid-cols-3 gap-2">
-            {(['breakfast', 'lunch', 'dinner'] as const).map((type) => (
-              <button
-                key={type}
-                type="button"
-                onClick={() => setMealType(type)}
-                className={`px-4 py-2 rounded-md border-2 font-medium transition-colors capitalize ${mealType === type
-                    ? 'border-blue-600 bg-blue-50 text-blue-700'
-                    : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400'
-                  }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Split Meal Selection (if allowed) */}
+        {activeSlot?.allowSplit && (
+          <SplitMealSignup
+            selectedComponent={mealComponent}
+            onSelect={setMealComponent}
+            availableComponents={[
+              'FULL_MEAL', 'PROTEIN_MAIN', 'SIDES', 'SALAD', 'SOUP', 'DESSERT', 'DRINKS', 'BREAD_CHALLAH'
+            ]}
+            disabledComponents={
+              activeSlot.contributions
+                ?.filter(c => c.status === 'CONFIRMED')
+                .map(c => c.mealComponent) || []
+            }
+          />
+        )}
 
-        {/* Meal Description */}
+        {/* Kosher Metadata */}
+        <KosherMetadataForm
+          train={train}
+          selectedCategory={mealCategory}
+          onCategoryChange={setMealCategory}
+          kashrusSettings={kashrusSettings}
+          onKashrusChange={setKashrusSettings}
+        />
+
+        {/* Item Description */}
         <Input
-          label="What will you bring?"
-          placeholder="e.g., Lasagna with salad and garlic bread"
-          value={mealDescription}
-          onChange={(e) => setMealDescription(e.target.value)}
+          label="What are you bringing/doing?"
+          placeholder="e.g., Baked Ziti with Caesar Salad"
+          value={itemDescription}
+          onChange={(e) => setItemDescription(e.target.value)}
           required
         />
 
         {/* Additional Notes */}
         <Textarea
-          label="Additional Notes (Optional)"
-          placeholder="Any special preparations, delivery time, etc."
+          label="Notes for the family"
+          placeholder="e.g., I'll drop this off by 5:30 PM on the porch."
           value={notes}
           onChange={(e) => setNotes(e.target.value)}
           rows={3}
         />
 
-        {/* Guest Information (if not logged in) */}
+        {/* Guest Information */}
         {!isLoggedIn && (
-          <div className="border-t border-gray-200 pt-4 space-y-4">
-            <p className="text-sm text-gray-600">
-              Please provide your contact information so the coordinator can reach you.
-            </p>
-
-            <Input
-              label="Your Name"
-              placeholder="John Doe"
-              value={guestName}
-              onChange={(e) => setGuestName(e.target.value)}
-              required
-            />
-
-            <Input
-              label="Email"
-              type="email"
-              placeholder="john@example.com"
-              value={guestEmail}
-              onChange={(e) => setGuestEmail(e.target.value)}
-              required
-            />
-
+          <div className="bg-gray-50 p-4 rounded-xl border border-gray-100 space-y-4">
+            <h4 className="font-bold text-gray-900 text-sm">Your Contact Info</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Input
+                label="Full Name"
+                value={guestName}
+                onChange={(e) => setGuestName(e.target.value)}
+                required
+              />
+              <Input
+                label="Email"
+                type="email"
+                value={guestEmail}
+                onChange={(e) => setGuestEmail(e.target.value)}
+                required
+              />
+            </div>
             <Input
               label="Phone (Optional)"
               type="tel"
-              placeholder="(555) 123-4567"
               value={guestPhone}
               onChange={(e) => setGuestPhone(e.target.value)}
             />
           </div>
         )}
 
-        {/* Dietary Info Reminder */}
-        {(train.dietaryPreferences || train.allergies) && (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <h4 className="font-semibold text-yellow-900 mb-2">
-              Please Remember:
-            </h4>
-            {train.dietaryPreferences && (
-              <p className="text-sm text-yellow-800 mb-1">
-                <strong>Dietary Preferences:</strong> {train.dietaryPreferences}
-              </p>
-            )}
-            {train.allergies && (
-              <p className="text-sm text-yellow-800">
-                <strong>Allergies:</strong> {train.allergies}
-              </p>
-            )}
-          </div>
-        )}
-
         {/* Actions */}
-        <div className="flex justify-end gap-3 pt-4">
+        <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
           <Button
             type="button"
             variant="outline"
             onClick={onClose}
             disabled={isLoading}
+            className="rounded-xl font-bold"
           >
             Cancel
           </Button>
-          <Button type="submit" isLoading={isLoading}>
-            Sign Up
+          <Button
+            type="submit"
+            isLoading={isLoading}
+            className="rounded-xl font-bold px-8 shadow-lg shadow-primary-200"
+          >
+            Confirm Signup
           </Button>
         </div>
       </form>

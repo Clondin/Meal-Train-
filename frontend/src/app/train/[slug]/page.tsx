@@ -1,7 +1,7 @@
 import { notFound } from 'next/navigation';
 import { ChesedTrain } from '@/types';
 import TrainHero from './components/TrainHero';
-import MealCalendar from './components/MealCalendar';
+import TaskSlotCalendar from './components/TaskSlotCalendar';
 import ParticipantList from './components/ParticipantList';
 import DonationSection from './components/DonationSection';
 import GiftCardSection from './components/GiftCardSection';
@@ -62,9 +62,9 @@ export default async function TrainPage({ params }: PageProps) {
           <section id="calendar">
             <div className="bg-white rounded-lg shadow-sm p-6">
               <h2 className="text-2xl font-bold text-gray-900 mb-6">
-                Meal Calendar
+                Chesed Schedule
               </h2>
-              <MealCalendar train={train} />
+              <TaskSlotCalendar train={train} />
             </div>
           </section>
 

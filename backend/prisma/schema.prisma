@@ -7,6 +7,10 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// ============================================
+// USER & AUTH MODELS
+// ============================================
+
 model User {
   id                String    @id @default(uuid())
   email             String    @unique
@@ -27,13 +31,14 @@ model User {
   oauthProviders    OAuthProvider[]
 
   // Relations
-  organizedTrains   MealTrain[]     @relation("Organizer")
+  organizedTrains   ChesedTrain[]     @relation("Organizer")
   adminTrains       TrainAdmin[]
-  participations    Participant[]
+  contributions     Contribution[]
   donations         Donation[]
   giftCards         GiftCard[]
   sessions          Session[]
   notifications     Notification[]
+  simchaContributions SimchaContribution[]
 
   @@map("users")
 }
@@ -63,7 +68,25 @@ model Session {
   @@map("sessions")
 }
 
-model MealTrain {
+// Guest session for low-friction signup
+model GuestSession {
+  id               String   @id @default(uuid())
+  identifier       String   // Phone or email
+  identifierType   String   // 'phone' or 'email'
+  verificationCode String?
+  verified         Boolean  @default(false)
+  expiresAt        DateTime
+  createdAt        DateTime @default(now())
+
+  @@unique([identifier, identifierType])
+  @@map("guest_sessions")
+}
+
+// ============================================
+// CHESED TRAIN (MAIN MODEL)
+// ============================================
+
+model ChesedTrain {
   id                  String            @id @default(uuid())
   slug                String            @unique
   title               String
@@ -81,13 +104,35 @@ model MealTrain {
   recipientZip        String?
   recipientCountry    String            @default("USA")
 
-  // Preferences
+  // Basic Preferences (legacy support)
   dietaryPreferences  String?
   allergies           String?
   foodLikes           String?
   foodDislikes        String?
   deliveryInstructions String?
   householdSize       Int               @default(1)
+
+  // ===== NEW: Enhanced Kosher/Dietary Settings =====
+  requireMilchigFleishig Boolean        @default(true)   // Require category selection
+  acceptsMilchig         Boolean        @default(true)
+  acceptsFleishig        Boolean        @default(true)
+  acceptsPareve          Boolean        @default(true)
+  
+  // Kashrus requirements
+  requireCholovYisroel   Boolean        @default(false)
+  requirePasYisroel      Boolean        @default(false)
+  requireYoshon          Boolean        @default(false)
+  requireGlatt           Boolean        @default(true)
+  
+  // Structured allergies
+  allergyNuts            Boolean        @default(false)
+  allergyDairy           Boolean        @default(false)
+  allergyGluten          Boolean        @default(false)
+  allergyEggs            Boolean        @default(false)
+  allergyFish            Boolean        @default(false)
+  allergyShellfish       Boolean        @default(false)
+  allergySoy             Boolean        @default(false)
+  allergyOther           String?
 
   // Schedule
   startDate           DateTime
@@ -104,6 +149,9 @@ model MealTrain {
   showParticipantList Boolean           @default(true)
   enableReminders     Boolean           @default(true)
   reminderHours       Int               @default(24)
+  
+  // ===== NEW: Allow non-meal tasks =====
+  allowNonMealTasks   Boolean           @default(false)
 
   // Type and status
   trainType           TrainType         @default(STANDARD)
@@ -119,21 +167,23 @@ model MealTrain {
 
   // Relations
   admins              TrainAdmin[]
-  dates               MealDate[]
-  participants        Participant[]
+  taskSlots           TaskSlot[]
+  contributions       Contribution[]
   donations           Donation[]
   giftCards           GiftCard[]
   notifications       Notification[]
+  simchaContributions SimchaContribution[]
 
   @@index([slug])
   @@index([organizerId])
-  @@map("meal_trains")
+  @@map("chesed_trains")
 }
 
 enum TrainType {
-  STANDARD    // One volunteer per date
-  POTLUCK     // Multiple volunteers per date
-  PRO         // Organization managed
+  STANDARD        // Regular chesed train (meals primarily)
+  FULL_CHESED     // Meals + non-meal tasks (babysitting, rides, etc.)
+  SIMCHA          // Simcha/Kiddush contribution mode
+  EVENT           // One-time event coordination
 }
 
 enum TrainStatus {
@@ -150,17 +200,21 @@ enum TrainCategory {
   SURGERY
   LOSS
   INJURY
+  SHIVA
+  SIMCHA
+  KIDDUSH
+  COMMUNITY_EVENT
   OTHER
 }
 
 model TrainAdmin {
-  id          String    @id @default(uuid())
+  id          String      @id @default(uuid())
   trainId     String
-  train       MealTrain @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train       ChesedTrain @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId      String
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role        AdminRole @default(ADMIN)
-  createdAt   DateTime  @default(now())
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role        AdminRole   @default(ADMIN)
+  createdAt   DateTime    @default(now())
 
   @@unique([trainId, userId])
   @@map("train_admins")
@@ -171,75 +225,242 @@ enum AdminRole {
   MODERATOR
 }
 
-model MealDate {
+// ============================================
+// TASK SLOT (Replaces MealDate - more flexible)
+// ============================================
+
+model TaskSlot {
   id              String          @id @default(uuid())
   trainId         String
-  train           MealTrain       @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           ChesedTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  
   date            DateTime        @db.Date
-  deliveryTime    String          @default("18:00")
-  maxParticipants Int             @default(1)
+  startTime       String?         // Optional time window (HH:mm)
+  endTime         String?         // Optional time window (HH:mm)
+  
+  taskType        TaskType        @default(MEAL_DINNER)
+  
+  // Split-meal support
+  allowSplit      Boolean         @default(false)  // Allow multiple contributors for components
+  maxContributors Int             @default(1)
+  
+  // For non-meal tasks
+  taskTitle       String?         // Custom title for non-meal tasks
+  taskDescription String?
+  estimatedDuration Int?          // Minutes
+  location        String?         // For rides, hospital visits
+  
   notes           String?
-  status          DateStatus      @default(AVAILABLE)
+  status          SlotStatus      @default(AVAILABLE)
+  
   createdAt       DateTime        @default(now())
   updatedAt       DateTime        @updatedAt
-
+  
   // Relations
-  participants    Participant[]
-
-  @@unique([trainId, date])
+  contributions   Contribution[]
+  
+  @@unique([trainId, date, taskType])
   @@index([trainId, date])
-  @@map("meal_dates")
+  @@map("task_slots")
 }
 
-enum DateStatus {
+// ===== NEW: Comprehensive Task Types =====
+enum TaskType {
+  // Meal types
+  MEAL_BREAKFAST
+  MEAL_LUNCH
+  MEAL_DINNER
+  
+  // Shabbos-specific
+  MEAL_SHABBOS_FRIDAY_NIGHT
+  MEAL_SHABBOS_DAY
+  MEAL_SEUDAH_SHLISHIS
+  
+  // Non-meal chesed
+  BABYSITTING
+  HOSPITAL_VISIT
+  RIDES
+  GROCERY_RUN
+  ERRANDS
+  LAUNDRY
+  HOUSEHOLD_HELP
+  DOG_WALKING
+  CHILDCARE_PICKUP
+  OTHER_TASK
+}
+
+enum SlotStatus {
   AVAILABLE
+  PARTIALLY_FILLED
   FILLED
   CLOSED
   CANCELLED
 }
 
-model Participant {
-  id              String        @id @default(uuid())
-  trainId         String
-  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
-  dateId          String
-  date            MealDate      @relation(fields: [dateId], references: [id], onDelete: Cascade)
-  userId          String?
-  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+// ============================================
+// CONTRIBUTION (Enhanced Participant Model)
+// ============================================
 
-  // Guest info (if not registered)
+model Contribution {
+  id              String              @id @default(uuid())
+  slotId          String
+  slot            TaskSlot            @relation(fields: [slotId], references: [id], onDelete: Cascade)
+  trainId         String
+  train           ChesedTrain         @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  
+  // Contributor (user or guest)
+  userId          String?
+  user            User?               @relation(fields: [userId], references: [id], onDelete: SetNull)
+  
+  // Guest info (if not registered user)
   guestName       String?
   guestEmail      String?
   guestPhone      String?
-
-  // Meal details
-  mealDescription String?
-  notes           String?
-
-  // Status
-  status          ParticipantStatus @default(CONFIRMED)
-  reminderSent    Boolean           @default(false)
+  guestVerified   Boolean             @default(false)
+  verificationCode String?
+  
+  // ===== Meal-specific details =====
+  mealComponent   MealComponent       @default(FULL_MEAL)
+  mealCategory    MealCategory?       // Milchig/Fleishig/Pareve
+  
+  // Kashrus certifications (multiple allowed)
+  isCholovYisroel Boolean             @default(false)
+  isPasYisroel    Boolean             @default(false)
+  isYoshon        Boolean             @default(false)
+  isGlatt         Boolean             @default(true)
+  
+  allergyInfo     String?             // Any allergy info about the food
+  
+  // ===== Day-of confirmation =====
+  confirmedMealCategory Boolean       @default(false)
+  confirmedAt     DateTime?
+  dayOfReminderSent Boolean           @default(false)
+  dayOfReminderSentAt DateTime?
+  
+  // ===== Delivery tracking =====
+  deliveryStatus  DeliveryStatus      @default(NOT_STARTED)
+  deliveryStatusUpdatedAt DateTime?
+  estimatedArrival DateTime?
+  
+  // Description & notes
+  itemDescription String?             // What they're bringing / doing
+  notes           String?             // Additional notes
+  
+  // Status tracking
+  status          ContributionStatus  @default(CONFIRMED)
+  reminderSent    Boolean             @default(false)
   reminderSentAt  DateTime?
-
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
-
+  
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  @@index([slotId])
   @@index([trainId])
-  @@index([dateId])
-  @@map("participants")
+  @@index([userId])
+  @@map("contributions")
 }
 
-enum ParticipantStatus {
-  PENDING     // Awaiting approval
+// ===== NEW: Meal Component for split meals =====
+enum MealComponent {
+  FULL_MEAL
+  PROTEIN_MAIN
+  SIDES
+  SALAD
+  SOUP
+  DESSERT
+  DRINKS
+  BREAD_CHALLAH
+  APPETIZER
+  KUGEL
+  OTHER
+}
+
+// ===== NEW: Kosher Category =====
+enum MealCategory {
+  MILCHIG
+  FLEISHIG
+  PAREVE
+}
+
+// ===== NEW: Delivery Status Tracking =====
+enum DeliveryStatus {
+  NOT_STARTED
+  PREPARING
+  LEAVING_NOW
+  EN_ROUTE
+  ARRIVING_SOON
+  DELIVERED
+}
+
+enum ContributionStatus {
+  PENDING       // Awaiting approval
   CONFIRMED
   CANCELLED
+  COMPLETED
   NO_SHOW
 }
+
+// ============================================
+// SIMCHA CONTRIBUTION (For event/kiddush mode)
+// ============================================
+
+model SimchaContribution {
+  id              String        @id @default(uuid())
+  trainId         String
+  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  
+  // Contributor
+  userId          String?
+  user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  guestName       String?
+  guestPhone      String?
+  guestEmail      String?
+  
+  // What they're bringing
+  itemCategory    SimchaItemCategory
+  itemDescription String
+  servings        Int?          // Approximate number of servings
+  quantity        String?       // e.g., "2 trays", "1 platter"
+  
+  // Dietary info
+  mealCategory    MealCategory?
+  isCholovYisroel Boolean       @default(false)
+  isPasYisroel    Boolean       @default(false)
+  isYoshon        Boolean       @default(false)
+  isGlatt         Boolean       @default(true)
+  
+  notes           String?
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([trainId])
+  @@map("simcha_contributions")
+}
+
+enum SimchaItemCategory {
+  APPETIZER
+  MAIN_DISH
+  SIDE_DISH
+  SALAD
+  SOUP
+  KUGEL
+  CHALLAH_BREAD
+  DESSERT
+  DRINKS
+  SNACKS
+  PAPER_GOODS
+  OTHER
+}
+
+// ============================================
+// DONATIONS & GIFT CARDS
+// ============================================
 
 model Donation {
   id              String        @id @default(uuid())
   trainId         String
-  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId          String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -274,7 +495,7 @@ enum PaymentStatus {
 model GiftCard {
   id              String        @id @default(uuid())
   trainId         String
-  train           MealTrain     @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train           ChesedTrain   @relation(fields: [trainId], references: [id], onDelete: Cascade)
   userId          String?
   user            User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
 
@@ -304,12 +525,16 @@ model GiftCard {
   @@map("gift_cards")
 }
 
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
 model Notification {
   id          String            @id @default(uuid())
   userId      String?
   user        User?             @relation(fields: [userId], references: [id], onDelete: Cascade)
   trainId     String?
-  train       MealTrain?        @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  train       ChesedTrain?      @relation(fields: [trainId], references: [id], onDelete: Cascade)
 
   type        NotificationType
   title       String
@@ -317,6 +542,7 @@ model Notification {
   data        Json?             // Additional data
 
   email       String?           // For non-user notifications
+  phone       String?           // For SMS notifications
   read        Boolean           @default(false)
   sent        Boolean           @default(false)
   sentAt      DateTime?
@@ -329,12 +555,33 @@ model Notification {
 }
 
 enum NotificationType {
+  // Train lifecycle
   TRAIN_CREATED
-  PARTICIPANT_SIGNED_UP
-  PARTICIPANT_CANCELLED
-  DONATION_RECEIVED
-  GIFT_CARD_RECEIVED
-  REMINDER
   TRAIN_UPDATED
   TRAIN_COMPLETED
+  
+  // Contributions
+  CONTRIBUTION_SIGNED_UP
+  CONTRIBUTION_CANCELLED
+  CONTRIBUTION_REMINDER
+  
+  // Day-of notifications
+  DAY_OF_CONFIRMATION_REQUEST
+  MILCHIG_FLEISHIG_CONFIRMED
+  
+  // Delivery tracking
+  DELIVERY_STATUS_UPDATE
+  DELIVERY_ARRIVING
+  DELIVERY_COMPLETED
+  
+  // Donations
+  DONATION_RECEIVED
+  GIFT_CARD_RECEIVED
+  
+  // Simcha
+  SIMCHA_CONTRIBUTION_ADDED
+  
+  // General
+  REMINDER
+  ADMIN_MESSAGE
 }

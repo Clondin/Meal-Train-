@@ -7,17 +7,24 @@ import {
   ChesedTrain,
   CreateChesedTrainData,
   UpdateChesedTrainData,
-  MealDate,
-  CreateMealDateData,
-  ClaimMealDateData,
-  Participant,
-  CreateParticipantData,
+  TaskSlot,
+  CreateTaskSlotData,
+  UpdateTaskSlotData,
+  Contribution,
+  CreateContributionData,
+  UpdateContributionData,
+  SimchaContribution,
+  CreateSimchaContributionData,
   Donation,
   CreateDonationData,
   GiftCard,
   CreateGiftCardData,
+  GuestSession,
+  CreateGuestSessionData,
+  VerifyGuestSessionData,
   UploadResponse,
   ApiError,
+  DeliveryStatus,
 } from '@/types';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
@@ -56,7 +63,6 @@ class ApiClient {
       (response) => response,
       (error: AxiosError<ApiError>) => {
         if (error.response) {
-          // Server responded with error status
           const apiError: ApiError = {
             message: error.response.data?.message || 'An error occurred',
             errors: error.response.data?.errors,
@@ -73,13 +79,11 @@ class ApiClient {
 
           return Promise.reject(apiError);
         } else if (error.request) {
-          // Request was made but no response received
           return Promise.reject({
             message: 'Network error. Please check your connection.',
             statusCode: 0,
           } as ApiError);
         } else {
-          // Something happened in setting up the request
           return Promise.reject({
             message: error.message || 'An unexpected error occurred',
           } as ApiError);
@@ -103,7 +107,9 @@ class ApiClient {
     localStorage.removeItem('auth-token');
   }
 
-  // ===== Auth Endpoints =====
+  // ============================================
+  // AUTH ENDPOINTS
+  // ============================================
 
   async login(credentials: LoginCredentials): Promise<AuthResponse> {
     const { data } = await this.client.post<AuthResponse>('/auth/login', credentials);
@@ -127,24 +133,17 @@ class ApiClient {
   }
 
   async forgotPassword(email: string): Promise<{ message: string }> {
-    const { data } = await this.client.post<{ message: string }>('/auth/forgot-password', {
-      email,
-    });
+    const { data } = await this.client.post<{ message: string }>('/auth/forgot-password', { email });
     return data;
   }
 
   async resetPassword(token: string, password: string): Promise<{ message: string }> {
-    const { data } = await this.client.post<{ message: string }>('/auth/reset-password', {
-      token,
-      password,
-    });
+    const { data } = await this.client.post<{ message: string }>('/auth/reset-password', { token, password });
     return data;
   }
 
   async verifyEmail(token: string): Promise<{ message: string }> {
-    const { data } = await this.client.post<{ message: string }>('/auth/verify-email', {
-      token,
-    });
+    const { data } = await this.client.post<{ message: string }>('/auth/verify-email', { token });
     return data;
   }
 
@@ -153,15 +152,31 @@ class ApiClient {
     return data;
   }
 
-  // ===== Chesed Train Endpoints =====
+  // ============================================
+  // GUEST SESSION ENDPOINTS
+  // ============================================
 
-  async getChesedTrains(): Promise<ChesedTrain[]> {
-    const { data } = await this.client.get<ChesedTrain[]>('/chesed-trains');
+  async createGuestSession(sessionData: CreateGuestSessionData): Promise<GuestSession> {
+    const { data } = await this.client.post<GuestSession>('/guest-sessions', sessionData);
     return data;
   }
 
-  async getChesedTrain(id: string): Promise<ChesedTrain> {
-    const { data } = await this.client.get<ChesedTrain>(`/chesed-trains/${id}`);
+  async verifyGuestSession(verifyData: VerifyGuestSessionData): Promise<GuestSession> {
+    const { data } = await this.client.post<GuestSession>('/guest-sessions/verify', verifyData);
+    return data;
+  }
+
+  // ============================================
+  // CHESED TRAIN ENDPOINTS
+  // ============================================
+
+  async getChesedTrains(params?: { category?: string; status?: string }): Promise<ChesedTrain[]> {
+    const { data } = await this.client.get<ChesedTrain[]>('/chesed-trains', { params });
+    return data;
+  }
+
+  async getChesedTrain(idOrSlug: string): Promise<ChesedTrain> {
+    const { data } = await this.client.get<ChesedTrain>(`/chesed-trains/${idOrSlug}`);
     return data;
   }
 
@@ -184,184 +199,149 @@ class ApiClient {
     return data;
   }
 
-  // ===== Meal Date Endpoints =====
+  // ============================================
+  // TASK SLOT ENDPOINTS
+  // ============================================
 
-  async getMealDates(trainId: string): Promise<MealDate[]> {
-    const { data } = await this.client.get<MealDate[]>(`/chesed-trains/${trainId}/meal-dates`);
+  async getTaskSlots(trainId: string, params?: { date?: string; taskType?: string }): Promise<TaskSlot[]> {
+    const { data } = await this.client.get<TaskSlot[]>(`/chesed-trains/${trainId}/task-slots`, { params });
     return data;
   }
 
-  async getMealDate(trainId: string, dateId: string): Promise<MealDate> {
-    const { data } = await this.client.get<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates/${dateId}`
+  async getTaskSlot(trainId: string, slotId: string): Promise<TaskSlot> {
+    const { data } = await this.client.get<TaskSlot>(`/chesed-trains/${trainId}/task-slots/${slotId}`);
+    return data;
+  }
+
+  async createTaskSlot(trainId: string, slotData: CreateTaskSlotData): Promise<TaskSlot> {
+    const { data } = await this.client.post<TaskSlot>(`/chesed-trains/${trainId}/task-slots`, slotData);
+    return data;
+  }
+
+  async createTaskSlotsBulk(trainId: string, slotsData: CreateTaskSlotData[]): Promise<TaskSlot[]> {
+    const { data } = await this.client.post<TaskSlot[]>(`/chesed-trains/${trainId}/task-slots/bulk`, { slots: slotsData });
+    return data;
+  }
+
+  async updateTaskSlot(trainId: string, slotId: string, slotData: UpdateTaskSlotData): Promise<TaskSlot> {
+    const { data } = await this.client.patch<TaskSlot>(`/chesed-trains/${trainId}/task-slots/${slotId}`, slotData);
+    return data;
+  }
+
+  async deleteTaskSlot(trainId: string, slotId: string): Promise<void> {
+    await this.client.delete(`/chesed-trains/${trainId}/task-slots/${slotId}`);
+  }
+
+  // ============================================
+  // CONTRIBUTION ENDPOINTS
+  // ============================================
+
+  async getContributions(trainId: string, params?: { slotId?: string; status?: string }): Promise<Contribution[]> {
+    const { data } = await this.client.get<Contribution[]>(`/chesed-trains/${trainId}/contributions`, { params });
+    return data;
+  }
+
+  async getContribution(trainId: string, contributionId: string): Promise<Contribution> {
+    const { data } = await this.client.get<Contribution>(`/chesed-trains/${trainId}/contributions/${contributionId}`);
+    return data;
+  }
+
+  async createContribution(trainId: string, contributionData: CreateContributionData): Promise<Contribution> {
+    const { data } = await this.client.post<Contribution>(`/chesed-trains/${trainId}/contributions`, contributionData);
+    return data;
+  }
+
+  async updateContribution(trainId: string, contributionId: string, contributionData: UpdateContributionData): Promise<Contribution> {
+    const { data } = await this.client.patch<Contribution>(`/chesed-trains/${trainId}/contributions/${contributionId}`, contributionData);
+    return data;
+  }
+
+  async cancelContribution(trainId: string, contributionId: string): Promise<Contribution> {
+    const { data } = await this.client.post<Contribution>(`/chesed-trains/${trainId}/contributions/${contributionId}/cancel`);
+    return data;
+  }
+
+  // Confirm milchig/fleishig on day of delivery
+  async confirmMealCategory(trainId: string, contributionId: string, mealCategory: string): Promise<Contribution> {
+    const { data } = await this.client.post<Contribution>(
+      `/chesed-trains/${trainId}/contributions/${contributionId}/confirm-category`,
+      { mealCategory }
     );
     return data;
   }
 
-  async createMealDate(trainId: string, dateData: CreateMealDateData): Promise<MealDate> {
-    const { data } = await this.client.post<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates`,
-      dateData
+  // Update delivery status
+  async updateDeliveryStatus(trainId: string, contributionId: string, status: DeliveryStatus, estimatedArrival?: string): Promise<Contribution> {
+    const { data } = await this.client.post<Contribution>(
+      `/chesed-trains/${trainId}/contributions/${contributionId}/delivery-status`,
+      { status, estimatedArrival }
     );
     return data;
   }
 
-  async claimMealDate(
-    trainId: string,
-    dateId: string,
-    claimData: ClaimMealDateData
-  ): Promise<MealDate> {
-    const { data } = await this.client.post<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates/${dateId}/claim`,
-      claimData
-    );
+  // ============================================
+  // SIMCHA CONTRIBUTION ENDPOINTS
+  // ============================================
+
+  async getSimchaContributions(trainId: string): Promise<SimchaContribution[]> {
+    const { data } = await this.client.get<SimchaContribution[]>(`/chesed-trains/${trainId}/simcha-contributions`);
     return data;
   }
 
-  async unclaimMealDate(trainId: string, dateId: string): Promise<MealDate> {
-    const { data } = await this.client.post<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates/${dateId}/unclaim`
-    );
+  async createSimchaContribution(trainId: string, contributionData: CreateSimchaContributionData): Promise<SimchaContribution> {
+    const { data } = await this.client.post<SimchaContribution>(`/chesed-trains/${trainId}/simcha-contributions`, contributionData);
     return data;
   }
 
-  async updateMealDate(
-    trainId: string,
-    dateId: string,
-    dateData: Partial<CreateMealDateData>
-  ): Promise<MealDate> {
-    const { data } = await this.client.patch<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates/${dateId}`,
-      dateData
-    );
+  async updateSimchaContribution(trainId: string, contributionId: string, contributionData: Partial<CreateSimchaContributionData>): Promise<SimchaContribution> {
+    const { data } = await this.client.patch<SimchaContribution>(`/chesed-trains/${trainId}/simcha-contributions/${contributionId}`, contributionData);
     return data;
   }
 
-  async deleteMealDate(trainId: string, dateId: string): Promise<void> {
-    await this.client.delete(`/chesed-trains/${trainId}/meal-dates/${dateId}`);
+  async deleteSimchaContribution(trainId: string, contributionId: string): Promise<void> {
+    await this.client.delete(`/chesed-trains/${trainId}/simcha-contributions/${contributionId}`);
   }
 
-  async markMealDateDelivered(trainId: string, dateId: string): Promise<MealDate> {
-    const { data } = await this.client.post<MealDate>(
-      `/chesed-trains/${trainId}/meal-dates/${dateId}/delivered`
-    );
-    return data;
-  }
-
-  // ===== Participant Endpoints =====
-
-  async getParticipants(trainId: string): Promise<Participant[]> {
-    const { data } = await this.client.get<Participant[]>(
-      `/chesed-trains/${trainId}/participants`
-    );
-    return data;
-  }
-
-  async getParticipant(trainId: string, participantId: string): Promise<Participant> {
-    const { data } = await this.client.get<Participant>(
-      `/chesed-trains/${trainId}/participants/${participantId}`
-    );
-    return data;
-  }
-
-  async createParticipant(
-    trainId: string,
-    participantData: CreateParticipantData
-  ): Promise<Participant> {
-    const { data } = await this.client.post<Participant>(
-      `/chesed-trains/${trainId}/participants`,
-      participantData
-    );
-    return data;
-  }
-
-  async updateParticipant(
-    trainId: string,
-    participantId: string,
-    participantData: Partial<CreateParticipantData>
-  ): Promise<Participant> {
-    const { data } = await this.client.patch<Participant>(
-      `/chesed-trains/${trainId}/participants/${participantId}`,
-      participantData
-    );
-    return data;
-  }
-
-  async deleteParticipant(trainId: string, participantId: string): Promise<void> {
-    await this.client.delete(`/chesed-trains/${trainId}/participants/${participantId}`);
-  }
-
-  // ===== Donation Endpoints =====
+  // ============================================
+  // DONATION ENDPOINTS
+  // ============================================
 
   async getDonations(trainId: string): Promise<Donation[]> {
     const { data } = await this.client.get<Donation[]>(`/chesed-trains/${trainId}/donations`);
     return data;
   }
 
-  async getDonation(trainId: string, donationId: string): Promise<Donation> {
-    const { data } = await this.client.get<Donation>(
-      `/chesed-trains/${trainId}/donations/${donationId}`
-    );
-    return data;
-  }
-
   async createDonation(trainId: string, donationData: CreateDonationData): Promise<Donation> {
-    const { data } = await this.client.post<Donation>(
-      `/chesed-trains/${trainId}/donations`,
-      donationData
-    );
+    const { data } = await this.client.post<Donation>(`/chesed-trains/${trainId}/donations`, donationData);
     return data;
   }
 
-  async createDonationPaymentIntent(
-    trainId: string,
-    amount: number
-  ): Promise<{ clientSecret: string }> {
-    const { data } = await this.client.post<{ clientSecret: string }>(
-      `/chesed-trains/${trainId}/donations/payment-intent`,
-      { amount }
-    );
+  async createDonationPaymentIntent(trainId: string, amount: number): Promise<{ clientSecret: string }> {
+    const { data } = await this.client.post<{ clientSecret: string }>(`/chesed-trains/${trainId}/donations/payment-intent`, { amount });
     return data;
   }
 
   async confirmDonation(trainId: string, donationId: string): Promise<Donation> {
-    const { data } = await this.client.post<Donation>(
-      `/chesed-trains/${trainId}/donations/${donationId}/confirm`
-    );
+    const { data } = await this.client.post<Donation>(`/chesed-trains/${trainId}/donations/${donationId}/confirm`);
     return data;
   }
 
-  // ===== Gift Card Endpoints =====
+  // ============================================
+  // GIFT CARD ENDPOINTS
+  // ============================================
 
   async getGiftCards(trainId: string): Promise<GiftCard[]> {
     const { data } = await this.client.get<GiftCard[]>(`/chesed-trains/${trainId}/gift-cards`);
     return data;
   }
 
-  async getGiftCard(trainId: string, giftCardId: string): Promise<GiftCard> {
-    const { data } = await this.client.get<GiftCard>(
-      `/chesed-trains/${trainId}/gift-cards/${giftCardId}`
-    );
-    return data;
-  }
-
   async createGiftCard(trainId: string, giftCardData: CreateGiftCardData): Promise<GiftCard> {
-    const { data } = await this.client.post<GiftCard>(
-      `/chesed-trains/${trainId}/gift-cards`,
-      giftCardData
-    );
+    const { data } = await this.client.post<GiftCard>(`/chesed-trains/${trainId}/gift-cards`, giftCardData);
     return data;
   }
 
-  async updateGiftCard(
-    trainId: string,
-    giftCardId: string,
-    giftCardData: Partial<CreateGiftCardData>
-  ): Promise<GiftCard> {
-    const { data } = await this.client.patch<GiftCard>(
-      `/chesed-trains/${trainId}/gift-cards/${giftCardId}`,
-      giftCardData
-    );
+  async updateGiftCard(trainId: string, giftCardId: string, giftCardData: Partial<CreateGiftCardData>): Promise<GiftCard> {
+    const { data } = await this.client.patch<GiftCard>(`/chesed-trains/${trainId}/gift-cards/${giftCardId}`, giftCardData);
     return data;
   }
 
@@ -370,20 +350,18 @@ class ApiClient {
   }
 
   async markGiftCardSent(trainId: string, giftCardId: string): Promise<GiftCard> {
-    const { data } = await this.client.post<GiftCard>(
-      `/chesed-trains/${trainId}/gift-cards/${giftCardId}/sent`
-    );
+    const { data } = await this.client.post<GiftCard>(`/chesed-trains/${trainId}/gift-cards/${giftCardId}/sent`);
     return data;
   }
 
   async markGiftCardReceived(trainId: string, giftCardId: string): Promise<GiftCard> {
-    const { data } = await this.client.post<GiftCard>(
-      `/chesed-trains/${trainId}/gift-cards/${giftCardId}/received`
-    );
+    const { data } = await this.client.post<GiftCard>(`/chesed-trains/${trainId}/gift-cards/${giftCardId}/received`);
     return data;
   }
 
-  // ===== File Upload Endpoints =====
+  // ============================================
+  // FILE UPLOAD ENDPOINTS
+  // ============================================
 
   async uploadFile(file: File): Promise<UploadResponse> {
     const formData = new FormData();
@@ -411,10 +389,12 @@ class ApiClient {
     return data;
   }
 
-  // ===== User Endpoints =====
+  // ============================================
+  // USER ENDPOINTS
+  // ============================================
 
-  async getUserParticipations(): Promise<{ participations: Participant[] }> {
-    const { data } = await this.client.get<{ participations: Participant[] }>('/users/participations');
+  async getUserParticipations(): Promise<{ contributions: Contribution[] }> {
+    const { data } = await this.client.get<{ contributions: Contribution[] }>('/users/contributions');
     return data;
   }
 
@@ -441,7 +421,9 @@ class ApiClient {
     return data;
   }
 
-  // ===== Generic HTTP Methods =====
+  // ============================================
+  // GENERIC HTTP METHODS
+  // ============================================
 
   async get<T>(url: string): Promise<{ data: T }> {
     const response = await this.client.get<T>(url);
