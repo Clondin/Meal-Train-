@@ -34,10 +34,10 @@ export default function DonationReport({ trainId, donations, onUpdate }: Donatio
 
   const getStatusBadge = (status: Donation['status']) => {
     const statusConfig = {
-      pending: { label: 'Pending', variant: 'warning' as const },
-      completed: { label: 'Completed', variant: 'success' as const },
-      failed: { label: 'Failed', variant: 'error' as const },
-      refunded: { label: 'Refunded', variant: 'neutral' as const },
+      PENDING: { label: 'Pending', variant: 'warning' as const },
+      COMPLETED: { label: 'Completed', variant: 'success' as const },
+      FAILED: { label: 'Failed', variant: 'error' as const },
+      REFUNDED: { label: 'Refunded', variant: 'neutral' as const },
     };
 
     const config = statusConfig[status];
@@ -45,11 +45,11 @@ export default function DonationReport({ trainId, donations, onUpdate }: Donatio
   };
 
   const getStats = () => {
-    const completed = donations.filter((d) => d.status === 'completed');
+    const completed = donations.filter((d) => d.status === 'COMPLETED');
     const totalAmount = completed.reduce((sum, d) => sum + d.amount, 0);
     const averageAmount = completed.length > 0 ? totalAmount / completed.length : 0;
-    const pending = donations.filter((d) => d.status === 'pending').length;
-    const refunded = donations.filter((d) => d.status === 'refunded');
+    const pending = donations.filter((d) => d.status === 'PENDING').length;
+    const refunded = donations.filter((d) => d.status === 'REFUNDED');
     const refundedAmount = refunded.reduce((sum, d) => sum + d.amount, 0);
 
     return {
