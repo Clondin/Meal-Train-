@@ -172,7 +172,7 @@ export default function CreateMealTrainPage() {
       toast.success('Meal train created successfully!');
 
       // Redirect to the meal train page
-      router.push(`/meal-trains/${mealTrain.id}`);
+      router.push(`/train/${mealTrain.id}`);
     } catch (error: any) {
       console.error('Failed to create meal train:', error);
       toast.error(error.message || 'Failed to create meal train');
