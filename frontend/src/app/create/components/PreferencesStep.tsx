@@ -39,9 +39,9 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
       </div>
 
       <Textarea
-        label="Dietary Restrictions"
-        {...register('dietaryRestrictions')}
-        error={errors.dietaryRestrictions?.message}
+        label="Dietary Preferences"
+        {...register('dietaryPreferences')}
+        error={errors.dietaryPreferences?.message}
         placeholder="Vegetarian, vegan, gluten-free, dairy-free, etc."
         rows={3}
         helperText="Any dietary restrictions or preferences"
@@ -49,8 +49,8 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
 
       <Textarea
         label="Allergies"
-        {...register('allergyInfo')}
-        error={errors.allergyInfo?.message}
+        {...register('allergies')}
+        error={errors.allergies?.message}
         placeholder="Peanuts, shellfish, tree nuts, etc."
         rows={3}
         helperText="Important allergy information"
@@ -76,8 +76,8 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
 
       <Textarea
         label="Delivery Instructions"
-        {...register('specialInstructions')}
-        error={errors.specialInstructions?.message}
+        {...register('deliveryInstructions')}
+        error={errors.deliveryInstructions?.message}
         placeholder="Leave on porch, ring doorbell, gate code, parking instructions, etc."
         rows={4}
         helperText="Special instructions for meal drop-off"

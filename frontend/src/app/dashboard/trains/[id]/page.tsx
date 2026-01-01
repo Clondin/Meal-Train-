@@ -268,10 +268,10 @@ export default function TrainDetailPage() {
                       <dd className="text-sm text-gray-900 mt-1">{train.householdSize} people</dd>
                     </div>
                   )}
-                  {train.preferredMealTime && (
+                  {train.defaultDeliveryTime && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Preferred Meal Time</dt>
-                      <dd className="text-sm text-gray-900 mt-1">{train.preferredMealTime}</dd>
+                      <dd className="text-sm text-gray-900 mt-1">{train.defaultDeliveryTime}</dd>
                     </div>
                   )}
                 </dl>
@@ -281,25 +281,25 @@ export default function TrainDetailPage() {
               <Card>
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Dietary Information</h2>
                 <dl className="space-y-3">
-                  {train.dietaryRestrictions && (
+                  {train.dietaryPreferences && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Dietary Restrictions</dt>
-                      <dd className="text-sm text-gray-900 mt-1">{train.dietaryRestrictions}</dd>
+                      <dt className="text-sm font-medium text-gray-500">Dietary Preferences</dt>
+                      <dd className="text-sm text-gray-900 mt-1">{train.dietaryPreferences}</dd>
                     </div>
                   )}
-                  {train.allergyInfo && (
+                  {train.allergies && (
                     <div>
                       <dt className="text-sm font-medium text-gray-500">Allergies</dt>
-                      <dd className="text-sm text-gray-900 mt-1">{train.allergyInfo}</dd>
+                      <dd className="text-sm text-gray-900 mt-1">{train.allergies}</dd>
                     </div>
                   )}
-                  {train.specialInstructions && (
+                  {train.deliveryInstructions && (
                     <div>
-                      <dt className="text-sm font-medium text-gray-500">Special Instructions</dt>
-                      <dd className="text-sm text-gray-900 mt-1">{train.specialInstructions}</dd>
+                      <dt className="text-sm font-medium text-gray-500">Delivery Instructions</dt>
+                      <dd className="text-sm text-gray-900 mt-1">{train.deliveryInstructions}</dd>
                     </div>
                   )}
-                  {!train.dietaryRestrictions && !train.allergyInfo && !train.specialInstructions && (
+                  {!train.dietaryPreferences && !train.allergies && !train.deliveryInstructions && (
                     <p className="text-sm text-gray-500">No dietary information provided</p>
                   )}
                 </dl>
@@ -360,7 +360,6 @@ export default function TrainDetailPage() {
           <TrainSettings
             train={train}
             onUpdate={loadTrainData}
-            onDelete={() => router.push('/dashboard/trains')}
           />
         )}
       </div>

@@ -14,7 +14,7 @@ export default function ParticipantList({ train }: ParticipantListProps) {
   const today = startOfToday();
 
   // Get all claimed meal dates sorted by date
-  const claimedMealDates = train.mealDates
+  const claimedMealDates = train.dates
     ?.filter((mealDate) => mealDate.status === 'claimed' || mealDate.status === 'delivered')
     .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime()) || [];
 

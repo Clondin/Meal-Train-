@@ -121,7 +121,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           <div>
             <dt className="font-medium text-gray-700">Default Delivery Time:</dt>
             <dd className="text-gray-900">
-              {formatTime(formData.preferredMealTime)}
+              {formatTime(formData.defaultDeliveryTime)}
             </dd>
           </div>
           <div>
@@ -153,19 +153,19 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               {formData.householdSize || 'Not set'}
             </dd>
           </div>
-          {formData.dietaryRestrictions && (
+          {formData.dietaryPreferences && (
             <div>
-              <dt className="font-medium text-gray-700">Dietary Restrictions:</dt>
+              <dt className="font-medium text-gray-700">Dietary Preferences:</dt>
               <dd className="text-gray-900 whitespace-pre-line">
-                {formData.dietaryRestrictions}
+                {formData.dietaryPreferences}
               </dd>
             </div>
           )}
-          {formData.allergyInfo && (
+          {formData.allergies && (
             <div>
               <dt className="font-medium text-gray-700">Allergies:</dt>
               <dd className="text-gray-900 whitespace-pre-line">
-                {formData.allergyInfo}
+                {formData.allergies}
               </dd>
             </div>
           )}
@@ -185,11 +185,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               </dd>
             </div>
           )}
-          {formData.specialInstructions && (
+          {formData.deliveryInstructions && (
             <div>
               <dt className="font-medium text-gray-700">Delivery Instructions:</dt>
               <dd className="text-gray-900 whitespace-pre-line">
-                {formData.specialInstructions}
+                {formData.deliveryInstructions}
               </dd>
             </div>
           )}

@@ -29,7 +29,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
 
   const shareUrl = getShareUrl();
   const shareTitle = `${train.recipientName}'s Meal Train`;
-  const shareDescription = train.description.substring(0, 200);
+  const shareDescription = (train.description || '').substring(0, 200);
 
   // Copy link to clipboard
   const handleCopyLink = async () => {
@@ -166,7 +166,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
           </Button>
 
           {/* Native Share (mobile) */}
-          {typeof navigator !== 'undefined' && navigator.share && (
+          {typeof navigator !== 'undefined' && 'share' in navigator && (
             <Button
               variant="primary"
               size="sm"

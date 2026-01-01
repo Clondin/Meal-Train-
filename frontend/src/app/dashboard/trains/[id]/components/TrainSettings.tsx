@@ -141,7 +141,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
             label="Status"
             options={STATUS_OPTIONS}
             value={selectedStatus}
-            onChange={(value) => setSelectedStatus(value as any)}
+            onChange={(value) => setSelectedStatus(String(value) as MealTrain['status'])}
           />
           <p className="text-sm text-gray-500 mt-2">
             {selectedStatus === 'ACTIVE' && 'Volunteers can sign up for dates.'}
@@ -258,7 +258,7 @@ export default function TrainSettings({ train, onUpdate }: TrainSettingsProps) {
             label="Default Delivery Time"
             options={TIME_OPTIONS}
             value={watch('defaultDeliveryTime')}
-            onChange={(value) => setValue('defaultDeliveryTime', value)}
+            onChange={(value) => setValue('defaultDeliveryTime', String(value))}
           />
         </div>
 

@@ -8,11 +8,11 @@ interface TrainHeroProps {
 
 export default function TrainHero({ train }: TrainHeroProps) {
   // Calculate stats
-  const totalMealDates = train.mealDates?.length || 0;
-  const claimedMeals = train.mealDates?.filter(
+  const totalMealDates = train.dates?.length || 0;
+  const claimedMeals = train.dates?.filter(
     (date) => date.status === 'claimed' || date.status === 'delivered'
   ).length || 0;
-  const deliveredMeals = train.mealDates?.filter(
+  const deliveredMeals = train.dates?.filter(
     (date) => date.status === 'delivered'
   ).length || 0;
 
@@ -70,39 +70,39 @@ export default function TrainHero({ train }: TrainHeroProps) {
               </div>
             )}
 
-            {train.preferredMealTime && (
+            {train.defaultDeliveryTime && (
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-sm text-blue-100 mb-1">Preferred Meal Time</div>
-                <div className="text-lg font-semibold">{train.preferredMealTime}</div>
+                <div className="text-sm text-blue-100 mb-1">Default Delivery Time</div>
+                <div className="text-lg font-semibold">{train.defaultDeliveryTime}</div>
               </div>
             )}
           </div>
 
-          {/* Dietary Restrictions & Allergies */}
-          {(train.dietaryRestrictions || train.allergyInfo) && (
+          {/* Dietary Preferences & Allergies */}
+          {(train.dietaryPreferences || train.allergies) && (
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-              {train.dietaryRestrictions && (
+              {train.dietaryPreferences && (
                 <div className="mb-3">
-                  <div className="text-sm text-blue-100 mb-1">Dietary Restrictions</div>
-                  <div className="text-base">{train.dietaryRestrictions}</div>
+                  <div className="text-sm text-blue-100 mb-1">Dietary Preferences</div>
+                  <div className="text-base">{train.dietaryPreferences}</div>
                 </div>
               )}
-              {train.allergyInfo && (
+              {train.allergies && (
                 <div>
                   <div className="text-sm text-blue-100 mb-1">Allergies</div>
                   <div className="text-base text-yellow-200 font-medium">
-                    ⚠️ {train.allergyInfo}
+                    ⚠️ {train.allergies}
                   </div>
                 </div>
               )}
             </div>
           )}
 
-          {/* Special Instructions */}
-          {train.specialInstructions && (
+          {/* Delivery Instructions */}
+          {train.deliveryInstructions && (
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-              <div className="text-sm text-blue-100 mb-1">Special Instructions</div>
-              <p className="text-base whitespace-pre-wrap">{train.specialInstructions}</p>
+              <div className="text-sm text-blue-100 mb-1">Delivery Instructions</div>
+              <p className="text-base whitespace-pre-wrap">{train.deliveryInstructions}</p>
             </div>
           )}
 

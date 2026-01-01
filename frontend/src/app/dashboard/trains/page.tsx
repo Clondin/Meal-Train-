@@ -57,8 +57,8 @@ export default function TrainsPage() {
       filtered = filtered.filter(
         (train) =>
           train.recipientName.toLowerCase().includes(query) ||
-          train.description.toLowerCase().includes(query) ||
-          train.recipientAddress.toLowerCase().includes(query)
+          (train.description?.toLowerCase().includes(query) ?? false) ||
+          (train.recipientAddress?.toLowerCase().includes(query) ?? false)
       );
     }
 
@@ -84,8 +84,8 @@ export default function TrainsPage() {
   };
 
   const getTrainStats = (train: MealTrain) => {
-    const totalDates = train.mealDates?.length || 0;
-    const claimedDates = train.mealDates?.filter((d) => d.status === 'claimed' || d.status === 'delivered').length || 0;
+    const totalDates = train.dates?.length || 0;
+    const claimedDates = train.dates?.filter((d) => d.status === 'claimed' || d.status === 'delivered').length || 0;
     const participants = train.participants?.length || 0;
     const donations = train.donations?.filter((d) => d.status === 'completed').reduce((sum, d) => sum + d.amount, 0) || 0;
 
@@ -155,7 +155,7 @@ export default function TrainsPage() {
             <div className="sm:w-48">
               <Select
                 value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value as FilterStatus)}
+                onChange={(value) => setStatusFilter(String(value) as FilterStatus)}
                 options={[
                   { value: 'all', label: 'All Status' },
                   { value: 'active', label: 'Active' },

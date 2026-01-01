@@ -67,7 +67,7 @@ export default function SearchPage() {
       params.set('page', page.toString());
       params.set('limit', '12');
 
-      const response = await api.get(`/trains?${params.toString()}`);
+      const response = await api.get<{ trains: MealTrain[]; pagination: { pages: number } }>(`/trains?${params.toString()}`);
       setTrains(response.data.trains);
       setTotalPages(response.data.pagination.pages);
     } catch (error) {
@@ -117,7 +117,7 @@ export default function SearchPage() {
                   options={CATEGORIES}
                   value={category}
                   onChange={(value) => {
-                    setCategory(value);
+                    setCategory(String(value));
                     setPage(1);
                   }}
                 />

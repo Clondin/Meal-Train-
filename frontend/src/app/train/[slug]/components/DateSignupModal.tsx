@@ -55,7 +55,7 @@ export default function DateSignupModal({
 
     try {
       // Find if there's already a meal date for this day
-      const existingMealDate = train.mealDates?.find((md) => {
+      const existingMealDate = train.dates?.find((md) => {
         const mdDate = new Date(md.date);
         return (
           mdDate.getFullYear() === selectedDate.getFullYear() &&
@@ -201,19 +201,19 @@ export default function DateSignupModal({
         )}
 
         {/* Dietary Info Reminder */}
-        {(train.dietaryRestrictions || train.allergyInfo) && (
+        {(train.dietaryPreferences || train.allergies) && (
           <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
             <h4 className="font-semibold text-yellow-900 mb-2">
               Please Remember:
             </h4>
-            {train.dietaryRestrictions && (
+            {train.dietaryPreferences && (
               <p className="text-sm text-yellow-800 mb-1">
-                <strong>Dietary Restrictions:</strong> {train.dietaryRestrictions}
+                <strong>Dietary Preferences:</strong> {train.dietaryPreferences}
               </p>
             )}
-            {train.allergyInfo && (
+            {train.allergies && (
               <p className="text-sm text-yellow-800">
-                <strong>Allergies:</strong> {train.allergyInfo}
+                <strong>Allergies:</strong> {train.allergies}
               </p>
             )}
           </div>

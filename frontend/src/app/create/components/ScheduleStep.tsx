@@ -44,7 +44,7 @@ export const ScheduleStep: React.FC<ScheduleStepProps> = ({
 }) => {
   const startDate = watch('startDate');
   const endDate = watch('endDate');
-  const preferredMealTime = watch('preferredMealTime') || '18:00';
+  const defaultDeliveryTime = watch('defaultDeliveryTime') || '18:00';
   const timezone = watch('timezone') || 'America/New_York';
 
   // Calculate minimum end date (must be after start date)
@@ -113,12 +113,12 @@ export const ScheduleStep: React.FC<ScheduleStepProps> = ({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <Select
           label="Default Delivery Time"
-          value={preferredMealTime}
+          value={defaultDeliveryTime}
           onChange={(value) => {
             const event = {
-              target: { name: 'preferredMealTime', value: value as string },
+              target: { name: 'defaultDeliveryTime', value: value as string },
             } as any;
-            register('preferredMealTime').onChange(event);
+            register('defaultDeliveryTime').onChange(event);
           }}
           options={timeOptions}
         />

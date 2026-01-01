@@ -31,15 +31,15 @@ export interface MealTrainFormData {
   title: string;
   startDate: string;
   endDate: string;
-  preferredMealTime?: string;
+  defaultDeliveryTime?: string;
   timezone?: string;
 
   // Preferences
-  dietaryRestrictions?: string;
-  allergyInfo?: string;
+  dietaryPreferences?: string;
+  allergies?: string;
   foodLikes?: string;
   foodDislikes?: string;
-  specialInstructions?: string;
+  deliveryInstructions?: string;
   householdSize?: number;
 
   // Donations
@@ -79,7 +79,7 @@ export default function CreateMealTrainPage() {
     trigger,
   } = useForm<MealTrainFormData>({
     defaultValues: {
-      preferredMealTime: '18:00',
+      defaultDeliveryTime: '18:00',
       timezone: 'America/New_York',
       trainType: 'standard',
       donationsEnabled: false,
@@ -160,11 +160,11 @@ export default function CreateMealTrainPage() {
         startDate: data.startDate,
         endDate: data.endDate,
         description: data.description,
-        dietaryRestrictions: data.dietaryRestrictions,
-        allergyInfo: data.allergyInfo,
+        dietaryPreferences: data.dietaryPreferences,
+        allergies: data.allergies,
         householdSize: data.householdSize,
-        preferredMealTime: data.preferredMealTime,
-        specialInstructions: data.specialInstructions,
+        defaultDeliveryTime: data.defaultDeliveryTime,
+        deliveryInstructions: data.deliveryInstructions,
       };
 
       const mealTrain = await api.createMealTrain(mealTrainData);

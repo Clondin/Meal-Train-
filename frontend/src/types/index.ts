@@ -89,14 +89,36 @@ export interface CreateMealTrainData {
   startDate: string;
   endDate: string;
   description: string;
-  dietaryRestrictions?: string;
-  allergyInfo?: string;
+  dietaryPreferences?: string;
+  allergies?: string;
   householdSize?: number;
-  preferredMealTime?: string;
-  specialInstructions?: string;
+  defaultDeliveryTime?: string;
+  deliveryInstructions?: string;
 }
 
-export interface UpdateMealTrainData extends Partial<CreateMealTrainData> {}
+export interface UpdateMealTrainData extends Partial<CreateMealTrainData> {
+  title?: string;
+  description?: string;
+  story?: string;
+  recipientCity?: string;
+  recipientState?: string;
+  recipientZip?: string;
+  dietaryPreferences?: string;
+  allergies?: string;
+  foodLikes?: string;
+  foodDislikes?: string;
+  deliveryInstructions?: string;
+  defaultDeliveryTime?: string;
+  isPublic?: boolean;
+  allowDonations?: boolean;
+  allowGiftCards?: boolean;
+  donationGoal?: number | null;
+  requireApproval?: boolean;
+  showParticipantList?: boolean;
+  enableReminders?: boolean;
+  reminderHours?: number;
+  status?: 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
+}
 
 // Meal Date Types
 export interface MealDate {

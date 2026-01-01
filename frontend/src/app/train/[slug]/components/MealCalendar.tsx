@@ -41,7 +41,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
 
   // Get meal date for a specific day
   const getMealDateForDay = (day: Date): MealDate | undefined => {
-    return train.mealDates?.find((mealDate) =>
+    return train.dates?.find((mealDate) =>
       isSameDay(new Date(mealDate.date), day)
     );
   };
@@ -207,7 +207,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
       <div className="mt-6 lg:hidden">
         <h4 className="font-semibold text-gray-900 mb-3">Available Dates</h4>
         <div className="space-y-2">
-          {train.mealDates
+          {train.dates
             ?.filter((mealDate) => {
               const day = new Date(mealDate.date);
               return (

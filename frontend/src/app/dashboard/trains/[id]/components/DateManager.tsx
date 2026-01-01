@@ -311,10 +311,9 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
                 Meal Type *
               </label>
               <Select
-                required
                 value={formData.mealType}
-                onChange={(e) =>
-                  setFormData({ ...formData, mealType: e.target.value as 'breakfast' | 'lunch' | 'dinner' })
+                onChange={(value) =>
+                  setFormData({ ...formData, mealType: value as 'breakfast' | 'lunch' | 'dinner' })
                 }
                 options={[
                   { value: 'breakfast', label: 'Breakfast' },
@@ -390,10 +389,9 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
                 Meal Type *
               </label>
               <Select
-                required
                 value={formData.mealType}
-                onChange={(e) =>
-                  setFormData({ ...formData, mealType: e.target.value as 'breakfast' | 'lunch' | 'dinner' })
+                onChange={(value) =>
+                  setFormData({ ...formData, mealType: value as 'breakfast' | 'lunch' | 'dinner' })
                 }
                 options={[
                   { value: 'breakfast', label: 'Breakfast' },
