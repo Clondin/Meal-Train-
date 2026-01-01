@@ -18,6 +18,7 @@ import donationRoutes from './routes/donations.js';
 import giftCardRoutes from './routes/giftCards.js';
 import uploadRoutes from './routes/uploads.js';
 import webhookRoutes from './routes/webhooks.js';
+import contributionRoutes from './routes/contributions.js';
 
 dotenv.config();
 
@@ -67,7 +68,9 @@ app.get('/health', (req, res) => {
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/trains', trainRoutes);
+app.use('/api/chesed-trains', trainRoutes);
 app.use('/api/participants', participantRoutes);
+app.use('/api/contributions', contributionRoutes);
 app.use('/api/donations', donationRoutes);
 app.use('/api/gift-cards', giftCardRoutes);
 app.use('/api/uploads', uploadRoutes);

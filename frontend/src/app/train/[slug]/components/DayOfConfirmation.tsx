@@ -65,7 +65,7 @@ export default function DayOfConfirmation({
                         className="w-full h-12 text-lg"
                         disabled={!selectedCategory || isSubmitting}
                         onClick={handleConfirm}
-                        loading={isSubmitting}
+                        isLoading={isSubmitting}
                     >
                         Confirm & Send Update
                     </Button>

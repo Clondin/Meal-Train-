@@ -3,10 +3,38 @@ import prisma from '../config/database.js';
 import { catchAsync, AppError } from '../middleware/errorHandler.js';
 import { authenticate, optionalAuth, AuthRequest, requireVerified } from '../middleware/auth.js';
 import { generateSlug } from '../utils/slug.js';
-import { body, param, query, validationResult } from 'express-validator';
-import { TrainStatus, TrainType, TrainCategory, DateStatus } from '@prisma/client';
+import { body, query, validationResult } from 'express-validator';
+import {
+  TrainStatus,
+  TrainType,
+  TrainCategory,
+  DateStatus,
+  SlotStatus,
+  ContributionStatus,
+  TaskType,
+  SimchaItemCategory,
+  MealCategory,
+} from '@prisma/client';
 
 const router = Router();
+
+const findTrainByIdentifier = async (
+  identifier: string,
+  include?: Parameters<typeof prisma.mealTrain.findFirst>[0]['include']
+) => {
+  return prisma.mealTrain.findFirst({
+    where: {
+      OR: [{ slug: identifier }, { id: identifier }],
+    },
+    include,
+  });
+};
+
+const isOrganizerOrAdmin = (train: { organizerId: string; admins?: { userId: string }[] }, userId: string) => {
+  const isOrganizer = train.organizerId === userId;
+  const isAdmin = train.admins?.some(a => a.userId === userId) || false;
+  return isOrganizer || isAdmin;
+};
 
 // Create a new meal train
 router.post(
@@ -58,12 +86,28 @@ router.post(
       reminderHours,
       trainType,
       category,
-      dates, // Array of specific dates to create
+      dates,
+      requireMilchigFleishig,
+      acceptsMilchig,
+      acceptsFleishig,
+      acceptsPareve,
+      requireCholovYisroel,
+      requirePasYisroel,
+      requireYoshon,
+      requireGlatt,
+      allergyNuts,
+      allergyDairy,
+      allergyGluten,
+      allergyEggs,
+      allergyFish,
+      allergyShellfish,
+      allergySoy,
+      allergyOther,
+      allowNonMealTasks,
     } = req.body;
 
     const slug = generateSlug(title);
 
-    // Create the meal train
     const train = await prisma.mealTrain.create({
       data: {
         slug,
@@ -85,6 +129,23 @@ router.post(
         foodDislikes,
         deliveryInstructions,
         householdSize: householdSize || 1,
+        requireMilchigFleishig: requireMilchigFleishig ?? true,
+        acceptsMilchig: acceptsMilchig ?? true,
+        acceptsFleishig: acceptsFleishig ?? true,
+        acceptsPareve: acceptsPareve ?? true,
+        requireCholovYisroel: requireCholovYisroel ?? false,
+        requirePasYisroel: requirePasYisroel ?? false,
+        requireYoshon: requireYoshon ?? false,
+        requireGlatt: requireGlatt ?? true,
+        allergyNuts: allergyNuts ?? false,
+        allergyDairy: allergyDairy ?? false,
+        allergyGluten: allergyGluten ?? false,
+        allergyEggs: allergyEggs ?? false,
+        allergyFish: allergyFish ?? false,
+        allergyShellfish: allergyShellfish ?? false,
+        allergySoy: allergySoy ?? false,
+        allergyOther,
+        allowNonMealTasks: allowNonMealTasks ?? false,
         startDate: new Date(startDate),
         endDate: new Date(endDate),
         defaultDeliveryTime: defaultDeliveryTime || '18:00',
@@ -104,7 +165,6 @@ router.post(
       },
     });
 
-    // Create dates if provided, otherwise generate from date range
     if (dates && Array.isArray(dates)) {
       await prisma.mealDate.createMany({
         data: dates.map((d: any) => ({
@@ -117,7 +177,6 @@ router.post(
         })),
       });
     } else {
-      // Generate dates for the entire range
       const start = new Date(startDate);
       const end = new Date(endDate);
       const datesToCreate = [];
@@ -135,7 +194,6 @@ router.post(
       await prisma.mealDate.createMany({ data: datesToCreate });
     }
 
-    // Fetch the complete train with dates
     const completeTrain = await prisma.mealTrain.findUnique({
       where: { id: train.id },
       include: {
@@ -152,41 +210,64 @@ router.post(
   })
 );
 
-// Get meal train by slug (public view)
+// Get meal train by slug or id (public view)
 router.get(
   '/:slug',
   optionalAuth,
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: {
-        organizer: {
-          select: { id: true, firstName: true, lastName: true },
-        },
-        dates: {
-          orderBy: { date: 'asc' },
-          include: {
-            participants: {
-              where: { status: { in: ['CONFIRMED', 'PENDING'] } },
-              select: {
-                id: true,
-                mealDescription: true,
-                status: true,
-                user: {
-                  select: { id: true, firstName: true, lastName: true },
-                },
-                guestName: true,
+    const train = await findTrainByIdentifier(slug, {
+      organizer: {
+        select: { id: true, firstName: true, lastName: true },
+      },
+      dates: {
+        orderBy: { date: 'asc' },
+        include: {
+          participants: {
+            where: { status: { in: ['CONFIRMED', 'PENDING'] } },
+            select: {
+              id: true,
+              mealDescription: true,
+              status: true,
+              user: {
+                select: { id: true, firstName: true, lastName: true },
               },
+              guestName: true,
             },
           },
         },
-        _count: {
-          select: {
-            donations: { where: { status: 'COMPLETED' } },
-            participants: { where: { status: 'CONFIRMED' } },
+      },
+      taskSlots: {
+        orderBy: { date: 'asc' },
+        include: {
+          contributions: {
+            include: {
+              user: { select: { id: true, firstName: true, lastName: true, email: true } },
+            },
           },
+        },
+      },
+      contributions: {
+        include: {
+          slot: true,
+          user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      },
+      simchaContributions: {
+        include: {
+          user: { select: { id: true, firstName: true, lastName: true, email: true } },
+        },
+        orderBy: { createdAt: 'asc' },
+      },
+      _count: {
+        select: {
+          donations: { where: { status: 'COMPLETED' } },
+          participants: { where: { status: 'CONFIRMED' } },
+          contributions: { where: { status: 'CONFIRMED' } },
+          taskSlots: true,
+          simchaContributions: true,
         },
       },
     });
@@ -195,16 +276,13 @@ router.get(
       throw new AppError('Meal train not found', 404);
     }
 
-    // Check if private and user is not organizer/admin/participant
     const isOrganizer = req.user?.id === train.organizerId;
-    const isAdmin = req.user ? await prisma.trainAdmin.findFirst({
-      where: { trainId: train.id, userId: req.user.id },
-    }) : null;
+    const isAdmin = req.user
+      ? await prisma.trainAdmin.findFirst({
+          where: { trainId: train.id, userId: req.user.id },
+        })
+      : null;
 
-    // For private trains, only allow access with the unique link (slug)
-    // The slug itself acts as the access token
-
-    // Calculate donation total if allowed
     let donationTotal = null;
     if (train.allowDonations) {
       const result = await prisma.donation.aggregate({
@@ -214,7 +292,6 @@ router.get(
       donationTotal = result._sum.amount;
     }
 
-    // Hide sensitive info for non-organizers
     const response = {
       ...train,
       recipientEmail: isOrganizer || isAdmin ? train.recipientEmail : undefined,
@@ -235,20 +312,13 @@ router.patch(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: { admins: true },
-    });
+    const train = await findTrainByIdentifier(slug, { admins: true });
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
     }
 
-    // Check authorization
-    const isOrganizer = req.user!.id === train.organizerId;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
-
-    if (!isOrganizer && !isAdmin) {
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
       throw new AppError('Not authorized to update this meal train', 403);
     }
 
@@ -263,6 +333,11 @@ router.patch(
       'requireApproval', 'showParticipantList',
       'enableReminders', 'reminderHours',
       'status', 'trainType', 'category',
+      'requireMilchigFleishig', 'acceptsMilchig', 'acceptsFleishig', 'acceptsPareve',
+      'requireCholovYisroel', 'requirePasYisroel', 'requireYoshon', 'requireGlatt',
+      'allergyNuts', 'allergyDairy', 'allergyGluten', 'allergyEggs', 'allergyFish',
+      'allergyShellfish', 'allergySoy', 'allergyOther',
+      'allowNonMealTasks',
     ];
 
     const updateData: any = {};
@@ -298,9 +373,7 @@ router.delete(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-    });
+    const train = await findTrainByIdentifier(slug);
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
@@ -324,19 +397,13 @@ router.post(
     const { slug } = req.params;
     const { dates } = req.body;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: { admins: true },
-    });
+    const train = await findTrainByIdentifier(slug, { admins: true });
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
     }
 
-    const isOrganizer = req.user!.id === train.organizerId;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
-
-    if (!isOrganizer && !isAdmin) {
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
       throw new AppError('Not authorized', 403);
     }
 
@@ -382,19 +449,13 @@ router.patch(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug, dateId } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: { admins: true },
-    });
+    const train = await findTrainByIdentifier(slug, { admins: true });
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
     }
 
-    const isOrganizer = req.user!.id === train.organizerId;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
-
-    if (!isOrganizer && !isAdmin) {
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
       throw new AppError('Not authorized', 403);
     }
 
@@ -424,25 +485,344 @@ router.delete(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug, dateId } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: { admins: true },
-    });
+    const train = await findTrainByIdentifier(slug, { admins: true });
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
     }
 
-    const isOrganizer = req.user!.id === train.organizerId;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
-
-    if (!isOrganizer && !isAdmin) {
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
       throw new AppError('Not authorized', 403);
     }
 
     await prisma.mealDate.delete({ where: { id: dateId } });
 
     res.json({ message: 'Date deleted successfully' });
+  })
+);
+
+// Create or fetch a task slot
+router.post(
+  '/:slug/task-slots',
+  optionalAuth,
+  [
+    body('date').isISO8601(),
+    body('taskType').optional().isString(),
+  ],
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const { slug } = req.params;
+    const { date, taskType, allowSplit, maxContributors, taskTitle, taskDescription, estimatedDuration, location, notes, startTime, endTime } = req.body;
+
+    const train = await findTrainByIdentifier(slug, { admins: true });
+    if (!train) throw new AppError('Meal train not found', 404);
+
+    const isAuthorized = req.user ? isOrganizerOrAdmin(train, req.user.id) : true;
+    if (!isAuthorized && !train.isPublic) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const slot = await prisma.taskSlot.upsert({
+      where: {
+        trainId_date_taskType: {
+          trainId: train.id,
+          date: new Date(date),
+          taskType: (taskType as TaskType) || TaskType.MEAL_DINNER,
+        },
+      },
+      create: {
+        trainId: train.id,
+        date: new Date(date),
+        taskType: (taskType as TaskType) || TaskType.MEAL_DINNER,
+        allowSplit: allowSplit ?? false,
+        maxContributors: maxContributors || 1,
+        taskTitle,
+        taskDescription,
+        estimatedDuration,
+        location,
+        notes,
+        startTime,
+        endTime,
+        status: SlotStatus.AVAILABLE,
+      },
+      update: {
+        allowSplit,
+        maxContributors,
+        taskTitle,
+        taskDescription,
+        estimatedDuration,
+        location,
+        notes,
+        startTime,
+        endTime,
+      },
+      include: {
+        contributions: true,
+      },
+    });
+
+    res.status(201).json(slot);
+  })
+);
+
+// Sign up for a task slot (create contribution)
+router.post(
+  '/:slug/contributions',
+  optionalAuth,
+  [
+    body('slotId').notEmpty(),
+  ],
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const { slug } = req.params;
+    const {
+      slotId,
+      mealComponent,
+      mealCategory,
+      isCholovYisroel,
+      isPasYisroel,
+      isYoshon,
+      isGlatt,
+      allergyInfo,
+      itemDescription,
+      notes,
+      guestName,
+      guestEmail,
+      guestPhone,
+    } = req.body;
+
+    const train = await findTrainByIdentifier(slug);
+    if (!train) throw new AppError('Meal train not found', 404);
+
+    const slot = await prisma.taskSlot.findUnique({
+      where: { id: slotId },
+      include: { contributions: { where: { status: { in: ['CONFIRMED', 'PENDING'] } } } },
+    });
+
+    if (!slot || slot.trainId !== train.id) {
+      throw new AppError('Task slot not found', 404);
+    }
+
+    if ([SlotStatus.CLOSED, SlotStatus.CANCELLED].includes(slot.status)) {
+      throw new AppError('This slot is not available', 400);
+    }
+
+    if (!req.user && !guestName) {
+      throw new AppError('Guest name is required', 400);
+    }
+    if (!req.user && !guestEmail) {
+      throw new AppError('Guest email is required', 400);
+    }
+
+    const status = train.requireApproval
+      ? ContributionStatus.PENDING
+      : ContributionStatus.CONFIRMED;
+
+    const contribution = await prisma.contribution.create({
+      data: {
+        slotId: slot.id,
+        trainId: train.id,
+        userId: req.user?.id,
+        guestName: req.user ? null : guestName,
+        guestEmail: req.user ? null : guestEmail,
+        guestPhone: req.user ? null : guestPhone,
+        mealComponent,
+        mealCategory: mealCategory as MealCategory | undefined,
+        isCholovYisroel: isCholovYisroel ?? false,
+        isPasYisroel: isPasYisroel ?? false,
+        isYoshon: isYoshon ?? false,
+        isGlatt: isGlatt ?? true,
+        allergyInfo,
+        itemDescription,
+        notes,
+        status,
+      },
+      include: {
+        slot: true,
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    const totalContributions = slot.contributions.length + 1;
+    const shouldFill = totalContributions >= slot.maxContributors;
+    const nextStatus = shouldFill
+      ? SlotStatus.FILLED
+      : slot.allowSplit
+        ? SlotStatus.PARTIALLY_FILLED
+        : SlotStatus.FILLED;
+
+    await prisma.taskSlot.update({
+      where: { id: slot.id },
+      data: { status: nextStatus },
+    });
+
+    res.status(201).json({ contribution });
+  })
+);
+
+// Simcha contributions
+router.get(
+  '/:slug/simcha-contributions',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug } = req.params;
+    const train = await findTrainByIdentifier(slug);
+    if (!train) throw new AppError('Meal train not found', 404);
+
+    const contributions = await prisma.simchaContribution.findMany({
+      where: { trainId: train.id },
+      include: { user: { select: { id: true, firstName: true, lastName: true, email: true } } },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ contributions });
+  })
+);
+
+router.post(
+  '/:slug/simcha-contributions',
+  optionalAuth,
+  [
+    body('itemCategory').isString(),
+    body('itemDescription').isString().isLength({ min: 1 }),
+  ],
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const { slug } = req.params;
+    const {
+      itemCategory,
+      itemDescription,
+      servings,
+      quantity,
+      mealCategory,
+      isCholovYisroel,
+      isPasYisroel,
+      isYoshon,
+      isGlatt,
+      notes,
+      guestName,
+      guestEmail,
+      guestPhone,
+    } = req.body;
+
+    const train = await findTrainByIdentifier(slug);
+    if (!train) throw new AppError('Meal train not found', 404);
+    if (train.trainType !== TrainType.SIMCHA) {
+      throw new AppError('Simcha contributions are only available for SIMCHA trains', 400);
+    }
+
+    if (!req.user && !guestName) {
+      throw new AppError('Guest name is required', 400);
+    }
+    if (!req.user && !guestEmail) {
+      throw new AppError('Guest email is required', 400);
+    }
+
+    const contribution = await prisma.simchaContribution.create({
+      data: {
+        trainId: train.id,
+        userId: req.user?.id,
+        guestName: req.user ? null : guestName,
+        guestEmail: req.user ? null : guestEmail,
+        guestPhone: req.user ? null : guestPhone,
+        itemCategory: itemCategory as SimchaItemCategory,
+        itemDescription,
+        servings,
+        quantity,
+        mealCategory: mealCategory as MealCategory | undefined,
+        isCholovYisroel: isCholovYisroel ?? false,
+        isPasYisroel: isPasYisroel ?? false,
+        isYoshon: isYoshon ?? false,
+        isGlatt: isGlatt ?? true,
+        notes,
+      },
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    res.status(201).json({ contribution });
+  })
+);
+
+router.patch(
+  '/:slug/simcha-contributions/:id',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug, id } = req.params;
+    const { guestEmail, guestPhone, ...updateData } = req.body;
+
+    const train = await findTrainByIdentifier(slug, { admins: true });
+    if (!train) throw new AppError('Meal train not found', 404);
+
+    const contribution = await prisma.simchaContribution.findUnique({
+      where: { id },
+    });
+    if (!contribution || contribution.trainId !== train.id) {
+      throw new AppError('Contribution not found', 404);
+    }
+
+    const isOwner = req.user && contribution.userId === req.user.id;
+    const isAuthorized = req.user
+      ? isOwner || isOrganizerOrAdmin(train, req.user.id)
+      : Boolean(contribution.guestEmail && guestEmail && contribution.guestEmail === guestEmail) ||
+        Boolean(contribution.guestPhone && guestPhone && contribution.guestPhone === guestPhone);
+
+    if (!isAuthorized) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const updated = await prisma.simchaContribution.update({
+      where: { id },
+      data: updateData,
+      include: {
+        user: { select: { id: true, firstName: true, lastName: true, email: true } },
+      },
+    });
+
+    res.json({ contribution: updated });
+  })
+);
+
+router.delete(
+  '/:slug/simcha-contributions/:id',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug, id } = req.params;
+    const { guestEmail, guestPhone } = req.body || {};
+
+    const train = await findTrainByIdentifier(slug, { admins: true });
+    if (!train) throw new AppError('Meal train not found', 404);
+
+    const contribution = await prisma.simchaContribution.findUnique({ where: { id } });
+    if (!contribution || contribution.trainId !== train.id) {
+      throw new AppError('Contribution not found', 404);
+    }
+
+    const isOwner = req.user && contribution.userId === req.user.id;
+    const isAuthorized = req.user
+      ? isOwner || isOrganizerOrAdmin(train, req.user.id)
+      : Boolean(contribution.guestEmail && guestEmail && contribution.guestEmail === guestEmail) ||
+        Boolean(contribution.guestPhone && guestPhone && contribution.guestPhone === guestPhone);
+
+    if (!isAuthorized) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    await prisma.simchaContribution.delete({ where: { id } });
+    res.json({ message: 'Contribution deleted successfully' });
   })
 );
 
@@ -455,7 +835,7 @@ router.post(
     const { slug } = req.params;
     const { email, role } = req.body;
 
-    const train = await prisma.mealTrain.findUnique({ where: { slug } });
+    const train = await findTrainByIdentifier(slug);
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
@@ -494,7 +874,7 @@ router.delete(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug, userId } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({ where: { slug } });
+    const train = await findTrainByIdentifier(slug);
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
@@ -519,19 +899,13 @@ router.get(
   catchAsync(async (req: AuthRequest, res: Response) => {
     const { slug } = req.params;
 
-    const train = await prisma.mealTrain.findUnique({
-      where: { slug },
-      include: { admins: true },
-    });
+    const train = await findTrainByIdentifier(slug, { admins: true });
 
     if (!train) {
       throw new AppError('Meal train not found', 404);
     }
 
-    const isOrganizer = req.user!.id === train.organizerId;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
-
-    if (!isOrganizer && !isAdmin) {
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
       throw new AppError('Not authorized', 403);
     }
 
@@ -541,6 +915,9 @@ router.get(
       totalParticipants,
       donationStats,
       giftCardStats,
+      totalTaskSlots,
+      totalContributions,
+      totalSimchaContributions,
     ] = await Promise.all([
       prisma.mealDate.count({ where: { trainId: train.id } }),
       prisma.mealDate.count({ where: { trainId: train.id, status: 'FILLED' } }),
@@ -557,6 +934,9 @@ router.get(
         _sum: { amount: true },
         _count: true,
       }),
+      prisma.taskSlot.count({ where: { trainId: train.id } }),
+      prisma.contribution.count({ where: { trainId: train.id, status: 'CONFIRMED' } }),
+      prisma.simchaContribution.count({ where: { trainId: train.id } }),
     ]);
 
     res.json({
@@ -570,6 +950,9 @@ router.get(
         donationAmount: donationStats._sum.amount || 0,
         totalGiftCards: giftCardStats._count,
         giftCardAmount: giftCardStats._sum.amount || 0,
+        totalTaskSlots,
+        totalContributions,
+        totalSimchaContributions,
       },
     });
   })
@@ -616,6 +999,9 @@ router.get(
             select: {
               dates: true,
               participants: { where: { status: 'CONFIRMED' } },
+              contributions: { where: { status: 'CONFIRMED' } },
+              taskSlots: true,
+              simchaContributions: true,
             },
           },
         },

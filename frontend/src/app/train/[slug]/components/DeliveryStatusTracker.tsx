@@ -107,7 +107,7 @@ export default function DeliveryStatusTracker({
                         <Button
                             className="w-full"
                             onClick={() => handleUpdate(statusOrder[currentIndex + 1])}
-                            loading={loadingStatus === statusOrder[currentIndex + 1]}
+                            isLoading={loadingStatus === statusOrder[currentIndex + 1]}
                         >
                             Next Step: {DELIVERY_STATUS_LABELS[statusOrder[currentIndex + 1]]}
                         </Button>

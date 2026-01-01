@@ -352,3 +352,55 @@ export async function sendGiftCardNotification(
     `,
   });
 }
+
+export async function sendDeliveryStatusUpdate(
+  recipientEmail: string,
+  recipientName: string,
+  trainTitle: string,
+  dateIso: string,
+  status: string
+): Promise<boolean> {
+  const formattedDate = new Date(dateIso).toLocaleDateString();
+  const statusLabel = status.replace(/_/g, ' ').toLowerCase();
+
+  return sendEmail({
+    to: recipientEmail,
+    subject: `Delivery update for ${recipientName}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+            .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
+            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Chesed Train</h1>
+            </div>
+            <div class="content">
+              <h2>Delivery Update</h2>
+              <p>Your scheduled delivery has a new status.</p>
+              <div class="highlight">
+                <p><strong>Train:</strong> ${trainTitle}</p>
+                <p><strong>Date:</strong> ${formattedDate}</p>
+                <p><strong>Status:</strong> ${statusLabel}</p>
+              </div>
+              <p>Thank you for being part of this chesed effort.</p>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} MealTrain. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+}
