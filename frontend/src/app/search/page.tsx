@@ -202,7 +202,7 @@ export default function SearchPage() {
                       <div className="flex items-center gap-4 mt-4 pt-4 border-t">
                         <div className="flex items-center gap-1 text-sm">
                           <UserGroupIcon className="w-4 h-4 text-primary-500" />
-                          <span>{train._count?.participants || 0} volunteers</span>
+                          <span>{train._count?.contributions || 0} volunteers</span>
                         </div>
                         {train.allowDonations && (
                           <Badge variant="success" className="text-xs">

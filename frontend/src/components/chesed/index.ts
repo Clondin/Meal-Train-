@@ -5,4 +5,3 @@ export { DeliveryStatusTracker } from './DeliveryStatusTracker';
 export { TaskSlotCalendar } from './TaskSlotCalendar';
 export { GuestSignupModal } from './GuestSignupModal';
 export { SimchaBoard } from './SimchaBoard';
-export { TaskTypeSelector } from './TaskTypeSelector';

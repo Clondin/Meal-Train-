@@ -411,6 +411,13 @@ export interface UpdateContributionData extends Partial<CreateContributionData> 
   status?: ContributionStatus;
 }
 
+export interface CreateParticipantData {
+  dateId: string;
+  name: string;
+  email: string;
+  phone?: string;
+}
+
 // ============================================
 // SIMCHA CONTRIBUTION TYPES
 // ============================================

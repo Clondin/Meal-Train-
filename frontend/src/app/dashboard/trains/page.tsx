@@ -84,10 +84,16 @@ export default function TrainsPage() {
   };
 
   const getTrainStats = (train: ChesedTrain) => {
-    const totalDates = train.dates?.length || 0;
-    const claimedDates = train.dates?.filter((d) => d.status === 'claimed' || d.status === 'delivered').length || 0;
-    const participants = train.participants?.length || 0;
-    const donations = train.donations?.filter((d) => d.status === 'completed').reduce((sum, d) => sum + d.amount, 0) || 0;
+    const totalDates = train.taskSlots?.length || 0;
+    const claimedDates =
+      train.taskSlots?.filter(
+        (slot) => slot.status === 'FILLED' || slot.status === 'PARTIALLY_FILLED'
+      ).length || 0;
+    const participants = train.contributions?.length || 0;
+    const donations =
+      train.donations
+        ?.filter((donation) => donation.status === 'COMPLETED')
+        .reduce((sum, donation) => sum + donation.amount, 0) || 0;
 
     return { totalDates, claimedDates, participants, donations };
   };

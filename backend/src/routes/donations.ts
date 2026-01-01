@@ -221,7 +221,7 @@ router.get(
     }
 
     const isOrganizer = train.organizerId === req.user!.id;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = train.admins.some((admin: { userId: string }) => admin.userId === req.user!.id);
 
     if (!isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);
@@ -279,9 +279,9 @@ router.get(
     });
 
     // Anonymize names for anonymous donations
-    const publicDonations = donations.map(d => ({
-      ...d,
-      donorName: d.isAnonymous ? 'Anonymous' : d.donorName,
+    const publicDonations = donations.map((donation: { isAnonymous: boolean; donorName: string }) => ({
+      ...donation,
+      donorName: donation.isAnonymous ? 'Anonymous' : donation.donorName,
     }));
 
     res.json({ donations: publicDonations });

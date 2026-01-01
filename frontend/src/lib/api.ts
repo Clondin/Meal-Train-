@@ -13,6 +13,8 @@ import {
   Contribution,
   CreateContributionData,
   UpdateContributionData,
+  CreateParticipantData,
+  Participant,
   SimchaContribution,
   CreateSimchaContributionData,
   Donation,
@@ -200,11 +202,43 @@ class ApiClient {
   }
 
   // ============================================
+  // PARTICIPANT ENDPOINTS
+  // ============================================
+
+  async createParticipant(trainId: string, participantData: CreateParticipantData): Promise<Participant> {
+    const { dateId, name, email, phone } = participantData;
+    const { data } = await this.client.post<{ participant: Participant }>('/participants', {
+      trainId,
+      dateId,
+      guestName: name,
+      guestEmail: email,
+      guestPhone: phone,
+    });
+    return data.participant;
+  }
+
+  async getParticipants(trainId: string): Promise<Participant[]> {
+    const { data } = await this.client.get<{ participants: Participant[] }>(
+      `/participants/train/${trainId}`
+    );
+    return data.participants;
+  }
+
+  async deleteParticipant(_trainId: string, participantId: string): Promise<void> {
+    await this.client.delete(`/participants/${participantId}`);
+  }
+
+  // ============================================
   // TASK SLOT ENDPOINTS
   // ============================================
 
   async getTaskSlots(trainId: string, params?: { date?: string; taskType?: string }): Promise<TaskSlot[]> {
     const { data } = await this.client.get<TaskSlot[]>(`/chesed-trains/${trainId}/task-slots`, { params });
+    return data;
+  }
+
+  async getMealDates(trainId: string): Promise<TaskSlot[]> {
+    const { data } = await this.client.get<TaskSlot[]>(`/chesed-trains/${trainId}/task-slots`);
     return data;
   }
 

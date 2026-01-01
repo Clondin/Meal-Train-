@@ -85,23 +85,48 @@ export default function TrainDetailPage() {
 
   const getStats = () => {
     const totalDates = dates.length;
-    const claimedDates = dates.filter((d) => d.status === 'claimed' || d.status === 'delivered').length;
-    const deliveredDates = dates.filter((d) => d.status === 'delivered').length;
+    const claimedDates = dates.filter(
+      (d) => d.status === 'FILLED' || d.status === 'PARTIALLY_FILLED'
+    ).length;
+    const deliveredDates = participants.filter((participant) => participant.deliveryStatus === 'DELIVERED')
+      .length;
     const totalParticipants = participants.length;
     const totalDonations = donations
-      .filter((d) => d.status === 'completed')
+      .filter((d) => d.status === 'COMPLETED')
       .reduce((sum, d) => sum + d.amount, 0);
 
     return {
       totalDates,
       claimedDates,
       deliveredDates,
-      availableDates: totalDates - claimedDates,
+      availableDates: dates.filter((d) => d.status === 'AVAILABLE').length,
       totalParticipants,
       totalDonations,
-      donationCount: donations.filter((d) => d.status === 'completed').length,
+      donationCount: donations.filter((d) => d.status === 'COMPLETED').length,
     };
   };
+
+  const getParticipantName = (participant: Participant) => {
+    if (participant.user?.name) return participant.user.name;
+    const combinedName = [participant.user?.firstName, participant.user?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return combinedName || participant.guestName || 'Guest';
+  };
+
+  const recentContributions = dates
+    .flatMap((date) =>
+      (date.contributions || []).map((contribution) => ({
+        date,
+        contribution,
+      }))
+    )
+    .sort(
+      (a, b) =>
+        new Date(b.contribution.createdAt).getTime() - new Date(a.contribution.createdAt).getTime()
+    )
+    .slice(0, 5);
 
   const tabs = [
     { id: 'overview' as TabType, label: 'Overview', icon: '📊' },
@@ -310,20 +335,30 @@ export default function TrainDetailPage() {
             <Card>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
               <div className="space-y-3">
-                {dates.filter(d => d.status === 'claimed').slice(0, 5).map((date) => (
-                  <div key={date.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">
-                        {date.participant?.name || 'Unknown'} claimed {date.mealType}
-                      </p>
-                      <p className="text-xs text-gray-500">
-                        {formatDate(date.date)}
-                      </p>
+                {recentContributions.map(({ date, contribution }) => {
+                  const participantName = getParticipantName(contribution);
+                  const taskLabel = date.taskTitle || date.taskType.replace(/_/g, ' ').toLowerCase();
+                  const badgeVariant = contribution.status === 'CONFIRMED' ? 'success' : 'warning';
+                  const badgeLabel = contribution.status === 'CONFIRMED' ? 'Confirmed' : 'Pending';
+
+                  return (
+                    <div
+                      key={contribution.id}
+                      className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0"
+                    >
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-gray-900">
+                          {participantName} signed up for {taskLabel}
+                        </p>
+                        <p className="text-xs text-gray-500">{formatDate(date.date)}</p>
+                      </div>
+                      <Badge variant={badgeVariant} size="sm">
+                        {badgeLabel}
+                      </Badge>
                     </div>
-                    <Badge variant="success" size="sm">Claimed</Badge>
-                  </div>
-                ))}
-                {dates.filter(d => d.status === 'claimed').length === 0 && (
+                  );
+                })}
+                {recentContributions.length === 0 && (
                   <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
                 )}
               </div>

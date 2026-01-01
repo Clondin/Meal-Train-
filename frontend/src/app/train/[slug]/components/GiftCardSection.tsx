@@ -38,9 +38,7 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
 
   // Get gift cards
   const giftCards = train.giftCards || [];
-  const sentGiftCards = giftCards.filter(
-    (card) => card.status === 'sent' || card.status === 'received'
-  );
+  const sentGiftCards = giftCards.filter((card) => card.status === 'COMPLETED');
 
   const recentGiftCards = sentGiftCards
     .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -94,11 +92,11 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-semibold text-gray-900">
-                        {giftCard.donorName}
+                        {giftCard.purchaserName}
                       </h4>
                       <Badge variant="success">${giftCard.amount.toFixed(2)}</Badge>
                       <Badge variant="info" className="capitalize">
-                        {giftCard.retailer.replace('-', ' ')}
+                        {giftCard.vendor.replace('-', ' ')}
                       </Badge>
                     </div>
                     {giftCard.message && (
@@ -111,10 +109,10 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
                         {format(new Date(giftCard.createdAt), 'MMMM d, yyyy')}
                       </p>
                       <Badge
-                        variant={giftCard.status === 'received' ? 'success' : 'info'}
+                        variant={giftCard.status === 'COMPLETED' ? 'success' : 'info'}
                         size="sm"
                       >
-                        {giftCard.status === 'received' ? 'Received' : 'Sent'}
+                        {giftCard.status === 'COMPLETED' ? 'Delivered' : 'Pending'}
                       </Badge>
                     </div>
                   </div>
@@ -198,13 +196,14 @@ function GiftCardModal({
         return;
       }
 
+      const code = [cardNumber, pin].filter(Boolean).join(' / ') || undefined;
+
       await api.createGiftCard(train.id, {
-        retailer,
+        vendor: retailer,
         amount: giftCardAmount,
-        cardNumber,
-        pin,
-        donorName,
-        donorEmail,
+        code,
+        purchaserName: donorName,
+        purchaserEmail: donorEmail,
         message,
       });
 

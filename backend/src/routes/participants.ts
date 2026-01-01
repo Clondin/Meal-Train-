@@ -161,7 +161,9 @@ router.patch(
     // Check authorization
     const isOwner = participant.userId === req.user!.id;
     const isOrganizer = participant.train.organizerId === req.user!.id;
-    const isAdmin = participant.train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = participant.train.admins.some(
+      (admin: { userId: string }) => admin.userId === req.user!.id
+    );
 
     if (!isOwner && !isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);
@@ -215,7 +217,8 @@ router.delete(
     // Check authorization
     const isOwner = req.user && participant.userId === req.user.id;
     const isOrganizer = req.user && participant.train.organizerId === req.user.id;
-    const isAdmin = req.user && participant.train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin =
+      req.user && participant.train.admins.some((admin: { userId: string }) => admin.userId === req.user!.id);
 
     if (!isOwner && !isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);
@@ -259,7 +262,9 @@ router.post(
     }
 
     const isOrganizer = participant.train.organizerId === req.user!.id;
-    const isAdmin = participant.train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = participant.train.admins.some(
+      (admin: { userId: string }) => admin.userId === req.user!.id
+    );
 
     if (!isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);
@@ -308,7 +313,7 @@ router.get(
     }
 
     const isOrganizer = train.organizerId === req.user!.id;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = train.admins.some((admin: { userId: string }) => admin.userId === req.user!.id);
 
     if (!isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);

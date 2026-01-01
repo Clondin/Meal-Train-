@@ -18,10 +18,7 @@ import {
 
 const router = Router();
 
-const findTrainByIdentifier = async (
-  identifier: string,
-  include?: Parameters<typeof prisma.mealTrain.findFirst>[0]['include']
-) => {
+const findTrainByIdentifier = async (identifier: string, include?: Record<string, unknown>) => {
   return prisma.mealTrain.findFirst({
     where: {
       OR: [{ slug: identifier }, { id: identifier }],
@@ -32,7 +29,8 @@ const findTrainByIdentifier = async (
 
 const isOrganizerOrAdmin = (train: { organizerId: string; admins?: { userId: string }[] }, userId: string) => {
   const isOrganizer = train.organizerId === userId;
-  const isAdmin = train.admins?.some(a => a.userId === userId) || false;
+  const isAdmin =
+    train.admins?.some((admin: { userId: string }) => admin.userId === userId) || false;
   return isOrganizer || isAdmin;
 };
 
@@ -171,7 +169,7 @@ router.post(
           trainId: train.id,
           date: new Date(d.date),
           deliveryTime: d.deliveryTime || defaultDeliveryTime || '18:00',
-          maxParticipants: d.maxParticipants || (trainType === TrainType.POTLUCK ? 5 : 1),
+          maxParticipants: d.maxParticipants || (trainType === TrainType.FULL_CHESED ? 5 : 1),
           notes: d.notes,
           status: DateStatus.AVAILABLE,
         })),
@@ -186,7 +184,7 @@ router.post(
           trainId: train.id,
           date: new Date(d),
           deliveryTime: defaultDeliveryTime || '18:00',
-          maxParticipants: trainType === TrainType.POTLUCK ? 5 : 1,
+          maxParticipants: trainType === TrainType.FULL_CHESED ? 5 : 1,
           status: DateStatus.AVAILABLE,
         });
       }

@@ -26,7 +26,7 @@ export default function DonationSection({ train }: DonationSectionProps) {
 
   // Calculate totals
   const completedDonations = train.donations?.filter(
-    (donation) => donation.status === 'completed'
+    (donation) => donation.status === 'COMPLETED'
   ) || [];
 
   const totalDonations = completedDonations.reduce(

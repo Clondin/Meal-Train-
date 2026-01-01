@@ -44,7 +44,17 @@ export default function ParticipantManager({
     try {
       setLoading(true);
       setError(null);
-      await api.createParticipant(trainId, formData);
+      const availableDate = dates.find((date) => date.status === 'AVAILABLE');
+
+      if (!availableDate) {
+        setError('No available dates to assign this participant.');
+        return;
+      }
+
+      await api.createParticipant(trainId, {
+        ...formData,
+        dateId: availableDate.id,
+      });
       setShowAddModal(false);
       resetForm();
       onUpdate();
@@ -69,19 +79,32 @@ export default function ParticipantManager({
     }
   };
 
+  const getParticipantName = (participant: Participant) => {
+    if (participant.user?.name) return participant.user.name;
+    const combinedName = [participant.user?.firstName, participant.user?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return combinedName || participant.guestName || 'Guest';
+  };
+
+  const getParticipantEmail = (participant: Participant) =>
+    participant.user?.email || participant.guestEmail || '';
+
+  const getParticipantPhone = (participant: Participant) =>
+    participant.user?.phone || participant.guestPhone || '';
+
   const handleExportCSV = () => {
     const headers = ['Name', 'Email', 'Phone', 'Claimed Dates', 'Delivered Dates'];
     const rows = filteredParticipants.map((participant) => {
-      const participantDates = dates.filter((d) => d.participantId === participant.id);
-      const claimedCount = participantDates.filter((d) => d.status === 'claimed').length;
-      const deliveredCount = participantDates.filter((d) => d.status === 'delivered').length;
+      const stats = getParticipantStats(participant.id);
 
       return [
-        participant.name,
-        participant.email,
-        participant.phone || '',
-        claimedCount.toString(),
-        deliveredCount.toString(),
+        getParticipantName(participant),
+        getParticipantEmail(participant),
+        getParticipantPhone(participant),
+        stats.claimed.toString(),
+        stats.delivered.toString(),
       ];
     });
 
@@ -96,12 +119,17 @@ export default function ParticipantManager({
   };
 
   const getParticipantStats = (participantId: string) => {
-    const participantDates = dates.filter((d) => d.participantId === participantId);
-    const claimed = participantDates.filter((d) => d.status === 'claimed').length;
-    const delivered = participantDates.filter((d) => d.status === 'delivered').length;
-    const upcoming = participantDates.filter(
-      (d) => d.status === 'claimed' && new Date(d.date) >= new Date()
-    ).length;
+    const participant = participants.find((item) => item.id === participantId);
+    if (!participant) {
+      return { claimed: 0, delivered: 0, upcoming: 0, total: 0 };
+    }
+
+    const slot = participant.slot || dates.find((date) => date.id === participant.slotId);
+    const isDelivered = participant.deliveryStatus === 'DELIVERED';
+    const isCancelled = participant.status === 'CANCELLED';
+    const claimed = isCancelled ? 0 : 1;
+    const delivered = isDelivered ? 1 : 0;
+    const upcoming = slot && new Date(slot.date) >= new Date() && !isDelivered ? 1 : 0;
 
     return { claimed, delivered, upcoming, total: claimed + delivered };
   };
@@ -109,10 +137,13 @@ export default function ParticipantManager({
   const filteredParticipants = participants.filter((participant) => {
     if (!searchQuery) return true;
     const query = searchQuery.toLowerCase();
+    const name = getParticipantName(participant).toLowerCase();
+    const email = getParticipantEmail(participant).toLowerCase();
+    const phone = getParticipantPhone(participant).toLowerCase();
     return (
-      participant.name.toLowerCase().includes(query) ||
-      participant.email.toLowerCase().includes(query) ||
-      participant.phone?.toLowerCase().includes(query)
+      name.includes(query) ||
+      email.includes(query) ||
+      phone.includes(query)
     );
   });
 
@@ -207,6 +238,9 @@ export default function ParticipantManager({
               <tbody className="bg-white divide-y divide-gray-200">
                 {filteredParticipants.map((participant) => {
                   const stats = getParticipantStats(participant.id);
+                  const displayName = getParticipantName(participant);
+                  const displayEmail = getParticipantEmail(participant);
+                  const displayPhone = getParticipantPhone(participant);
 
                   return (
                     <tr key={participant.id} className="hover:bg-gray-50">
@@ -215,7 +249,7 @@ export default function ParticipantManager({
                           <div className="flex-shrink-0 h-10 w-10">
                             <div className="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center">
                               <span className="text-blue-600 font-medium text-sm">
-                                {participant.name
+                                {displayName
                                   .split(' ')
                                   .map((n) => n[0])
                                   .join('')
@@ -226,7 +260,7 @@ export default function ParticipantManager({
                           </div>
                           <div className="ml-4">
                             <div className="text-sm font-medium text-gray-900">
-                              {participant.name}
+                              {displayName}
                             </div>
                             {participant.user && (
                               <div className="text-xs text-gray-500">Registered User</div>
@@ -235,9 +269,9 @@ export default function ParticipantManager({
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-900">{participant.email}</div>
-                        {participant.phone && (
-                          <div className="text-sm text-gray-500">{participant.phone}</div>
+                        <div className="text-sm text-gray-900">{displayEmail || '-'}</div>
+                        {displayPhone && (
+                          <div className="text-sm text-gray-500">{displayPhone}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

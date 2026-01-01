@@ -167,7 +167,7 @@ router.get(
     }
 
     const isOrganizer = train.organizerId === req.user!.id;
-    const isAdmin = train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = train.admins.some((admin: { userId: string }) => admin.userId === req.user!.id);
 
     if (!isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);
@@ -214,7 +214,7 @@ router.post(
     }
 
     const isOrganizer = giftCard.train.organizerId === req.user!.id;
-    const isAdmin = giftCard.train.admins.some(a => a.userId === req.user!.id);
+    const isAdmin = giftCard.train.admins.some((admin: { userId: string }) => admin.userId === req.user!.id);
 
     if (!isOrganizer && !isAdmin) {
       throw new AppError('Not authorized', 403);

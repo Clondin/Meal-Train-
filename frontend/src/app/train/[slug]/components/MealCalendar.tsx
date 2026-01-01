@@ -32,6 +32,20 @@ export default function MealCalendar({ train }: MealCalendarProps) {
 
   const today = startOfToday();
 
+  const getSlotLabel = (slot: MealDate) =>
+    slot.taskTitle || slot.taskType.replace(/_/g, ' ').toLowerCase();
+
+  const getContributorName = (slot: MealDate) => {
+    const contribution = slot.contributions?.[0];
+    if (!contribution) return null;
+    if (contribution.user?.name) return contribution.user.name;
+    const combinedName = [contribution.user?.firstName, contribution.user?.lastName]
+      .filter(Boolean)
+      .join(' ')
+      .trim();
+    return combinedName || contribution.guestName || 'Volunteer';
+  };
+
   // Generate calendar days for the current month
   const calendarDays = useMemo(() => {
     const start = startOfWeek(startOfMonth(currentMonth));
@@ -41,7 +55,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
 
   // Get meal date for a specific day
   const getMealDateForDay = (day: Date): MealDate | undefined => {
-    return train.dates?.find((mealDate) =>
+    return train.taskSlots?.find((mealDate) =>
       isSameDay(new Date(mealDate.date), day)
     );
   };
@@ -53,7 +67,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
 
     if (!mealDate) return 'none';
     if (isPast) return 'past';
-    if (mealDate.status === 'claimed' || mealDate.status === 'delivered') {
+    if (mealDate.status === 'FILLED' || mealDate.status === 'PARTIALLY_FILLED') {
       return 'filled';
     }
     return 'available';
@@ -146,7 +160,8 @@ export default function MealCalendar({ train }: MealCalendarProps) {
             const mealDate = getMealDateForDay(day);
             const isCurrentMonth = isSameMonth(day, currentMonth);
             const isToday = isSameDay(day, today);
-            const isClickable = status === 'available' || (status === 'none' && !isBefore(day, today));
+            const isClickable =
+              status === 'available' || (status === 'none' && !isBefore(day, today));
 
             return (
               <div
@@ -184,12 +199,11 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                       className="w-full text-xs"
                     >
                       {status === 'available' && 'Open'}
-                      {status === 'filled' &&
-                        (mealDate.participant?.name || 'Claimed')}
+                      {status === 'filled' && (getContributorName(mealDate) || 'Claimed')}
                       {status === 'past' && 'Past'}
                     </Badge>
                     <div className="text-xs text-gray-600 truncate">
-                      {mealDate.mealType}
+                      {getSlotLabel(mealDate)}
                     </div>
                   </div>
                 )}
@@ -207,13 +221,13 @@ export default function MealCalendar({ train }: MealCalendarProps) {
       <div className="mt-6 lg:hidden">
         <h4 className="font-semibold text-gray-900 mb-3">Available Dates</h4>
         <div className="space-y-2">
-          {train.dates
+          {train.taskSlots
             ?.filter((mealDate) => {
               const day = new Date(mealDate.date);
               return (
                 isSameMonth(day, currentMonth) &&
                 !isBefore(day, today) &&
-                mealDate.status === 'available'
+                mealDate.status === 'AVAILABLE'
               );
             })
             .map((mealDate) => (
@@ -230,7 +244,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                     {format(new Date(mealDate.date), 'EEEE, MMMM d')}
                   </div>
                   <div className="text-sm text-gray-600 capitalize">
-                    {mealDate.mealType}
+                    {getSlotLabel(mealDate)}
                   </div>
                 </div>
                 <Badge variant="success">Available</Badge>
