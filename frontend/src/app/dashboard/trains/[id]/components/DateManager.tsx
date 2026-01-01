@@ -3,33 +3,46 @@
 import React, { useState } from 'react';
 import { api } from '@/lib/api';
 import { Card, Button, Badge, Modal, Input, Select } from '@/components/ui';
-import { MealDate, CreateMealDateData } from '@/types';
+import { TaskSlot, CreateTaskSlotData, TaskType, SlotStatus, ContributionStatus } from '@/types';
 import { cn } from '@/lib/utils';
+
+// Helper for mapping simple labels to TaskType
+const TASK_TYPE_OPTIONS: { value: TaskType; label: string }[] = [
+  { value: 'MEAL_BREAKFAST', label: 'Breakfast' },
+  { value: 'MEAL_LUNCH', label: 'Lunch' },
+  { value: 'MEAL_DINNER', label: 'Dinner' },
+  { value: 'MEAL_SHABBOS_FRIDAY_NIGHT', label: 'Friday Night' },
+  { value: 'MEAL_SHABBOS_DAY', label: 'Shabbos Day' },
+];
 
 interface DateManagerProps {
   trainId: string;
-  dates: MealDate[];
+  dates: TaskSlot[];
   onUpdate: () => void;
 }
 
 export default function DateManager({ trainId, dates, onUpdate }: DateManagerProps) {
   const [showAddModal, setShowAddModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
-  const [selectedDate, setSelectedDate] = useState<MealDate | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<TaskSlot | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const [formData, setFormData] = useState<CreateMealDateData>({
+  const [formData, setFormData] = useState<CreateTaskSlotData>({
     date: '',
-    mealType: 'dinner',
+    taskType: 'MEAL_DINNER',
     notes: '',
+    maxContributors: 1,
+    allowSplit: false
   });
 
   const resetForm = () => {
     setFormData({
       date: '',
-      mealType: 'dinner',
+      taskType: 'MEAL_DINNER',
       notes: '',
+      maxContributors: 1,
+      allowSplit: false
     });
     setError(null);
   };
@@ -39,7 +52,7 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     try {
       setLoading(true);
       setError(null);
-      await api.createMealDate(trainId, formData);
+      await api.createTaskSlot(trainId, formData);
       setShowAddModal(false);
       resetForm();
       onUpdate();
@@ -52,14 +65,14 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
 
   const handleEditDate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDate) return;
+    if (!selectedSlot) return;
 
     try {
       setLoading(true);
       setError(null);
-      await api.updateMealDate(trainId, selectedDate.id, formData);
+      await api.updateTaskSlot(trainId, selectedSlot.id, formData);
       setShowEditModal(false);
-      setSelectedDate(null);
+      setSelectedSlot(null);
       resetForm();
       onUpdate();
     } catch (err: any) {
@@ -69,13 +82,13 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     }
   };
 
-  const handleDeleteDate = async (dateId: string) => {
+  const handleDeleteDate = async (slotId: string) => {
     if (!confirm('Are you sure you want to delete this meal date?')) return;
 
     try {
       setLoading(true);
       setError(null);
-      await api.deleteMealDate(trainId, dateId);
+      await api.deleteTaskSlot(trainId, slotId);
       onUpdate();
     } catch (err: any) {
       alert(err.message || 'Failed to delete meal date');
@@ -84,13 +97,23 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     }
   };
 
-  const handleUnclaimDate = async (dateId: string) => {
+  const handleUnclaimDate = async (slot: TaskSlot) => {
     if (!confirm('Are you sure you want to unclaim this meal date?')) return;
+
+    // Find the first active contribution to cancel
+    const contribution = slot.contributions?.find(c =>
+      c.status !== 'CANCELLED' && c.status !== 'NO_SHOW'
+    );
+
+    if (!contribution) {
+      alert('No active contribution found to unclaim.');
+      return;
+    }
 
     try {
       setLoading(true);
       setError(null);
-      await api.unclaimMealDate(trainId, dateId);
+      await api.cancelContribution(trainId, contribution.id);
       onUpdate();
     } catch (err: any) {
       alert(err.message || 'Failed to unclaim meal date');
@@ -99,11 +122,21 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     }
   };
 
-  const handleMarkDelivered = async (dateId: string) => {
+  const handleMarkDelivered = async (slot: TaskSlot) => {
+    // Find the first confirmed contribution
+    const contribution = slot.contributions?.find(c =>
+      c.status === 'CONFIRMED' || c.status === 'PENDING'
+    );
+
+    if (!contribution) {
+      alert('No active contribution found to mark delivered.');
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      await api.markMealDateDelivered(trainId, dateId);
+      await api.updateDeliveryStatus(trainId, contribution.id, 'DELIVERED');
       onUpdate();
     } catch (err: any) {
       alert(err.message || 'Failed to mark as delivered');
@@ -112,12 +145,14 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     }
   };
 
-  const openEditModal = (date: MealDate) => {
-    setSelectedDate(date);
+  const openEditModal = (slot: TaskSlot) => {
+    setSelectedSlot(slot);
     setFormData({
-      date: date.date.split('T')[0],
-      mealType: date.mealType,
-      notes: date.notes || '',
+      date: slot.date.split('T')[0],
+      taskType: slot.taskType,
+      notes: slot.notes || '',
+      maxContributors: slot.maxContributors,
+      allowSplit: slot.allowSplit,
     });
     setShowEditModal(true);
   };
@@ -131,16 +166,22 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     });
   };
 
-  const getStatusBadge = (status: MealDate['status']) => {
-    const statusConfig = {
-      available: { label: 'Available', variant: 'info' as const },
-      claimed: { label: 'Claimed', variant: 'warning' as const },
-      delivered: { label: 'Delivered', variant: 'success' as const },
-      cancelled: { label: 'Cancelled', variant: 'error' as const },
+  const getStatusBadge = (status: SlotStatus) => {
+    const statusConfig: Record<string, { label: string; variant: 'info' | 'warning' | 'success' | 'error' | 'neutral' }> = {
+      AVAILABLE: { label: 'Available', variant: 'info' },
+      PARTIALLY_FILLED: { label: 'Partial', variant: 'warning' },
+      FILLED: { label: 'Claimed', variant: 'success' },
+      CLOSED: { label: 'Closed', variant: 'neutral' },
+      CANCELLED: { label: 'Cancelled', variant: 'error' },
     };
 
-    const config = statusConfig[status];
+    const config = statusConfig[status] || statusConfig['AVAILABLE'];
     return <Badge variant={config.variant}>{config.label}</Badge>;
+  };
+
+  const getTaskTypeLabel = (retry: TaskType) => {
+    const option = TASK_TYPE_OPTIONS.find(o => o.value === retry);
+    return option ? option.label : retry.replace('MEAL_', '');
   };
 
   // Group dates by month
@@ -154,7 +195,7 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
     }
     acc[monthYear].push(date);
     return acc;
-  }, {} as Record<string, MealDate[]>);
+  }, {} as Record<string, TaskSlot[]>);
 
   // Sort dates within each group
   Object.keys(groupedDates).forEach((key) => {
@@ -199,78 +240,85 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
             <Card key={monthYear}>
               <h3 className="text-lg font-semibold text-gray-900 mb-4">{monthYear}</h3>
               <div className="space-y-3">
-                {monthDates.map((date) => (
-                  <div
-                    key={date.id}
-                    className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
-                  >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <p className="font-medium text-gray-900">{formatDate(date.date)}</p>
-                        <Badge variant="neutral" size="sm">
-                          {date.mealType.charAt(0).toUpperCase() + date.mealType.slice(1)}
-                        </Badge>
-                        {getStatusBadge(date.status)}
-                      </div>
-                      {date.participant && (
-                        <p className="text-sm text-gray-600 mb-1">
-                          Claimed by: {date.participant.name}
-                        </p>
-                      )}
-                      {date.notes && (
-                        <p className="text-sm text-gray-500">{date.notes}</p>
-                      )}
-                    </div>
+                {monthDates.map((slot) => {
+                  const activeContribution = slot.contributions?.find(c =>
+                    c.status !== 'CANCELLED' && c.status !== 'NO_SHOW'
+                  );
+                  const isDelivered = activeContribution?.deliveryStatus === 'DELIVERED';
 
-                    <div className="flex items-center gap-2">
-                      {date.status === 'available' && (
-                        <>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => openEditModal(date)}
-                            disabled={loading}
-                          >
-                            Edit
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDeleteDate(date.id)}
-                            disabled={loading}
-                          >
-                            <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                            </svg>
-                          </Button>
-                        </>
-                      )}
-                      {date.status === 'claimed' && (
-                        <>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleMarkDelivered(date.id)}
-                            disabled={loading}
-                          >
-                            Mark Delivered
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleUnclaimDate(date.id)}
-                            disabled={loading}
-                          >
-                            Unclaim
-                          </Button>
-                        </>
-                      )}
-                      {date.status === 'delivered' && (
-                        <Badge variant="success">Completed</Badge>
-                      )}
+                  return (
+                    <div
+                      key={slot.id}
+                      className="flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:border-gray-300 transition-colors"
+                    >
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <p className="font-medium text-gray-900">{formatDate(slot.date)}</p>
+                          <Badge variant="neutral" size="sm">
+                            {getTaskTypeLabel(slot.taskType)}
+                          </Badge>
+                          {getStatusBadge(slot.status)}
+                        </div>
+                        {activeContribution && (
+                          <div className="text-sm text-gray-600 mb-1">
+                            Claimed by: {activeContribution.user?.name || activeContribution.guestName || 'Anonymous'}
+                            {isDelivered && (
+                              <Badge variant="success" size="sm" className="ml-2">Delivered</Badge>
+                            )}
+                          </div>
+                        )}
+                        {slot.notes && (
+                          <p className="text-sm text-gray-500">{slot.notes}</p>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2">
+                        {slot.status === 'AVAILABLE' && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => openEditModal(slot)}
+                              disabled={loading}
+                            >
+                              Edit
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDeleteDate(slot.id)}
+                              disabled={loading}
+                            >
+                              <svg className="w-4 h-4 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                              </svg>
+                            </Button>
+                          </>
+                        )}
+                        {(slot.status === 'FILLED' || slot.status === 'PARTIALLY_FILLED') && activeContribution && !isDelivered && (
+                          <>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleMarkDelivered(slot)}
+                              disabled={loading}
+                            >
+                              Mark Delivered
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleUnclaimDate(slot)}
+                              disabled={loading}
+                            >
+                              Unclaim
+                            </Button>
+                          </>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </Card>
           ))}
@@ -311,15 +359,11 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
                 Meal Type *
               </label>
               <Select
-                value={formData.mealType}
+                value={formData.taskType}
                 onChange={(value) =>
-                  setFormData({ ...formData, mealType: value as 'breakfast' | 'lunch' | 'dinner' })
+                  setFormData({ ...formData, taskType: value as TaskType })
                 }
-                options={[
-                  { value: 'breakfast', label: 'Breakfast' },
-                  { value: 'lunch', label: 'Lunch' },
-                  { value: 'dinner', label: 'Dinner' },
-                ]}
+                options={TASK_TYPE_OPTIONS}
               />
             </div>
 
@@ -359,7 +403,7 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
         isOpen={showEditModal}
         onClose={() => {
           setShowEditModal(false);
-          setSelectedDate(null);
+          setSelectedSlot(null);
           resetForm();
         }}
         title="Edit Meal Date"
@@ -389,15 +433,11 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
                 Meal Type *
               </label>
               <Select
-                value={formData.mealType}
+                value={formData.taskType}
                 onChange={(value) =>
-                  setFormData({ ...formData, mealType: value as 'breakfast' | 'lunch' | 'dinner' })
+                  setFormData({ ...formData, taskType: value as TaskType })
                 }
-                options={[
-                  { value: 'breakfast', label: 'Breakfast' },
-                  { value: 'lunch', label: 'Lunch' },
-                  { value: 'dinner', label: 'Dinner' },
-                ]}
+                options={TASK_TYPE_OPTIONS}
               />
             </div>
 
@@ -419,7 +459,7 @@ export default function DateManager({ trainId, dates, onUpdate }: DateManagerPro
               variant="outline"
               onClick={() => {
                 setShowEditModal(false);
-                setSelectedDate(null);
+                setSelectedSlot(null);
                 resetForm();
               }}
               disabled={loading}
