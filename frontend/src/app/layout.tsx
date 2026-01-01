@@ -3,6 +3,9 @@ import { Inter, Playfair_Display } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
+const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
+
 export const metadata: Metadata = {
   title: {
     default: 'MealTrain - Organize Meal Deliveries with Love',
@@ -61,22 +64,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
-const playfair = Playfair_Display({ subsets: ['latin'], variable: '--font-playfair' });
-
-    export default function RootLayout({
-      children,
-    }: Readonly<{
-      children: React.ReactNode;
-    }>) {
-    return (
-      <html lang="en" suppressHydrationWarning>
-        <body
-          className={`${inter.variable} ${playfair.variable} font-sans antialiased bg-background text-foreground`}
-          suppressHydrationWarning
-        >
-          <Providers>{children}</Providers>
-        </body>
-      </html>
-    );
-  }
+    <html lang="en" suppressHydrationWarning>
+      <body
+        className={`${inter.variable} ${playfair.variable} font-sans antialiased`}
+        suppressHydrationWarning
+      >
+        <Providers>{children}</Providers>
+      </body>
+    </html>
+  );
+}
