@@ -62,21 +62,23 @@ const socialLinks = [
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-900" aria-labelledby="footer-heading">
+    <footer className="bg-foreground text-background" aria-labelledby="footer-heading">
       <h2 id="footer-heading" className="sr-only">
         Footer
       </h2>
       <div className="mx-auto max-w-7xl px-6 pb-8 pt-16 sm:pt-24 lg:px-8 lg:pt-32">
         <div className="xl:grid xl:grid-cols-3 xl:gap-8">
           <div className="space-y-8">
-            <Link href="/" className="flex items-center space-x-2 group">
-              <div className="relative">
-                <HeartIcon className="h-8 w-8 text-rose-500 group-hover:text-rose-400 transition-colors" />
-                <div className="absolute inset-0 bg-rose-500 blur-lg opacity-30 group-hover:opacity-40 transition-opacity" />
+            <Link href="/" className="flex items-center gap-2 group">
+              <div className="relative p-1">
+                <HeartIcon className="h-8 w-8 text-primary group-hover:scale-110 transition-transform duration-300" />
+                <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 rounded-full" />
               </div>
-              <span className="text-2xl font-bold text-white">MealTrain</span>
+              <span className="text-2xl font-serif font-bold text-background tracking-tight">
+                MealTrain
+              </span>
             </Link>
-            <p className="text-sm leading-6 text-gray-400">
+            <p className="text-sm leading-6 text-background/70">
               Bringing communities together through the simple act of sharing
               meals. Organize meal deliveries for friends, family, and neighbors
               during times of need.
@@ -88,7 +90,7 @@ export default function Footer() {
                   <a
                     key={item.name}
                     href={item.href}
-                    className="text-gray-400 hover:text-rose-500 transition-colors"
+                    className="text-background/70 hover:text-primary transition-colors hover:-translate-y-1 transform duration-200"
                     target="_blank"
                     rel="noopener noreferrer"
                   >
@@ -102,7 +104,7 @@ export default function Footer() {
           <div className="mt-16 grid grid-cols-2 gap-8 xl:col-span-2 xl:mt-0">
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">
+                <h3 className="text-sm font-semibold leading-6 text-white font-serif tracking-wide">
                   Product
                 </h3>
                 <ul role="list" className="mt-6 space-y-4">
@@ -110,7 +112,7 @@ export default function Footer() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm leading-6 text-gray-400 hover:text-white transition-colors"
+                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -119,7 +121,7 @@ export default function Footer() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">
+                <h3 className="text-sm font-semibold leading-6 text-white font-serif tracking-wide">
                   Support
                 </h3>
                 <ul role="list" className="mt-6 space-y-4">
@@ -127,7 +129,7 @@ export default function Footer() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm leading-6 text-gray-400 hover:text-white transition-colors"
+                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -138,7 +140,7 @@ export default function Footer() {
             </div>
             <div className="md:grid md:grid-cols-2 md:gap-8">
               <div>
-                <h3 className="text-sm font-semibold leading-6 text-white">
+                <h3 className="text-sm font-semibold leading-6 text-white font-serif tracking-wide">
                   Company
                 </h3>
                 <ul role="list" className="mt-6 space-y-4">
@@ -146,7 +148,7 @@ export default function Footer() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm leading-6 text-gray-400 hover:text-white transition-colors"
+                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -155,7 +157,7 @@ export default function Footer() {
                 </ul>
               </div>
               <div className="mt-10 md:mt-0">
-                <h3 className="text-sm font-semibold leading-6 text-white">
+                <h3 className="text-sm font-semibold leading-6 text-white font-serif tracking-wide">
                   Legal
                 </h3>
                 <ul role="list" className="mt-6 space-y-4">
@@ -163,7 +165,7 @@ export default function Footer() {
                     <li key={item.name}>
                       <Link
                         href={item.href}
-                        className="text-sm leading-6 text-gray-400 hover:text-white transition-colors"
+                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
                       >
                         {item.name}
                       </Link>
@@ -174,10 +176,10 @@ export default function Footer() {
             </div>
           </div>
         </div>
-        <div className="mt-16 border-t border-gray-800 pt-8 sm:mt-20 lg:mt-24">
-          <p className="text-xs leading-5 text-gray-400 text-center">
+        <div className="mt-16 border-t border-background/10 pt-8 sm:mt-20 lg:mt-24">
+          <p className="text-xs leading-5 text-background/50 text-center">
             &copy; {new Date().getFullYear()} MealTrain. All rights reserved.
-            Made with <HeartIcon className="inline h-4 w-4 text-rose-500" /> for
+            Made with <HeartIcon className="inline h-4 w-4 text-primary" /> for
             communities everywhere.
           </p>
         </div>
