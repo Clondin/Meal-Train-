@@ -5,6 +5,7 @@ import { authenticate, optionalAuth, AuthRequest, requireVerified } from '../mid
 import { generateSlug } from '../utils/slug.js';
 import { body, query, validationResult } from 'express-validator';
 import {
+  Prisma,
   TrainStatus,
   TrainType,
   TrainCategory,
@@ -20,7 +21,7 @@ const router = Router();
 
 const findTrainByIdentifier = async (
   identifier: string,
-  include?: Parameters<typeof prisma.mealTrain.findFirst>[0]['include']
+  include?: Prisma.MealTrainInclude
 ) => {
   return prisma.mealTrain.findFirst({
     where: {
@@ -611,7 +612,8 @@ router.post(
       throw new AppError('Task slot not found', 404);
     }
 
-    if ([SlotStatus.CLOSED, SlotStatus.CANCELLED].includes(slot.status)) {
+    const closedStatuses: SlotStatus[] = [SlotStatus.CLOSED, SlotStatus.CANCELLED];
+    if (closedStatuses.includes(slot.status)) {
       throw new AppError('This slot is not available', 400);
     }
 
