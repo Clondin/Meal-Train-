@@ -1,0 +1,48 @@
+{
+  "root": true,
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+    "ecmaVersion": 2022,
+    "sourceType": "module",
+    "ecmaFeatures": {
+      "jsx": true
+    }
+  },
+  "env": {
+    "browser": true,
+    "node": true,
+    "es2022": true
+  },
+  "plugins": ["@typescript-eslint", "@next/next", "react", "react-hooks"],
+  "extends": [
+    "eslint:recommended",
+    "plugin:@typescript-eslint/recommended",
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+    "plugin:@next/next/core-web-vitals"
+  ],
+  "settings": {
+    "next": {
+      "rootDir": "frontend/"
+    },
+    "react": {
+      "version": "detect"
+    }
+  },
+  "ignorePatterns": [".next", "coverage", "node_modules"],
+  "overrides": [
+    {
+      "files": ["next.config.js"],
+      "rules": {
+        "@typescript-eslint/no-require-imports": "off"
+      }
+    }
+  ],
+  "rules": {
+    "@typescript-eslint/no-explicit-any": "off",
+    "@typescript-eslint/no-unused-vars": "off",
+    "@typescript-eslint/triple-slash-reference": "off",
+    "react/no-unescaped-entities": "off",
+    "react/react-in-jsx-scope": "off"
+  }
+}

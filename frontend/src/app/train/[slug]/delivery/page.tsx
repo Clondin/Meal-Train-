@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
 import { ChesedTrain, Contribution, DeliveryStatus } from '@/types';
 import { api } from '@/lib/api';
 import TrainHero from '../components/TrainHero';
@@ -9,22 +10,24 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { format } from 'date-fns';
 import toast from 'react-hot-toast';
+import { devLogError } from '@/lib/dev-log';
 
-interface DeliveryPageProps {
-    params: {
-        slug: string;
-    };
-}
-
-export default function DeliveryPage({ params }: DeliveryPageProps) {
+export default function DeliveryPage() {
+    const params = useParams<{ slug: string }>();
+    const slug = typeof params.slug === 'string' ? params.slug : '';
     const [train, setTrain] = useState<ChesedTrain | null>(null);
     const [activeContributions, setActiveContributions] = useState<Contribution[]>([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        if (!slug) {
+            setLoading(false);
+            return;
+        }
+
         const fetchData = async () => {
             try {
-                const trainData = await api.getChesedTrain(params.slug);
+                const trainData = await api.getChesedTrain(slug);
                 setTrain(trainData);
 
                 // In a real app, filter for the current user's contributions
@@ -39,7 +42,7 @@ export default function DeliveryPage({ params }: DeliveryPageProps) {
 
                 setActiveContributions(relevant);
             } catch (error) {
-                console.error(error);
+                devLogError('Failed to load delivery data:', error);
                 toast.error('Failed to load delivery data');
             } finally {
                 setLoading(false);
@@ -47,7 +50,7 @@ export default function DeliveryPage({ params }: DeliveryPageProps) {
         };
 
         fetchData();
-    }, [params.slug]);
+    }, [slug]);
 
     const handleStatusUpdate = async (contributionId: string, status: DeliveryStatus) => {
         try {

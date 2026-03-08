@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/Badge';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 import { format } from 'date-fns';
+import { devLogError } from '@/lib/dev-log';
 
 interface GiftCardSectionProps {
   train: ChesedTrain;
@@ -72,7 +73,7 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
           {RETAILERS.slice(0, -1).map((retailer) => (
             <div
               key={retailer.value}
-              className="p-4 border border-gray-200 rounded-lg text-center hover:border-blue-500 hover:bg-blue-50 transition-colors cursor-pointer"
+              className="p-4 border border-gray-200 rounded-lg text-center hover:border-primary-500 hover:bg-primary-50 transition-colors cursor-pointer"
               onClick={() => setIsModalOpen(true)}
             >
               <div className="font-medium text-gray-900">{retailer.label}</div>
@@ -214,7 +215,7 @@ function GiftCardModal({
       router.refresh();
       onClose();
     } catch (error: any) {
-      console.error('Error creating gift card:', error);
+      devLogError('Error creating gift card:', error);
       toast.error(error.message || 'Failed to send gift card. Please try again.');
     } finally {
       setIsLoading(false);
@@ -238,7 +239,7 @@ function GiftCardModal({
           <select
             value={retailer}
             onChange={(e) => setRetailer(e.target.value)}
-            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            className="block w-full rounded-md border border-gray-300 px-3 py-2 text-gray-900 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
             required
           >
             {RETAILERS.map((option) => (
@@ -305,8 +306,8 @@ function GiftCardModal({
         />
 
         {/* Info Box */}
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-          <p className="text-sm text-blue-800">
+        <div className="bg-primary-50 border border-primary-200 rounded-md p-4">
+          <p className="text-sm text-primary-800">
             <strong>Note:</strong> If you haven't purchased the gift card yet, you can submit this form
             and add the card details later. The coordinator will receive your information and follow up.
           </p>

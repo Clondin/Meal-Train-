@@ -2,6 +2,7 @@ import { Prisma } from '@prisma/client';
 import cron from 'node-cron';
 import prisma from '../config/database.js';
 import { sendReminderEmail, sendEmail } from './email.js';
+import { logger } from './logger.js';
 
 const createNotification = async (input: {
   userId?: string | null;
@@ -30,28 +31,44 @@ const createNotification = async (input: {
   });
 };
 
-const getDateRange = (offsetDays: number) => {
-  const start = new Date();
-  start.setHours(0, 0, 0, 0);
-  start.setDate(start.getDate() + offsetDays);
+const getLocalDateString = (date: Date, timeZone: string) =>
+  new Intl.DateTimeFormat('en-CA', {
+    timeZone,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+  }).format(date);
 
-  const end = new Date(start);
-  end.setHours(23, 59, 59, 999);
+const getLocalHour = (date: Date, timeZone: string) =>
+  Number(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone,
+      hour: '2-digit',
+      hourCycle: 'h23',
+    }).format(date)
+  );
 
-  return { start, end };
+const getLocalWeekday = (date: Date, timeZone: string) =>
+  new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    weekday: 'short',
+  }).format(date);
+
+const addDays = (date: Date, days: number) => {
+  const next = new Date(date);
+  next.setUTCDate(next.getUTCDate() + days);
+  return next;
 };
 
 async function sendTomorrowReminders() {
-  const { start, end } = getDateRange(1);
-
   const contributions = await prisma.contribution.findMany({
     where: {
       status: { in: ['CONFIRMED', 'PENDING'] },
       reminderSent: false,
       slot: {
         date: {
-          gte: start,
-          lte: end,
+          gte: addDays(new Date(), 0),
+          lte: addDays(new Date(), 2),
         },
         status: {
           not: 'CANCELLED',
@@ -68,7 +85,15 @@ async function sendTomorrowReminders() {
     },
   });
 
+  const now = new Date();
   for (const contribution of contributions) {
+    const timeZone = contribution.train.timezone || 'UTC';
+    if (getLocalHour(now, timeZone) !== 8) continue;
+
+    const localTomorrow = getLocalDateString(addDays(now, 1), timeZone);
+    const contributionDate = getLocalDateString(contribution.slot.date, timeZone);
+    if (contributionDate !== localTomorrow) continue;
+
     const email = contribution.user?.email || contribution.guestEmail;
     const name =
       contribution.user?.firstName ||
@@ -118,8 +143,6 @@ async function sendTomorrowReminders() {
 }
 
 async function sendDayOfConfirmations() {
-  const { start, end } = getDateRange(0);
-
   const contributions = await prisma.contribution.findMany({
     where: {
       status: 'CONFIRMED',
@@ -127,8 +150,8 @@ async function sendDayOfConfirmations() {
       dayOfReminderSent: false,
       slot: {
         date: {
-          gte: start,
-          lte: end,
+          gte: addDays(new Date(), -1),
+          lte: addDays(new Date(), 1),
         },
       },
       train: {
@@ -142,7 +165,15 @@ async function sendDayOfConfirmations() {
     },
   });
 
+  const now = new Date();
   for (const contribution of contributions) {
+    const timeZone = contribution.train.timezone || 'UTC';
+    if (getLocalHour(now, timeZone) !== 7) continue;
+
+    const localToday = getLocalDateString(now, timeZone);
+    const contributionDate = getLocalDateString(contribution.slot.date, timeZone);
+    if (contributionDate !== localToday) continue;
+
     const email = contribution.user?.email || contribution.guestEmail;
     const name =
       contribution.user?.firstName ||
@@ -200,8 +231,13 @@ async function sendWeeklyOrganizerDigest() {
     },
   });
 
+  const now = new Date();
   for (const organizer of organizers) {
     if (!organizer.email) continue;
+    const timeZone = organizer.timezone || 'UTC';
+    if (getLocalWeekday(now, timeZone) !== 'Mon' || getLocalHour(now, timeZone) !== 9) {
+      continue;
+    }
 
     const digestLines = organizer.organizedTrains.map((train) => {
       const filled = train.taskSlots.filter((slot) =>
@@ -232,16 +268,32 @@ async function sendWeeklyOrganizerDigest() {
   }
 }
 
+async function pruneExpiredSessions() {
+  const result = await prisma.session.deleteMany({
+    where: {
+      expiresAt: { lt: new Date() },
+    },
+  });
+
+  if (result.count > 0) {
+    logger.info({ deletedSessions: result.count }, 'Pruned expired sessions');
+  }
+}
+
 export function startScheduler() {
-  cron.schedule('0 8 * * *', () => {
+  cron.schedule('0 * * * *', () => {
     void sendTomorrowReminders();
   });
 
-  cron.schedule('0 7 * * *', () => {
+  cron.schedule('15 * * * *', () => {
     void sendDayOfConfirmations();
   });
 
-  cron.schedule('0 9 * * 1', () => {
+  cron.schedule('30 * * * *', () => {
     void sendWeeklyOrganizerDigest();
+  });
+
+  cron.schedule('0 3 * * *', () => {
+    void pruneExpiredSessions();
   });
 }

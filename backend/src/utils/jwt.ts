@@ -1,6 +1,7 @@
 import jwt, { type SignOptions } from 'jsonwebtoken';
+import { getJwtSecret } from './env.js';
 
-const JWT_SECRET: jwt.Secret = process.env.JWT_SECRET || 'fallback-secret-change-in-production';
+const JWT_SECRET: jwt.Secret = getJwtSecret();
 const JWT_EXPIRES_IN: SignOptions['expiresIn'] =
   (process.env.JWT_EXPIRES_IN as SignOptions['expiresIn']) ?? '7d';
 const REFRESH_TOKEN_EXPIRES_IN: SignOptions['expiresIn'] =

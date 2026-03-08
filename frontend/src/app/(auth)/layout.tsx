@@ -8,19 +8,19 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex flex-col">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex flex-col">
       {/* Header with Logo and Back Link */}
       <div className="w-full px-4 py-6">
         <div className="max-w-md mx-auto flex items-center justify-between">
           <Link
             href="/"
-            className="flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors group"
+            className="flex items-center gap-2 text-primary-600 hover:text-primary-700 transition-colors group"
           >
             <FiArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
             <span className="font-medium">Back to Home</span>
           </Link>
           <Link href="/" className="flex items-center gap-2">
-            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+            <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-lg">C</span>
             </div>
             <span className="text-xl font-bold text-gray-900">Chesed Train</span>

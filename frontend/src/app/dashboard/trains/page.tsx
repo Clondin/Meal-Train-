@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Card, Button, Badge, Input, Select, Spinner } from '@/components/ui';
@@ -11,21 +11,12 @@ type FilterStatus = 'all' | 'active' | 'completed';
 
 export default function TrainsPage() {
   const [trains, setTrains] = useState<ChesedTrain[]>([]);
-  const [filteredTrains, setFilteredTrains] = useState<ChesedTrain[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<FilterStatus>('all');
 
-  useEffect(() => {
-    loadTrains();
-  }, []);
-
-  useEffect(() => {
-    filterTrains();
-  }, [trains, searchQuery, statusFilter]);
-
-  const loadTrains = async () => {
+  const loadTrains = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -36,9 +27,13 @@ export default function TrainsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
-  const filterTrains = () => {
+  useEffect(() => {
+    void loadTrains();
+  }, [loadTrains]);
+
+  const filteredTrains = useMemo(() => {
     let filtered = [...trains];
 
     // Filter by status
@@ -62,8 +57,8 @@ export default function TrainsPage() {
       );
     }
 
-    setFilteredTrains(filtered);
-  };
+    return filtered;
+  }, [trains, searchQuery, statusFilter]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -259,10 +254,10 @@ export default function TrainsPage() {
 
                   {/* Actions */}
                   <div className="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-sm text-blue-600 font-medium hover:text-blue-700">
+                    <span className="text-sm text-primary-600 font-medium hover:text-primary-700">
                       View Details
                     </span>
-                    <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-5 h-5 text-primary-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
                     </svg>
                   </div>

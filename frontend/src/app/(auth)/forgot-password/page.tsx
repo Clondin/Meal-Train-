@@ -73,8 +73,8 @@ export default function ForgotPasswordPage() {
             <>
               {/* Header */}
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FiMail className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FiMail className="w-8 h-8 text-primary-600" />
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   Forgot Password?
@@ -151,14 +151,14 @@ export default function ForgotPasswordPage() {
                   </span>
                 </p>
 
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-900">
+                <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-primary-900">
                     <strong>Didn&apos;t receive the email?</strong> Check your
                     spam folder or{' '}
                     <button
                       type="button"
                       onClick={handleResend}
-                      className="text-blue-600 hover:text-blue-700 font-medium underline"
+                      className="text-primary-600 hover:text-primary-700 font-medium underline"
                     >
                       click here to resend
                     </button>

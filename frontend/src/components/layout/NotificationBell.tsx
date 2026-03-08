@@ -75,7 +75,7 @@ export default function NotificationBell() {
                   void api.markAllNotificationsRead();
                   setUnreadCount(0);
                 }}
-                className="text-xs font-medium text-blue-600 hover:text-blue-700"
+                className="text-xs font-medium text-primary-600 hover:text-primary-700"
               >
                 Mark all read
               </button>
@@ -91,7 +91,7 @@ export default function NotificationBell() {
                   <div
                     key={notification.id}
                     className={`rounded-lg border px-3 py-3 text-sm ${
-                      notification.read ? 'border-gray-200 bg-white' : 'border-blue-100 bg-blue-50'
+                      notification.read ? 'border-gray-200 bg-white' : 'border-primary-100 bg-primary-50'
                     }`}
                   >
                     <p className="font-medium text-gray-900">{notification.title}</p>
@@ -105,7 +105,7 @@ export default function NotificationBell() {
             )}
 
             <div className="mt-3 border-t border-gray-100 pt-3">
-              <Link href="/dashboard" className="text-xs font-medium text-blue-600 hover:text-blue-700">
+              <Link href="/dashboard" className="text-xs font-medium text-primary-600 hover:text-primary-700">
                 Dashboard home
               </Link>
             </div>

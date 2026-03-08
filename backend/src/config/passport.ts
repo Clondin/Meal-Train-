@@ -22,7 +22,7 @@ export function configurePassport() {
             }
 
             // Check if OAuth provider already exists
-            let oauthProvider = await prisma.oAuthProvider.findUnique({
+            const oauthProvider = await prisma.oAuthProvider.findUnique({
               where: {
                 provider_providerId: {
                   provider: 'google',
@@ -90,7 +90,7 @@ export function configurePassport() {
             }
 
             // Check if OAuth provider already exists
-            let oauthProvider = await prisma.oAuthProvider.findUnique({
+            const oauthProvider = await prisma.oAuthProvider.findUnique({
               where: {
                 provider_providerId: {
                   provider: 'facebook',

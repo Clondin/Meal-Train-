@@ -79,7 +79,7 @@ export default function DashboardLayout({
   if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600"></div>
       </div>
     );
   }
@@ -109,7 +109,7 @@ export default function DashboardLayout({
           {/* Logo */}
           <div className="flex items-center justify-between h-16 px-4 border-b border-gray-200">
             <Link href="/dashboard" className="flex items-center">
-              <span className="text-xl font-bold text-blue-600">Chesed Train</span>
+              <span className="text-xl font-bold text-primary-600">Chesed Train</span>
             </Link>
             <button
               onClick={() => setSidebarOpen(false)}
@@ -132,7 +132,7 @@ export default function DashboardLayout({
                   className={cn(
                     'flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors',
                     isActive
-                      ? 'bg-blue-50 text-blue-600'
+                      ? 'bg-primary-50 text-primary-600'
                       : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
                   )}
                   onClick={() => setSidebarOpen(false)}

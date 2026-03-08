@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiCheck, FiAlertCircle, FiMail } from 'react-icons/fi';
 import { Card, CardBody } from '@/components/ui';
@@ -11,7 +11,7 @@ import toast from 'react-hot-toast';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
 
-export default function VerifyEmailPage() {
+function VerifyEmailContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<VerificationStatus>('loading');
@@ -75,7 +75,7 @@ export default function VerifyEmailPage() {
         <CardBody className="p-8">
           {status === 'loading' && (
             <div className="text-center py-8">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Spinner size="lg" />
               </div>
               <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -99,10 +99,10 @@ export default function VerifyEmailPage() {
                 Your email has been verified. You can now access all features of your account.
               </p>
 
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                <p className="text-sm text-blue-900">
+              <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-primary-900">
                   Redirecting you to your dashboard in{' '}
-                  <span className="font-bold text-blue-700">{countdown}</span>{' '}
+                  <span className="font-bold text-primary-700">{countdown}</span>{' '}
                   {countdown === 1 ? 'second' : 'seconds'}...
                 </p>
               </div>
@@ -164,5 +164,13 @@ export default function VerifyEmailPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function VerifyEmailPage() {
+  return (
+    <Suspense fallback={<div className="w-full" />}>
+      <VerifyEmailContent />
+    </Suspense>
   );
 }

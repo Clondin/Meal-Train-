@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '@/lib/config';
 
 // Validation schema
 const loginSchema = z.object({
@@ -63,8 +64,7 @@ export default function LoginPage() {
   };
 
   const handleOAuthLogin = (provider: 'google' | 'facebook') => {
-    // Redirect to OAuth provider
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api').replace(/\/api$/, '');
+    const baseUrl = getApiBaseUrl().replace(/\/api$/, '');
     window.location.href = `${baseUrl}/api/auth/${provider}`;
   };
 
@@ -111,7 +111,7 @@ export default function LoginPage() {
               variant="outline"
               className="w-full"
               onClick={() => handleOAuthLogin('facebook')}
-              leftIcon={<FaFacebook className="w-5 h-5 text-blue-600" />}
+              leftIcon={<FaFacebook className="w-5 h-5 text-primary-600" />}
             >
               Continue with Facebook
             </Button>
@@ -158,14 +158,14 @@ export default function LoginPage() {
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2"
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2"
                   {...register('rememberMe')}
                 />
                 <span className="text-sm text-gray-700">Remember me</span>
               </label>
               <Link
                 href="/forgot-password"
-                className="text-sm text-blue-600 hover:text-blue-700 font-medium"
+                className="text-sm text-primary-600 hover:text-primary-700 font-medium"
               >
                 Forgot password?
               </Link>
@@ -189,7 +189,7 @@ export default function LoginPage() {
               Don&apos;t have an account?{' '}
               <Link
                 href="/register"
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary-600 hover:text-primary-700 font-medium"
               >
                 Sign up for free
               </Link>

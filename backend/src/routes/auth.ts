@@ -376,7 +376,7 @@ router.get(
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}&refreshToken=${refreshToken}`);
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
   })
 );
 
@@ -405,7 +405,7 @@ router.get(
     });
 
     const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
-    res.redirect(`${frontendUrl}/auth/callback?token=${token}&refreshToken=${refreshToken}`);
+    res.redirect(`${frontendUrl}/auth/callback?token=${token}`);
   })
 );
 

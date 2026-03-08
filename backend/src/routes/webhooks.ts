@@ -4,6 +4,7 @@ import { constructWebhookEvent } from '../services/stripe.js';
 import { sendDonationConfirmation, sendGiftCardNotification } from '../services/email.js';
 import { generateUniqueCode } from '../utils/slug.js';
 import { PaymentStatus } from '@prisma/client';
+import { logger } from '../services/logger.js';
 
 const router = Router();
 
@@ -152,7 +153,7 @@ router.post('/stripe', async (req: Request, res: Response) => {
 
     res.json({ received: true });
   } catch (error: any) {
-    console.error('Webhook error:', error.message);
+    logger.error({ err: error }, 'Webhook error');
     res.status(400).json({ error: `Webhook Error: ${error.message}` });
   }
 });

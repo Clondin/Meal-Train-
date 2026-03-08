@@ -5,25 +5,18 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
 import { api } from '@/lib/api';
 import { Card, CardHeader, CardBody, Button, Badge, Spinner } from '@/components/ui';
-import { ChesedTrain, Participant } from '@/types';
+import { ChesedTrain, DashboardStats, TASK_TYPE_LABELS } from '@/types';
 import { cn } from '@/lib/utils';
-
-interface DashboardStats {
-  totalTrains: number;
-  activeTrains: number;
-  upcomingDeliveries: number;
-  totalDonations: number;
-}
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const [myTrains, setMyTrains] = useState<ChesedTrain[]>([]);
-  const [myParticipations, setMyParticipations] = useState<Participant[]>([]);
   const [stats, setStats] = useState<DashboardStats>({
     totalTrains: 0,
     activeTrains: 0,
-    upcomingDeliveries: 0,
-    totalDonations: 0,
+    totalContributions: 0,
+    totalDonationsAmount: 0,
+    upcomingDeliveries: [],
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,44 +30,13 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
 
-      // Load user's organized chesed trains
-      const trains = await api.getMyChesedTrains();
+      const [trains, dashboardStats] = await Promise.all([
+        api.getMyChesedTrains({ limit: 3 }),
+        api.getDashboardStats(),
+      ]);
+
       setMyTrains(trains);
-
-      // Calculate stats
-      const now = new Date();
-      const activeTrains = trains.filter(
-        (train) => new Date(train.endDate) >= now
-      );
-
-      // Calculate upcoming deliveries from task slots
-      let upcomingDeliveries = 0;
-      for (const train of trains) {
-        try {
-          const slots = await api.getTaskSlots(train.id);
-          upcomingDeliveries += slots.filter(
-            (slot) => slot.status === 'FILLED' && new Date(slot.date) >= now
-          ).length;
-        } catch {
-          // If task slots endpoint fails, continue with 0 for this train
-        }
-      }
-
-      // Calculate total donations (mock for now)
-      let totalDonations = 0;
-      for (const train of trains) {
-        const donations = await api.getDonations(train.id);
-        totalDonations += donations
-          .filter((d) => d.status === 'COMPLETED')
-          .reduce((sum, d) => sum + Number(d.amount), 0);
-      }
-
-      setStats({
-        totalTrains: trains.length,
-        activeTrains: activeTrains.length,
-        upcomingDeliveries,
-        totalDonations,
-      });
+      setStats(dashboardStats);
     } catch (err: any) {
       setError(err.message || 'Failed to load dashboard data');
     } finally {
@@ -129,9 +91,9 @@ export default function DashboardPage() {
         <Card hover>
           <div className="flex items-center">
             <div className="flex-shrink-0">
-              <div className="p-3 bg-blue-100 rounded-lg">
+              <div className="p-3 bg-primary-100 rounded-lg">
                 <svg
-                  className="w-6 h-6 text-blue-600"
+                  className="w-6 h-6 text-primary-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -215,7 +177,7 @@ export default function DashboardPage() {
                   Upcoming Deliveries
                 </dt>
                 <dd className="text-2xl font-bold text-gray-900">
-                  {stats.upcomingDeliveries}
+                  {stats.upcomingDeliveries.length}
                 </dd>
               </dl>
             </div>
@@ -247,7 +209,7 @@ export default function DashboardPage() {
                   Total Donations
                 </dt>
                 <dd className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(stats.totalDonations)}
+                  {formatCurrency(stats.totalDonationsAmount)}
                 </dd>
               </dl>
             </div>
@@ -315,7 +277,7 @@ export default function DashboardPage() {
                     <Link
                       key={train.id}
                       href={`/dashboard/trains/${train.id}`}
-                      className="block p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all"
+                      className="block p-4 border border-gray-200 rounded-lg hover:border-primary-300 hover:shadow-sm transition-all"
                     >
                       <div className="flex items-start justify-between">
                         <div className="flex-1">
@@ -356,24 +318,59 @@ export default function DashboardPage() {
             </div>
           </CardHeader>
           <CardBody>
-            <div className="text-center py-6">
-              <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                <svg
-                  className="w-8 h-8 text-gray-400"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
-                  />
-                </svg>
+            {stats.upcomingDeliveries.length === 0 ? (
+              <div className="text-center py-6">
+                <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                  <svg
+                    className="w-8 h-8 text-gray-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
+                    />
+                  </svg>
+                </div>
+                <p className="text-gray-500">No upcoming deliveries</p>
               </div>
-              <p className="text-gray-500">No upcoming deliveries</p>
-            </div>
+            ) : (
+              <div className="space-y-4">
+                {stats.upcomingDeliveries.map((slot) => (
+                  <Link
+                    key={slot.id}
+                    href={`/dashboard/trains/${slot.trainId}`}
+                    className="block rounded-lg border border-gray-200 p-4 hover:border-blue-300 hover:shadow-sm transition-all"
+                  >
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-gray-900">
+                          {slot.train?.recipientName || slot.train?.title || 'Upcoming delivery'}
+                        </p>
+                        <p className="mt-1 text-sm text-gray-500">
+                          {formatDate(slot.date)} · {TASK_TYPE_LABELS[slot.taskType]}
+                        </p>
+                        <p className="mt-2 text-sm text-gray-600">
+                          {(slot.contributions || [])
+                            .map((contribution) =>
+                              contribution.user
+                                ? `${contribution.user.firstName || ''} ${contribution.user.lastName || ''}`.trim() || contribution.user.email
+                                : contribution.guestName || 'Guest volunteer'
+                            )
+                            .join(', ')}
+                        </p>
+                      </div>
+                      <Badge variant="info" size="sm">
+                        {slot.status.replace(/_/g, ' ')}
+                      </Badge>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </CardBody>
         </Card>
       </div>

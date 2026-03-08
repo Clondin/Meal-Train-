@@ -1,10 +1,12 @@
 import { Router, Response } from 'express';
 import multer from 'multer';
+import { fileTypeFromBuffer } from 'file-type';
 import { catchAsync, AppError } from '../middleware/errorHandler.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { uploadFile, getUploadSignedUrl, deleteFile } from '../services/s3.js';
 
 const router = Router();
+const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
 
 // Configure multer for memory storage
 const upload = multer({
@@ -13,7 +15,6 @@ const upload = multer({
     fileSize: 10 * 1024 * 1024, // 10MB limit
   },
   fileFilter: (req, file, cb) => {
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (allowedTypes.includes(file.mimetype)) {
       cb(null, true);
     } else {
@@ -32,12 +33,17 @@ router.post(
       throw new AppError('No file uploaded', 400);
     }
 
+    const detectedType = await fileTypeFromBuffer(req.file.buffer);
+    if (!detectedType || !allowedTypes.includes(detectedType.mime) || detectedType.mime !== req.file.mimetype) {
+      throw new AppError('Uploaded file content does not match the declared image type', 400);
+    }
+
     const { folder = 'uploads' } = req.body;
 
     const result = await uploadFile(
       req.file.buffer,
       req.file.originalname,
-      req.file.mimetype,
+      detectedType.mime,
       folder
     );
 
@@ -59,7 +65,6 @@ router.post(
       throw new AppError('Filename and mimetype are required', 400);
     }
 
-    const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp'];
     if (!allowedTypes.includes(mimetype)) {
       throw new AppError('Invalid file type', 400);
     }

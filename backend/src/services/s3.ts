@@ -1,18 +1,32 @@
-import AWS from 'aws-sdk';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'node:crypto';
+import {
+  DeleteObjectCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
+import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-const s3 = new AWS.S3({
-  accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-  secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-  region: process.env.AWS_REGION || 'us-east-1',
-});
-
+const REGION = process.env.AWS_REGION || 'us-east-1';
 const BUCKET = process.env.AWS_S3_BUCKET || 'mealtrain-uploads';
+
+const s3 = new S3Client({
+  region: REGION,
+  credentials:
+    process.env.AWS_ACCESS_KEY_ID && process.env.AWS_SECRET_ACCESS_KEY
+      ? {
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+        }
+      : undefined,
+});
 
 export interface UploadResult {
   url: string;
   key: string;
 }
+
+const buildPublicUrl = (key: string) => `https://${BUCKET}.s3.${REGION}.amazonaws.com/${key}`;
 
 export async function uploadFile(
   file: Buffer,
@@ -21,43 +35,38 @@ export async function uploadFile(
   folder: string = 'uploads'
 ): Promise<UploadResult> {
   const extension = filename.split('.').pop() || '';
-  const key = `${folder}/${uuidv4()}.${extension}`;
+  const key = `${folder}/${randomUUID()}.${extension}`;
 
-  const params: AWS.S3.PutObjectRequest = {
-    Bucket: BUCKET,
-    Key: key,
-    Body: file,
-    ContentType: mimetype,
-    ACL: 'public-read',
-  };
+  await s3.send(
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      Body: file,
+      ContentType: mimetype,
+    })
+  );
 
-  await s3.upload(params).promise();
-
-  const url = `https://${BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-
-  return { url, key };
+  return { url: buildPublicUrl(key), key };
 }
 
 export async function deleteFile(key: string): Promise<void> {
-  const params: AWS.S3.DeleteObjectRequest = {
-    Bucket: BUCKET,
-    Key: key,
-  };
-
-  await s3.deleteObject(params).promise();
+  await s3.send(
+    new DeleteObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+    })
+  );
 }
 
-export async function getSignedUrl(
-  key: string,
-  expiresIn: number = 3600
-): Promise<string> {
-  const params = {
-    Bucket: BUCKET,
-    Key: key,
-    Expires: expiresIn,
-  };
-
-  return s3.getSignedUrlPromise('getObject', params);
+export async function getSignedFileUrl(key: string, expiresIn: number = 3600): Promise<string> {
+  return getSignedUrl(
+    s3,
+    new GetObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+    }),
+    { expiresIn }
+  );
 }
 
 export async function getUploadSignedUrl(
@@ -67,20 +76,19 @@ export async function getUploadSignedUrl(
   expiresIn: number = 300
 ): Promise<{ uploadUrl: string; key: string; publicUrl: string }> {
   const extension = filename.split('.').pop() || '';
-  const key = `${folder}/${uuidv4()}.${extension}`;
+  const key = `${folder}/${randomUUID()}.${extension}`;
 
-  const params = {
-    Bucket: BUCKET,
-    Key: key,
-    ContentType: mimetype,
-    Expires: expiresIn,
-    ACL: 'public-read',
-  };
+  const uploadUrl = await getSignedUrl(
+    s3,
+    new PutObjectCommand({
+      Bucket: BUCKET,
+      Key: key,
+      ContentType: mimetype,
+    }),
+    { expiresIn }
+  );
 
-  const uploadUrl = await s3.getSignedUrlPromise('putObject', params);
-  const publicUrl = `https://${BUCKET}.s3.${process.env.AWS_REGION || 'us-east-1'}.amazonaws.com/${key}`;
-
-  return { uploadUrl, key, publicUrl };
+  return { uploadUrl, key, publicUrl: buildPublicUrl(key) };
 }
 
 export { s3 };

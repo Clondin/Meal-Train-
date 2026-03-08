@@ -11,7 +11,7 @@ export default function PrivacyPage() {
           <p>We collect the information needed to run Chesed Train, including account details, train setup information, participant submissions, and payment-related metadata for donations and gift cards.</p>
           <p>We use that information to operate the service, communicate about contributions, send reminders, and help organizers coordinate support.</p>
           <p>We do not sell personal information. Access to private train data is limited to authorized users, organizers, and system administrators as needed to operate the platform.</p>
-          <p>For privacy questions, contact <a className="text-blue-600 hover:text-blue-700" href="mailto:privacy@chesedtrain.com">privacy@chesedtrain.com</a>.</p>
+          <p>For privacy questions, contact <a className="text-primary-600 hover:text-primary-700" href="mailto:privacy@chesedtrain.com">privacy@chesedtrain.com</a>.</p>
         </div>
       </main>
       <Footer />

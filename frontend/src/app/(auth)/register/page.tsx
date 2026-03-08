@@ -14,6 +14,7 @@ import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
 import toast from 'react-hot-toast';
+import { getApiBaseUrl } from '@/lib/config';
 
 // Validation schema
 const registerSchema = z
@@ -91,8 +92,7 @@ export default function RegisterPage() {
   };
 
   const handleOAuthRegister = (provider: 'google' | 'facebook') => {
-    // Redirect to OAuth provider
-    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api').replace(/\/api$/, '');
+    const baseUrl = getApiBaseUrl().replace(/\/api$/, '');
     window.location.href = `${baseUrl}/api/auth/${provider}`;
   };
 
@@ -139,7 +139,7 @@ export default function RegisterPage() {
               variant="outline"
               className="w-full"
               onClick={() => handleOAuthRegister('facebook')}
-              leftIcon={<FaFacebook className="w-5 h-5 text-blue-600" />}
+              leftIcon={<FaFacebook className="w-5 h-5 text-primary-600" />}
             >
               Sign up with Facebook
             </Button>
@@ -220,14 +220,14 @@ export default function RegisterPage() {
               <label className="flex items-start gap-2 cursor-pointer">
                 <input
                   type="checkbox"
-                  className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 focus:ring-2 mt-0.5"
+                  className="w-4 h-4 text-primary-600 border-gray-300 rounded focus:ring-primary-500 focus:ring-2 mt-0.5"
                   {...register('acceptTerms')}
                 />
                 <span className="text-sm text-gray-700">
                   I agree to the{' '}
                   <Link
                     href="/terms"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-primary-600 hover:text-primary-700 font-medium"
                     target="_blank"
                   >
                     Terms of Service
@@ -235,7 +235,7 @@ export default function RegisterPage() {
                   and{' '}
                   <Link
                     href="/privacy"
-                    className="text-blue-600 hover:text-blue-700 font-medium"
+                    className="text-primary-600 hover:text-primary-700 font-medium"
                     target="_blank"
                   >
                     Privacy Policy
@@ -267,7 +267,7 @@ export default function RegisterPage() {
               Already have an account?{' '}
               <Link
                 href="/login"
-                className="text-blue-600 hover:text-blue-700 font-medium"
+                className="text-primary-600 hover:text-primary-700 font-medium"
               >
                 Sign in
               </Link>

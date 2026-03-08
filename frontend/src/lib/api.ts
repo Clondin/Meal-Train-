@@ -15,7 +15,6 @@ import {
   UpdateContributionData,
   SimchaContribution,
   CreateSimchaContributionData,
-  Participant,
   Donation,
   CreateDonationData,
   GiftCard,
@@ -28,9 +27,13 @@ import {
   UploadResponse,
   ApiError,
   DeliveryStatus,
+  DashboardStats,
 } from '@/types';
+import { getApiBaseUrl } from './config';
+import { readStoredAuthToken, writeStoredAuthToken } from './auth-storage';
+import { readStoredGuestSession } from './guest-session';
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+const API_BASE_URL = getApiBaseUrl();
 
 class ApiClient {
   private client: AxiosInstance;
@@ -64,6 +67,12 @@ class ApiClient {
         if (token && config.headers) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+
+        const guestSession = this.getGuestSession();
+        if (guestSession?.token && config.headers) {
+          config.headers['x-guest-session-token'] = guestSession.token;
+        }
+
         return config;
       },
       (error) => {
@@ -106,18 +115,19 @@ class ApiClient {
   }
 
   private getToken(): string | null {
-    if (typeof window === 'undefined') return null;
-    return localStorage.getItem('auth-token');
+    return readStoredAuthToken();
   }
 
   private setToken(token: string): void {
-    if (typeof window === 'undefined') return;
-    localStorage.setItem('auth-token', token);
+    writeStoredAuthToken(token);
   }
 
   private clearToken(): void {
-    if (typeof window === 'undefined') return;
-    localStorage.removeItem('auth-token');
+    writeStoredAuthToken(null);
+  }
+
+  private getGuestSession() {
+    return readStoredGuestSession();
   }
 
   // ============================================
@@ -207,18 +217,26 @@ class ApiClient {
     await this.client.delete(`/chesed-trains/${id}`);
   }
 
-  async getMyChesedTrains(): Promise<ChesedTrain[]> {
-    const { data } = await this.client.get('/users/trains');
-    return this.unwrap<ChesedTrain[]>(data, ['trains']);
+  async getMyChesedTrains(params?: { page?: number; limit?: number }): Promise<ChesedTrain[]> {
+    const { data } = await this.client.get('/users/trains', { params });
+    return this.unwrap<ChesedTrain[]>(data, ['data', 'trains']);
+  }
+
+  async getDashboardStats(): Promise<DashboardStats> {
+    const { data } = await this.client.get('/users/dashboard-stats');
+    return data as DashboardStats;
   }
 
   // ============================================
   // TASK SLOT ENDPOINTS
   // ============================================
 
-  async getTaskSlots(trainId: string, params?: { date?: string; taskType?: string }): Promise<TaskSlot[]> {
+  async getTaskSlots(
+    trainId: string,
+    params?: { date?: string; taskType?: string; page?: number; limit?: number }
+  ): Promise<TaskSlot[]> {
     const { data } = await this.client.get(`/chesed-trains/${trainId}/task-slots`, { params });
-    return this.unwrap<TaskSlot[]>(data, ['taskSlots']);
+    return this.unwrap<TaskSlot[]>(data, ['data', 'taskSlots']);
   }
 
   async getTaskSlot(trainId: string, slotId: string): Promise<TaskSlot> {
@@ -232,8 +250,8 @@ class ApiClient {
   }
 
   async createTaskSlotsBulk(trainId: string, slotsData: CreateTaskSlotData[]): Promise<TaskSlot[]> {
-    const { data } = await this.client.post<TaskSlot[]>(`/chesed-trains/${trainId}/task-slots/bulk`, { slots: slotsData });
-    return data;
+    const { data } = await this.client.post(`/chesed-trains/${trainId}/task-slots/bulk`, { slots: slotsData });
+    return this.unwrap<TaskSlot[]>(data, ['taskSlots']);
   }
 
   async updateTaskSlot(trainId: string, slotId: string, slotData: UpdateTaskSlotData): Promise<TaskSlot> {
@@ -249,9 +267,12 @@ class ApiClient {
   // CONTRIBUTION ENDPOINTS
   // ============================================
 
-  async getContributions(trainId: string, params?: { slotId?: string; status?: string }): Promise<Contribution[]> {
+  async getContributions(
+    trainId: string,
+    params?: { slotId?: string; status?: string; page?: number; limit?: number }
+  ): Promise<Contribution[]> {
     const { data } = await this.client.get(`/chesed-trains/${trainId}/contributions`, { params });
-    return this.unwrap<Contribution[]>(data, ['contributions']);
+    return this.unwrap<Contribution[]>(data, ['data', 'contributions']);
   }
 
   async getContribution(trainId: string, contributionId: string): Promise<Contribution> {
@@ -297,9 +318,14 @@ class ApiClient {
   // SIMCHA CONTRIBUTION ENDPOINTS
   // ============================================
 
-  async getSimchaContributions(trainId: string): Promise<SimchaContribution[]> {
-    const { data } = await this.client.get(`/chesed-trains/${trainId}/simcha-contributions`);
-    return this.unwrap<SimchaContribution[]>(data, ['contributions']);
+  async getSimchaContributions(
+    trainId: string,
+    params?: { page?: number; limit?: number }
+  ): Promise<SimchaContribution[]> {
+    const { data } = await this.client.get(`/chesed-trains/${trainId}/simcha-contributions`, {
+      params,
+    });
+    return this.unwrap<SimchaContribution[]>(data, ['data', 'contributions']);
   }
 
   async createSimchaContribution(trainId: string, contributionData: CreateSimchaContributionData): Promise<SimchaContribution> {
@@ -384,38 +410,6 @@ class ApiClient {
   }
 
   // ============================================
-  // PARTICIPANT ENDPOINTS (LEGACY)
-  // ============================================
-
-  async createParticipant(
-    trainId: string,
-    participantData: {
-      name: string;
-      email: string;
-      phone?: string;
-      dateId?: string;
-      mealDescription?: string;
-      notes?: string;
-    }
-  ): Promise<Participant> {
-    const payload = {
-      trainId,
-      dateId: participantData.dateId,
-      mealDescription: participantData.mealDescription,
-      notes: participantData.notes,
-      guestName: participantData.name,
-      guestEmail: participantData.email,
-      guestPhone: participantData.phone,
-    };
-    const { data } = await this.client.post<Participant>('/participants', payload);
-    return data;
-  }
-
-  async deleteParticipant(_trainId: string, participantId: string): Promise<void> {
-    await this.client.delete(`/participants/${participantId}`);
-  }
-
-  // ============================================
   // FILE UPLOAD ENDPOINTS
   // ============================================
 
@@ -449,14 +443,14 @@ class ApiClient {
   // USER ENDPOINTS
   // ============================================
 
-  async getUserParticipations(): Promise<{ contributions: Contribution[] }> {
-    const { data } = await this.client.get('/users/contributions');
-    return { contributions: this.unwrap<Contribution[]>(data, ['contributions', 'participations']) };
+  async getUserParticipations(params?: { page?: number; limit?: number }): Promise<{ contributions: Contribution[] }> {
+    const { data } = await this.client.get('/users/contributions', { params });
+    return { contributions: this.unwrap<Contribution[]>(data, ['data', 'contributions', 'participations']) };
   }
 
-  async getUserDonations(): Promise<{ donations: Donation[] }> {
-    const { data } = await this.client.get('/users/donations');
-    return { donations: this.unwrap<Donation[]>(data, ['donations']) };
+  async getUserDonations(params?: { page?: number; limit?: number }): Promise<{ donations: Donation[] }> {
+    const { data } = await this.client.get('/users/donations', { params });
+    return { donations: this.unwrap<Donation[]>(data, ['data', 'donations']) };
   }
 
   async updateUserProfile(profileData: Partial<User>): Promise<{ user: User }> {

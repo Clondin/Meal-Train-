@@ -1,12 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { Suspense, useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { format } from 'date-fns';
 import { MagnifyingGlassIcon, FunnelIcon, MapPinIcon, CalendarIcon, UserGroupIcon } from '@heroicons/react/24/outline';
 import { Button, Input, Select, Card, CardBody, Badge, Spinner } from '@/components/ui';
 import { api } from '@/lib/api';
+import { devLogError } from '@/lib/dev-log';
 import type { ChesedTrain } from '@/types';
 
 const CATEGORIES = [
@@ -29,7 +30,7 @@ const getCategoryColor = (category: string) => {
     case 'NEW_BABY':
       return 'bg-pink-100 text-pink-800';
     case 'ILLNESS':
-      return 'bg-blue-100 text-blue-800';
+      return 'bg-primary-100 text-primary-800';
     case 'SURGERY':
       return 'bg-purple-100 text-purple-800';
     case 'LOSS':
@@ -41,7 +42,7 @@ const getCategoryColor = (category: string) => {
   }
 };
 
-export default function SearchPage() {
+function SearchPageContent() {
   const searchParams = useSearchParams();
   const initialQuery = searchParams.get('q') || '';
   const initialCategory = searchParams.get('category') || '';
@@ -54,11 +55,7 @@ export default function SearchPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  useEffect(() => {
-    fetchTrains();
-  }, [query, category, page]);
-
-  const fetchTrains = async () => {
+  const fetchTrains = useCallback(async () => {
     setIsLoading(true);
     try {
       const params = new URLSearchParams();
@@ -71,11 +68,15 @@ export default function SearchPage() {
       setTrains(response.data.trains);
       setTotalPages(response.data.pagination.pages);
     } catch (error) {
-      console.error('Failed to fetch trains:', error);
+      devLogError('Failed to fetch trains:', error);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [category, page, query]);
+
+  useEffect(() => {
+    void fetchTrains();
+  }, [fetchTrains]);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,5 +243,13 @@ export default function SearchPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+      <SearchPageContent />
+    </Suspense>
   );
 }

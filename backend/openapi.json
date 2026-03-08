@@ -1,0 +1,365 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "Chesed Train API",
+    "version": "1.0.0",
+    "description": "Core API surface for Chesed Train."
+  },
+  "servers": [
+    {
+      "url": "/"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "email": { "type": "string" },
+          "firstName": { "type": "string" },
+          "lastName": { "type": "string" }
+        }
+      },
+      "AuthResponse": {
+        "type": "object",
+        "properties": {
+          "token": { "type": "string" },
+          "refreshToken": { "type": "string" },
+          "user": { "$ref": "#/components/schemas/User" }
+        }
+      },
+      "GuestSession": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "identifier": { "type": "string" },
+          "identifierType": { "type": "string", "enum": ["email", "phone"] },
+          "verified": { "type": "boolean" },
+          "token": { "type": "string" }
+        }
+      },
+      "TaskSlot": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "trainId": { "type": "string" },
+          "date": { "type": "string", "format": "date-time" },
+          "taskType": { "type": "string" },
+          "status": { "type": "string" }
+        }
+      },
+      "Contribution": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "trainId": { "type": "string" },
+          "slotId": { "type": "string" },
+          "status": { "type": "string" },
+          "guestName": { "type": "string" }
+        }
+      },
+      "MealTrain": {
+        "type": "object",
+        "properties": {
+          "id": { "type": "string" },
+          "slug": { "type": "string" },
+          "title": { "type": "string" },
+          "recipientName": { "type": "string" },
+          "isPublic": { "type": "boolean" },
+          "taskSlots": {
+            "type": "array",
+            "items": { "$ref": "#/components/schemas/TaskSlot" }
+          }
+        }
+      },
+      "Pagination": {
+        "type": "object",
+        "properties": {
+          "page": { "type": "integer" },
+          "limit": { "type": "integer" },
+          "total": { "type": "integer" },
+          "pages": { "type": "integer" }
+        }
+      }
+    }
+  },
+  "paths": {
+    "/api/auth/register": {
+      "post": {
+        "summary": "Register a user",
+        "responses": {
+          "201": {
+            "description": "Registration succeeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "summary": "Log in",
+        "responses": {
+          "200": {
+            "description": "Authentication succeeded",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/AuthResponse" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "summary": "Current authenticated user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Current user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "user": { "$ref": "#/components/schemas/User" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest-sessions": {
+      "post": {
+        "summary": "Create a guest verification session",
+        "responses": {
+          "201": {
+            "description": "Guest session created",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GuestSession" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/guest-sessions/verify": {
+      "post": {
+        "summary": "Verify a guest session",
+        "responses": {
+          "200": {
+            "description": "Guest session verified",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/GuestSession" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chesed-trains": {
+      "get": {
+        "summary": "List public trains",
+        "responses": {
+          "200": {
+            "description": "Public trains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "trains": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MealTrain" }
+                    },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Create a train",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "201": {
+            "description": "Created train",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "train": { "$ref": "#/components/schemas/MealTrain" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chesed-trains/{slug}": {
+      "get": {
+        "summary": "Get train by slug",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Train details",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "train": { "$ref": "#/components/schemas/MealTrain" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chesed-trains/{slug}/task-slots": {
+      "get": {
+        "summary": "List task slots for a train",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Task slots",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TaskSlot" }
+                    },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/chesed-trains/{slug}/contributions": {
+      "get": {
+        "summary": "List contributions for a train",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": { "type": "string" }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Contributions",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/Contribution" }
+                    },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/trains": {
+      "get": {
+        "summary": "List trains organized by the current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "User trains",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/MealTrain" }
+                    },
+                    "pagination": { "$ref": "#/components/schemas/Pagination" }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/users/dashboard-stats": {
+      "get": {
+        "summary": "Dashboard stats for the current user",
+        "security": [{ "bearerAuth": [] }],
+        "responses": {
+          "200": {
+            "description": "Dashboard stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "totalTrains": { "type": "integer" },
+                    "activeTrains": { "type": "integer" },
+                    "totalContributions": { "type": "integer" },
+                    "totalDonationsAmount": { "type": "number" },
+                    "upcomingDeliveries": {
+                      "type": "array",
+                      "items": { "$ref": "#/components/schemas/TaskSlot" }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

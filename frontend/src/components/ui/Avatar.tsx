@@ -55,6 +55,8 @@ export const Avatar: React.FC<AvatarProps> = ({
       aria-label={displayName}
     >
       {showImage ? (
+        // External avatar URLs may come from arbitrary providers.
+        // eslint-disable-next-line @next/next/no-img-element
         <img
           src={src}
           alt={displayName}

@@ -107,6 +107,7 @@ A full-stack web application for organizing meal delivery schedules for those in
    ```env
    NEXT_PUBLIC_API_URL=http://localhost:4000
    NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_xxx
+   NEXT_PUBLIC_SENTRY_DSN=
    ```
 
 4. **Set up the database**
@@ -180,14 +181,19 @@ meal-train/
 - `GET /api/trains/:slug` - Get train details
 - `PATCH /api/trains/:slug` - Update train
 - `DELETE /api/trains/:slug` - Delete train
-- `POST /api/trains/:slug/dates` - Add dates
+- `GET /api/trains/:slug/task-slots` - List task slots
+- `POST /api/trains/:slug/task-slots` - Create task slot
+- `GET /api/trains/:slug/contributions` - List contributions
+- `POST /api/trains/:slug/contributions` - Create contribution
 - `GET /api/trains/:slug/analytics` - Get analytics
 
-### Participants
-- `POST /api/participants` - Sign up for date
-- `PATCH /api/participants/:id` - Update participation
-- `DELETE /api/participants/:id` - Cancel participation
-- `POST /api/participants/:id/approve` - Approve/reject
+### Guest Sessions
+- `POST /api/guest-sessions` - Start guest verification
+- `POST /api/guest-sessions/verify` - Verify guest session and receive guest token
+
+### User Dashboard
+- `GET /api/users/trains` - Get organized trains
+- `GET /api/users/dashboard-stats` - Get aggregated dashboard metrics
 
 ### Donations
 - `POST /api/donations` - Create donation

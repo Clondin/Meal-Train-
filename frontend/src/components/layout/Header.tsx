@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { HeartIcon } from '@heroicons/react/24/solid';
@@ -11,6 +11,19 @@ import { useAuthStore } from '@/stores/auth';
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setUserMenuOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [menuRef]);
   const router = useRouter();
   const { isAuthenticated, user, logout } = useAuthStore();
   const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'User';
@@ -45,7 +58,7 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <div className="hidden lg:flex lg:items-center lg:space-x-8">
-            {['How It Works', 'Use Cases'].map((item) => (
+            {['How It Works'].map((item) => (
               <Link
                 key={item}
                 href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
@@ -80,7 +93,7 @@ export default function Header() {
               Find a Chesed Train
             </Link>
             {isAuthenticated ? (
-              <div className="relative">
+              <div className="relative" ref={menuRef}>
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen((open) => !open)}
@@ -146,13 +159,6 @@ export default function Header() {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 How It Works
-              </Link>
-              <Link
-                href="#use-cases"
-                className="block text-base font-medium text-foreground hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Use Cases
               </Link>
               {isAuthenticated ? (
                 <Link

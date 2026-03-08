@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -32,7 +32,7 @@ const resetPasswordSchema = z
 
 type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPasswordContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [token, setToken] = useState<string | null>(null);
@@ -97,7 +97,7 @@ export default function ResetPasswordPage() {
         <Card className="shadow-lg">
           <CardBody className="p-8">
             <div className="text-center py-8">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4" />
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto mb-4" />
               <p className="text-gray-600">Validating reset link...</p>
             </div>
           </CardBody>
@@ -142,8 +142,8 @@ export default function ResetPasswordPage() {
             <>
               {/* Header */}
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FiLock className="w-8 h-8 text-blue-600" />
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FiLock className="w-8 h-8 text-primary-600" />
                 </div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
                   Reset Your Password
@@ -216,8 +216,8 @@ export default function ResetPasswordPage() {
                 <p className="text-gray-600 mb-6">
                   Your password has been successfully reset. You can now sign in with your new password.
                 </p>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-                  <p className="text-sm text-blue-900">
+                <div className="bg-primary-50 border border-primary-200 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-primary-900">
                     Redirecting you to the sign in page...
                   </p>
                 </div>
@@ -234,5 +234,13 @@ export default function ResetPasswordPage() {
         </CardBody>
       </Card>
     </div>
+  );
+}
+
+export default function ResetPasswordPage() {
+  return (
+    <Suspense fallback={<div className="w-full" />}>
+      <ResetPasswordContent />
+    </Suspense>
   );
 }

@@ -51,7 +51,7 @@ export function KosherMetadataForm({
     errors,
 }: KosherMetadataFormProps) {
     const categoryOptions: { value: MealCategory; label: string; icon: string; color: string }[] = [
-        { value: 'MILCHIG', label: MEAL_CATEGORY_LABELS.MILCHIG, icon: '🧀', color: 'bg-blue-50 border-blue-200 text-blue-800 hover:bg-blue-100' },
+        { value: 'MILCHIG', label: MEAL_CATEGORY_LABELS.MILCHIG, icon: '🧀', color: 'bg-primary-50 border-primary-200 text-primary-800 hover:bg-primary-100' },
         { value: 'FLEISHIG', label: MEAL_CATEGORY_LABELS.FLEISHIG, icon: '🥩', color: 'bg-red-50 border-red-200 text-red-800 hover:bg-red-100' },
         { value: 'PAREVE', label: MEAL_CATEGORY_LABELS.PAREVE, icon: '🥗', color: 'bg-green-50 border-green-200 text-green-800 hover:bg-green-100' },
     ];
@@ -109,7 +109,7 @@ export function KosherMetadataForm({
                                 checked={isCholovYisroel}
                                 onChange={(e) => onCholovYisroelChange(e.target.checked)}
                                 disabled={disabled}
-                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <div className="flex items-center gap-2">
                                 <span className="text-lg">🥛</span>
@@ -123,7 +123,7 @@ export function KosherMetadataForm({
                                 checked={isPasYisroel}
                                 onChange={(e) => onPasYisroelChange(e.target.checked)}
                                 disabled={disabled}
-                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <div className="flex items-center gap-2">
                                 <span className="text-lg">🍞</span>
@@ -137,7 +137,7 @@ export function KosherMetadataForm({
                                 checked={isYoshon}
                                 onChange={(e) => onYoshonChange(e.target.checked)}
                                 disabled={disabled}
-                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <div className="flex items-center gap-2">
                                 <span className="text-lg">🌾</span>
@@ -151,7 +151,7 @@ export function KosherMetadataForm({
                                 checked={isGlatt}
                                 onChange={(e) => onGlattChange(e.target.checked)}
                                 disabled={disabled}
-                                className="w-5 h-5 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                                className="w-5 h-5 rounded border-gray-300 text-primary-600 focus:ring-primary-500"
                             />
                             <div className="flex items-center gap-2">
                                 <span className="text-lg">🥩</span>
@@ -179,7 +179,7 @@ export function KosherMetadataForm({
                             disabled={disabled}
                             placeholder="List any allergens in your food (e.g., contains nuts, dairy, gluten...)"
                             rows={2}
-                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                            className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500 resize-none"
                         />
                     </div>
                     <p className="mt-1 text-xs text-gray-500">

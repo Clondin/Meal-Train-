@@ -1,4 +1,5 @@
 import sgMail from '@sendgrid/mail';
+import { logger } from './logger.js';
 
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
 const hasValidSendgridKey = Boolean(SENDGRID_API_KEY?.startsWith('SG.'));
@@ -8,7 +9,7 @@ if (hasValidSendgridKey && SENDGRID_API_KEY) {
 }
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@mealtrain.com';
-const FROM_NAME = process.env.FROM_NAME || 'MealTrain';
+const FROM_NAME = process.env.FROM_NAME || 'Chesed Train';
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 interface EmailOptions {
@@ -20,7 +21,7 @@ interface EmailOptions {
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
   if (!hasValidSendgridKey) {
-    console.log('SendGrid not configured. Email would be sent:', options);
+    logger.info({ to: options.to, subject: options.subject }, 'SendGrid not configured; skipping email send');
     return true;
   }
 
@@ -37,7 +38,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
     });
     return true;
   } catch (error) {
-    console.error('Error sending email:', error);
+    logger.error({ err: error, to: options.to, subject: options.subject }, 'Error sending email');
     return false;
   }
 }
@@ -60,16 +61,16 @@ export async function sendVerificationEmail(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-            .button { display: inline-block; background: #f97316; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .button { display: inline-block; background: #86198f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>Welcome${firstName ? `, ${firstName}` : ''}!</h2>
@@ -108,16 +109,16 @@ export async function sendPasswordResetEmail(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
-            .button { display: inline-block; background: #f97316; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .button { display: inline-block; background: #86198f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>Password Reset Request</h2>
@@ -157,7 +158,7 @@ export async function sendParticipantSignupNotification(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
@@ -166,7 +167,7 @@ export async function sendParticipantSignupNotification(
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>New Volunteer!</h2>
@@ -176,6 +177,63 @@ export async function sendParticipantSignupNotification(
                 <p><strong>Volunteer:</strong> ${participantName}</p>
                 <p><strong>Date:</strong> ${date}</p>
                 ${mealDescription ? `<p><strong>Meal:</strong> ${mealDescription}</p>` : ''}
+              </div>
+            </div>
+            <div class="footer">
+              <p>&copy; ${new Date().getFullYear()} MealTrain. All rights reserved.</p>
+            </div>
+          </div>
+        </body>
+      </html>
+    `,
+  });
+}
+
+export async function sendParticipantStatusUpdate(
+  participantEmail: string,
+  participantName: string,
+  trainTitle: string,
+  date: string,
+  approved: boolean
+): Promise<boolean> {
+  return sendEmail({
+    to: participantEmail,
+    subject: approved
+      ? `Your signup for ${trainTitle} was approved`
+      : `Update about your signup for ${trainTitle}`,
+    html: `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+            .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
+            .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
+            .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>Chesed Train</h1>
+            </div>
+            <div class="content">
+              <h2>${approved ? 'Signup Approved' : 'Signup Update'}</h2>
+              <p>Hi ${participantName},</p>
+              <p>
+                ${
+                  approved
+                    ? `Your signup for ${trainTitle} has been approved. Thank you for helping.`
+                    : `Your signup for ${trainTitle} was not approved this time.`
+                }
+              </p>
+              <div class="highlight">
+                <p><strong>Meal Train:</strong> ${trainTitle}</p>
+                <p><strong>Date:</strong> ${date}</p>
+                <p><strong>Status:</strong> ${approved ? 'Approved' : 'Not approved'}</p>
               </div>
             </div>
             <div class="footer">
@@ -212,17 +270,17 @@ export async function sendReminderEmail(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
-            .button { display: inline-block; background: #f97316; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
+            .button { display: inline-block; background: #86198f; color: white; padding: 12px 30px; text-decoration: none; border-radius: 6px; margin: 20px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
           </style>
         </head>
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>Reminder: Your meal delivery is tomorrow!</h2>
@@ -271,7 +329,7 @@ export async function sendDonationConfirmation(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }
@@ -280,7 +338,7 @@ export async function sendDonationConfirmation(
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>Thank You for Your Donation!</h2>
@@ -323,7 +381,7 @@ export async function sendGiftCardNotification(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #f97316; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .gift-card { background: linear-gradient(135deg, #f97316, #fb923c); color: white; padding: 25px; border-radius: 12px; margin: 20px 0; text-align: center; }
             .gift-code { font-size: 24px; font-weight: bold; letter-spacing: 2px; margin: 15px 0; font-family: monospace; }
@@ -333,7 +391,7 @@ export async function sendGiftCardNotification(
         <body>
           <div class="container">
             <div class="header">
-              <h1>MealTrain</h1>
+              <h1>Chesed Train</h1>
             </div>
             <div class="content">
               <h2>You've Received a Gift Card!</h2>
@@ -377,7 +435,7 @@ export async function sendDeliveryStatusUpdate(
           <style>
             body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
             .container { max-width: 600px; margin: 0 auto; padding: 20px; }
-            .header { background: #2563eb; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
+            .header { background: #86198f; color: white; padding: 20px; text-align: center; border-radius: 8px 8px 0 0; }
             .content { background: #f9fafb; padding: 30px; border-radius: 0 0 8px 8px; }
             .highlight { background: white; padding: 15px; border-radius: 6px; margin: 15px 0; }
             .footer { text-align: center; margin-top: 20px; font-size: 12px; color: #6b7280; }

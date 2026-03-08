@@ -328,11 +328,11 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
       </div>
 
       {/* Submit Section */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg
-              className="h-5 w-5 text-blue-400"
+              className="h-5 w-5 text-primary-400"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -344,10 +344,10 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">
+            <h3 className="text-sm font-medium text-primary-800">
               Ready to create your chesed train?
             </h3>
-            <div className="mt-2 text-sm text-blue-700">
+            <div className="mt-2 text-sm text-primary-700">
               <p>
                 Once you create the chesed train, you'll be able to share it with
                 friends and family. You can always edit these details later.

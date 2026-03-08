@@ -52,7 +52,7 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
         helperText="Choose between standard meals, broader chesed support, simcha contributions, or a one-time event"
       />
 
-      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+      <div className="rounded-lg border border-primary-100 bg-primary-50 p-4 text-sm text-primary-900">
         {trainType === 'STANDARD' && 'Standard trains focus on classic meal scheduling.'}
         {trainType === 'FULL_CHESED' && 'Full Chesed adds non-meal tasks like rides, babysitting, errands, and household help.'}
         {trainType === 'SIMCHA' && 'Simcha mode is optimized for contribution boards for kiddushim and celebrations.'}
@@ -76,8 +76,8 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${donationsEnabled ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${donationsEnabled ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={donationsEnabled}
@@ -126,8 +126,8 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${giftCardsEnabled ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${giftCardsEnabled ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={giftCardsEnabled}
@@ -152,11 +152,11 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
         )}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="bg-primary-50 border border-primary-200 rounded-lg p-4">
         <div className="flex">
           <div className="flex-shrink-0">
             <svg
-              className="h-5 w-5 text-blue-400"
+              className="h-5 w-5 text-primary-400"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -168,10 +168,10 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
             </svg>
           </div>
           <div className="ml-3">
-            <h3 className="text-sm font-medium text-blue-800">
+            <h3 className="text-sm font-medium text-primary-800">
               About Donations
             </h3>
-            <div className="mt-2 text-sm text-blue-700">
+            <div className="mt-2 text-sm text-primary-700">
               <p>
                 Enabling donations allows supporters to contribute financially if
                 they can't provide a meal. All donation processing is secure.

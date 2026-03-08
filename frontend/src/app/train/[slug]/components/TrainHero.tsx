@@ -26,7 +26,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
   ).length || 0;
 
   return (
-    <div className="relative bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+    <div className="relative bg-gradient-to-br from-primary-600 to-primary-800 text-white">
       {/* Cover Image with Overlay */}
       <div className="absolute inset-0 bg-black/30" />
 
@@ -46,7 +46,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
           </h1>
 
           {/* Date Range */}
-          <p className="text-lg lg:text-xl text-blue-100 mb-6">
+          <p className="text-lg lg:text-xl text-primary-100 mb-6">
             {format(new Date(train.startDate), 'MMMM d, yyyy')} -{' '}
             {format(new Date(train.endDate), 'MMMM d, yyyy')}
           </p>
@@ -54,7 +54,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
           {/* Description */}
           <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6 mb-6">
             <h2 className="text-lg font-semibold mb-2">About</h2>
-            <p className="text-blue-50 leading-relaxed whitespace-pre-wrap">
+            <p className="text-primary-50 leading-relaxed whitespace-pre-wrap">
               {train.description}
             </p>
           </div>
@@ -63,7 +63,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
             {train.householdSize && (
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-sm text-blue-100 mb-1">Household Size</div>
+                <div className="text-sm text-primary-100 mb-1">Household Size</div>
                 <div className="text-lg font-semibold">
                   {train.householdSize} {train.householdSize === 1 ? 'person' : 'people'}
                 </div>
@@ -72,7 +72,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
 
             {train.defaultDeliveryTime && (
               <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
-                <div className="text-sm text-blue-100 mb-1">Default Delivery Time</div>
+                <div className="text-sm text-primary-100 mb-1">Default Delivery Time</div>
                 <div className="text-lg font-semibold">{train.defaultDeliveryTime}</div>
               </div>
             )}
@@ -83,13 +83,13 @@ export default function TrainHero({ train }: TrainHeroProps) {
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
               {train.dietaryPreferences && (
                 <div className="mb-3">
-                  <div className="text-sm text-blue-100 mb-1">Dietary Preferences</div>
+                  <div className="text-sm text-primary-100 mb-1">Dietary Preferences</div>
                   <div className="text-base">{train.dietaryPreferences}</div>
                 </div>
               )}
               {train.allergies && (
                 <div>
-                  <div className="text-sm text-blue-100 mb-1">Allergies</div>
+                  <div className="text-sm text-primary-100 mb-1">Allergies</div>
                   <div className="text-base text-yellow-200 font-medium">
                     ⚠️ {train.allergies}
                   </div>
@@ -101,7 +101,7 @@ export default function TrainHero({ train }: TrainHeroProps) {
           {/* Delivery Instructions */}
           {train.deliveryInstructions && (
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-6">
-              <div className="text-sm text-blue-100 mb-1">Delivery Instructions</div>
+              <div className="text-sm text-primary-100 mb-1">Delivery Instructions</div>
               <p className="text-base whitespace-pre-wrap">{train.deliveryInstructions}</p>
             </div>
           )}
@@ -110,22 +110,22 @@ export default function TrainHero({ train }: TrainHeroProps) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
               <div className="text-3xl font-bold mb-1">{claimedMeals}/{totalMealDates}</div>
-              <div className="text-sm text-blue-100">Meals Scheduled</div>
+              <div className="text-sm text-primary-100">Meals Scheduled</div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
               <div className="text-3xl font-bold mb-1">{deliveredMeals}</div>
-              <div className="text-sm text-blue-100">Meals Delivered</div>
+              <div className="text-sm text-primary-100">Meals Delivered</div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
               <div className="text-3xl font-bold mb-1">${totalDonations.toFixed(0)}</div>
-              <div className="text-sm text-blue-100">Donated</div>
+              <div className="text-sm text-primary-100">Donated</div>
             </div>
 
             <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-center">
               <div className="text-3xl font-bold mb-1">{totalGiftCards}</div>
-              <div className="text-sm text-blue-100">Gift Cards</div>
+              <div className="text-sm text-primary-100">Gift Cards</div>
             </div>
           </div>
         </div>

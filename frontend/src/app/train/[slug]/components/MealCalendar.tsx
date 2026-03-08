@@ -116,7 +116,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
           <span className="text-gray-700">Available</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-4 h-4 rounded bg-blue-100 border-2 border-blue-500" />
+          <div className="w-4 h-4 rounded bg-primary-100 border-2 border-primary-500" />
           <span className="text-gray-700">Filled</span>
         </div>
         <div className="flex items-center gap-2">
@@ -164,7 +164,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                     'text-sm font-medium mb-1',
                     !isCurrentMonth && 'text-gray-400',
                     isCurrentMonth && 'text-gray-900',
-                    isToday && 'text-blue-600 font-bold'
+                    isToday && 'text-primary-600 font-bold'
                   )}
                 >
                   {format(day, 'd')}

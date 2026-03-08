@@ -12,6 +12,7 @@ import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
 import SplitMealSignup from './SplitMealSignup';
 import KosherMetadataForm from './KosherMetadataForm';
+import { readStoredAuthToken } from '@/lib/auth-storage';
 
 interface DateSignupModalProps {
   isOpen: boolean;
@@ -61,10 +62,7 @@ export default function DateSignupModal({
 
   // Auth check
   const checkAuthStatus = () => {
-    if (typeof window !== 'undefined') {
-      return !!localStorage.getItem('auth-token');
-    }
-    return false;
+    return Boolean(readStoredAuthToken());
   };
 
   const isLoggedIn = checkAuthStatus();
@@ -74,15 +72,9 @@ export default function DateSignupModal({
     setIsLoading(true);
 
     try {
-      let slotId = activeSlot?.id;
-
-      // If no slot exists, create one (default dinner)
+      const slotId = activeSlot?.id;
       if (!slotId) {
-        const newSlot = await api.post<TaskSlot>(`/chesed-trains/${train.id}/task-slots`, {
-          date: selectedDate.toISOString(),
-          taskType: 'MEAL_DINNER',
-        });
-        slotId = newSlot.data.id;
+        throw new Error('This date is not currently open for sign-up.');
       }
 
       // Prepare contribution data
@@ -108,7 +100,6 @@ export default function DateSignupModal({
       router.refresh();
       onClose();
     } catch (error: any) {
-      console.error('Error signing up:', error);
       toast.error(error.message || 'Failed to sign up. Please try again.');
     } finally {
       setIsLoading(false);

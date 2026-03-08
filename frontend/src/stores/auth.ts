@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { api } from '@/lib/api';
 import { User, LoginCredentials, RegisterData } from '@/types';
+import { readStoredAuthToken, writeStoredAuthToken } from '@/lib/auth-storage';
 
 interface AuthState {
   user: User | null;
@@ -94,6 +95,7 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       setToken: (token: string | null) => {
+        writeStoredAuthToken(token);
         set({ token });
       },
 
@@ -102,7 +104,11 @@ export const useAuthStore = create<AuthStore>()(
       },
 
       initializeAuth: async () => {
-        const { token } = get();
+        const token = readStoredAuthToken();
+        if (token && get().token !== token) {
+          set({ token });
+        }
+
         if (token) {
           set({ isLoading: true });
           try {
@@ -120,6 +126,7 @@ export const useAuthStore = create<AuthStore>()(
               isAuthenticated: false,
               isLoading: false,
             });
+            writeStoredAuthToken(null);
           }
         }
       },
@@ -129,7 +136,6 @@ export const useAuthStore = create<AuthStore>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         user: state.user,
-        token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
     }

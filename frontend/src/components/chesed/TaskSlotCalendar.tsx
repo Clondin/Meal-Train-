@@ -45,7 +45,7 @@ const TASK_TYPE_ICONS: Record<TaskType, string> = {
 const SLOT_STATUS_COLORS: Record<SlotStatus, { bg: string; border: string; text: string }> = {
     AVAILABLE: { bg: 'bg-green-50', border: 'border-green-200', text: 'text-green-700' },
     PARTIALLY_FILLED: { bg: 'bg-yellow-50', border: 'border-yellow-200', text: 'text-yellow-700' },
-    FILLED: { bg: 'bg-blue-50', border: 'border-blue-200', text: 'text-blue-700' },
+    FILLED: { bg: 'bg-primary-50', border: 'border-primary-200', text: 'text-primary-700' },
     CLOSED: { bg: 'bg-gray-50', border: 'border-gray-200', text: 'text-gray-500' },
     CANCELLED: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-500' },
 };
@@ -145,8 +145,8 @@ export function TaskSlotCalendar({
                 className={`
           min-h-[100px] p-1 border border-gray-100 transition-colors
           ${isPast ? 'bg-gray-50 text-gray-400' : 'bg-white'}
-          ${isSelected ? 'ring-2 ring-blue-500 ring-inset' : ''}
-          ${today ? 'bg-blue-50/50' : ''}
+          ${isSelected ? 'ring-2 ring-primary-500 ring-inset' : ''}
+          ${today ? 'bg-primary-50/50' : ''}
           ${!isPast && isInRange ? 'cursor-pointer hover:bg-gray-50' : ''}
           ${!isInRange ? 'opacity-40' : ''}
         `}
@@ -154,11 +154,11 @@ export function TaskSlotCalendar({
                 {/* Day number */}
                 <div className={`
           text-sm font-medium mb-1 flex items-center justify-between
-          ${today ? 'text-blue-600' : 'text-gray-700'}
+          ${today ? 'text-primary-600' : 'text-gray-700'}
         `}>
                     <span className={`
             w-6 h-6 flex items-center justify-center rounded-full
-            ${today ? 'bg-blue-600 text-white' : ''}
+            ${today ? 'bg-primary-600 text-white' : ''}
           `}>
                         {format(date, 'd')}
                     </span>
@@ -186,7 +186,7 @@ export function TaskSlotCalendar({
                             e.stopPropagation();
                             onAddSlot?.(date, 'MEAL_DINNER');
                         }}
-                        className="w-full mt-1 p-1 text-xs text-gray-400 border border-dashed border-gray-200 rounded hover:border-blue-300 hover:text-blue-500 hover:bg-blue-50 transition-colors"
+                        className="w-full mt-1 p-1 text-xs text-gray-400 border border-dashed border-gray-200 rounded hover:border-primary-300 hover:text-primary-500 hover:bg-primary-50 transition-colors"
                     >
                         + Add
                     </button>

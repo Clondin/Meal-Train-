@@ -4,6 +4,7 @@ import prisma from '../config/database.js';
 import { catchAsync, AppError } from '../middleware/errorHandler.js';
 import { authenticate, AuthRequest } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
+import { buildPaginationMeta, parsePagination } from '../utils/pagination.js';
 
 const router = Router();
 
@@ -146,33 +147,116 @@ router.get(
   '/trains',
   authenticate,
   catchAsync(async (req: AuthRequest, res: Response) => {
-    const trains = await prisma.mealTrain.findMany({
-      where: { organizerId: req.user!.id },
-      include: {
-        dates: {
-          include: {
-            participants: true,
+    const pagination = parsePagination(req.query);
+    const where = { organizerId: req.user!.id };
+    const [trains, total] = await Promise.all([
+      prisma.mealTrain.findMany({
+        where,
+        include: {
+          taskSlots: {
+            include: {
+              contributions: true,
+            },
+          },
+          contributions: true,
+          _count: {
+            select: {
+              donations: true,
+              contributions: true,
+              taskSlots: true,
+            },
           },
         },
-        taskSlots: {
-          include: {
-            contributions: true,
-          },
-        },
-        contributions: true,
-        _count: {
-          select: {
-            donations: true,
-            participants: true,
-            contributions: true,
-            taskSlots: true,
-          },
-        },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+      prisma.mealTrain.count({ where }),
+    ]);
 
-    res.json({ trains });
+    res.json({
+      data: trains,
+      pagination: buildPaginationMeta(pagination, total),
+    });
+  })
+);
+
+router.get(
+  '/dashboard-stats',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const now = new Date();
+    now.setHours(0, 0, 0, 0);
+
+    const [
+      totalTrains,
+      activeTrains,
+      totalContributions,
+      totalDonationsAmount,
+      upcomingDeliveries,
+    ] = await Promise.all([
+      prisma.mealTrain.count({
+        where: { organizerId: req.user!.id },
+      }),
+      prisma.mealTrain.count({
+        where: {
+          organizerId: req.user!.id,
+          status: 'ACTIVE',
+          endDate: { gte: now },
+        },
+      }),
+      prisma.contribution.count({
+        where: {
+          train: { organizerId: req.user!.id },
+          status: { in: ['CONFIRMED', 'PENDING'] },
+        },
+      }),
+      prisma.donation.aggregate({
+        where: {
+          train: { organizerId: req.user!.id },
+          status: 'COMPLETED',
+        },
+        _sum: { amount: true },
+      }),
+      prisma.taskSlot.findMany({
+        where: {
+          train: { organizerId: req.user!.id },
+          date: { gte: now },
+          status: { in: ['FILLED', 'PARTIALLY_FILLED'] },
+        },
+        include: {
+          train: {
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              recipientName: true,
+            },
+          },
+          contributions: {
+            where: {
+              status: { in: ['CONFIRMED', 'PENDING'] },
+            },
+            include: {
+              user: {
+                select: { firstName: true, lastName: true, email: true },
+              },
+            },
+            orderBy: { createdAt: 'asc' },
+          },
+        },
+        orderBy: [{ date: 'asc' }, { createdAt: 'asc' }],
+        take: 5,
+      }),
+    ]);
+
+    res.json({
+      totalTrains,
+      activeTrains,
+      totalContributions,
+      totalDonationsAmount: Number(totalDonationsAmount._sum.amount || 0),
+      upcomingDeliveries,
+    });
   })
 );
 
@@ -181,13 +265,23 @@ router.get(
   '/contributions',
   authenticate,
   catchAsync(async (req: AuthRequest, res: Response) => {
-    const contributions = await prisma.contribution.findMany({
-      where: { userId: req.user!.id },
-      include: contributionInclude,
-      orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
-    });
+    const pagination = parsePagination(req.query);
+    const where = { userId: req.user!.id };
+    const [contributions, total] = await Promise.all([
+      prisma.contribution.findMany({
+        where,
+        include: contributionInclude,
+        orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+      prisma.contribution.count({ where }),
+    ]);
 
-    res.json({ contributions });
+    res.json({
+      data: contributions,
+      pagination: buildPaginationMeta(pagination, total),
+    });
   })
 );
 
@@ -196,13 +290,23 @@ router.get(
   '/participations',
   authenticate,
   catchAsync(async (req: AuthRequest, res: Response) => {
-    const participations = await prisma.contribution.findMany({
-      where: { userId: req.user!.id },
-      include: contributionInclude,
-      orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
-    });
+    const pagination = parsePagination(req.query);
+    const where = { userId: req.user!.id };
+    const [participations, total] = await Promise.all([
+      prisma.contribution.findMany({
+        where,
+        include: contributionInclude,
+        orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+      prisma.contribution.count({ where }),
+    ]);
 
-    res.json({ participations });
+    res.json({
+      data: participations,
+      pagination: buildPaginationMeta(pagination, total),
+    });
   })
 );
 
@@ -211,22 +315,32 @@ router.get(
   '/donations',
   authenticate,
   catchAsync(async (req: AuthRequest, res: Response) => {
-    const donations = await prisma.donation.findMany({
-      where: { userId: req.user!.id },
-      include: {
-        train: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            recipientName: true,
+    const pagination = parsePagination(req.query);
+    const where = { userId: req.user!.id };
+    const [donations, total] = await Promise.all([
+      prisma.donation.findMany({
+        where,
+        include: {
+          train: {
+            select: {
+              id: true,
+              slug: true,
+              title: true,
+              recipientName: true,
+            },
           },
         },
-      },
-      orderBy: { createdAt: 'desc' },
-    });
+        orderBy: { createdAt: 'desc' },
+        skip: pagination.skip,
+        take: pagination.limit,
+      }),
+      prisma.donation.count({ where }),
+    ]);
 
-    res.json({ donations });
+    res.json({
+      data: donations,
+      pagination: buildPaginationMeta(pagination, total),
+    });
   })
 );
 
@@ -243,16 +357,6 @@ router.delete(
       prisma.notification.deleteMany({ where: { userId } }),
       prisma.thankYouNote.deleteMany({ where: { recipientUserId: userId } }),
       prisma.oAuthProvider.deleteMany({ where: { userId } }),
-      // Anonymize participations instead of deleting
-      prisma.participant.updateMany({
-        where: { userId },
-        data: {
-          userId: null,
-          guestName: 'Deleted User',
-          guestEmail: null,
-          guestPhone: null,
-        },
-      }),
       prisma.contribution.updateMany({
         where: { userId },
         data: {

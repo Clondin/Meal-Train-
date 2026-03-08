@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
@@ -27,11 +27,7 @@ export default function TrainDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<TabType>('overview');
 
-  useEffect(() => {
-    loadTrainData();
-  }, [trainId]);
-
-  const loadTrainData = async () => {
+  const loadTrainData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -55,7 +51,11 @@ export default function TrainDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [router, trainId]);
+
+  useEffect(() => {
+    void loadTrainData();
+  }, [loadTrainData]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -197,7 +197,7 @@ export default function TrainDetailPage() {
         <Card>
           <div className="text-center">
             <p className="text-sm text-gray-500 mb-1">Participants</p>
-            <p className="text-2xl font-bold text-blue-600">{stats.totalParticipants}</p>
+            <p className="text-2xl font-bold text-primary-600">{stats.totalParticipants}</p>
           </div>
         </Card>
         <Card>
@@ -221,7 +221,7 @@ export default function TrainDetailPage() {
                 className={cn(
                   'whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm transition-colors',
                   activeTab === tab.id
-                    ? 'border-blue-500 text-blue-600'
+                    ? 'border-primary-500 text-primary-600'
                     : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 )}
               >

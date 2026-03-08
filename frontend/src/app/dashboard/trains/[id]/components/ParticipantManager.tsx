@@ -187,7 +187,7 @@ export default function ParticipantManager({
         </Card>
         <Card>
           <p className="text-sm text-gray-500">Upcoming</p>
-          <p className="mt-1 text-2xl font-semibold text-blue-600">{stats.upcoming}</p>
+          <p className="mt-1 text-2xl font-semibold text-primary-600">{stats.upcoming}</p>
         </Card>
         <Card>
           <p className="text-sm text-gray-500">Delivered</p>

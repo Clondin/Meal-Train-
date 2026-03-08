@@ -299,6 +299,7 @@ export interface UpdateChesedTrainData extends Partial<CreateChesedTrainData> {
 export interface TaskSlot {
   id: string;
   trainId: string;
+  train?: ChesedTrain;
   date: string;
   startTime?: string;
   endTime?: string;
@@ -568,6 +569,7 @@ export interface GuestSession {
   verified: boolean;
   expiresAt: string;
   createdAt: string;
+  token: string;
 }
 
 export interface CreateGuestSessionData {
@@ -590,6 +592,14 @@ export interface UploadResponse {
   filename: string;
   mimetype: string;
   size: number;
+}
+
+export interface DashboardStats {
+  totalTrains: number;
+  activeTrains: number;
+  totalContributions: number;
+  totalDonationsAmount: number;
+  upcomingDeliveries: TaskSlot[];
 }
 
 // ============================================
@@ -700,7 +710,3 @@ export const isMealTask = (taskType: TaskType): boolean => {
 export const isShabbosTask = (taskType: TaskType): boolean => {
   return taskType.includes('SHABBOS') || taskType === 'MEAL_SEUDAH_SHLISHIS';
 };
-
-// Legacy compatibility - keeping old types for backward support
-export type MealDate = TaskSlot;
-export type Participant = Contribution;

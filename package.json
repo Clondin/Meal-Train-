@@ -21,10 +21,33 @@
     "db:generate": "npm run db:generate --workspace=backend",
     "db:seed": "npm run db:seed --workspace=backend",
     "lint": "npm run lint --workspaces",
-    "test": "npm run test --workspaces"
+    "test": "npm run test --workspaces",
+    "test:e2e": "playwright test",
+    "generate:types": "openapi-typescript backend/openapi.json -o frontend/src/types/api.generated.ts",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx}": [
+      "eslint --fix"
+    ]
   },
   "devDependencies": {
-    "concurrently": "^8.2.2"
+    "@playwright/test": "^1.58.2",
+    "@types/swagger-ui-express": "^4.1.8",
+    "concurrently": "^8.2.2",
+    "husky": "^9.1.7",
+    "lint-staged": "^16.3.2",
+    "openapi-typescript": "^7.13.0"
+  },
+  "overrides": {
+    "@typescript-eslint/eslint-plugin": "^8.56.1",
+    "@typescript-eslint/parser": "^8.56.1",
+    "@typescript-eslint/typescript-estree": "^8.56.1",
+    "@typescript-eslint/type-utils": "^8.56.1",
+    "@typescript-eslint/utils": "^8.56.1",
+    "@typescript-eslint/scope-manager": "^8.56.1",
+    "@typescript-eslint/visitor-keys": "^8.56.1",
+    "@typescript-eslint/types": "^8.56.1"
   },
   "engines": {
     "node": ">=18.0.0"

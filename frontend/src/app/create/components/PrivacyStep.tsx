@@ -59,8 +59,8 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${isPublic ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${isPublic ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={isPublic}
@@ -95,8 +95,8 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${requireApproval ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${requireApproval ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={requireApproval}
@@ -131,8 +131,8 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${showParticipants ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${showParticipants ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={showParticipants}
@@ -167,8 +167,8 @@ export const PrivacyStep: React.FC<PrivacyStepProps> = ({
             className={`
               relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full
               border-2 border-transparent transition-colors duration-200 ease-in-out
-              focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
-              ${enableReminders ? 'bg-blue-600' : 'bg-gray-200'}
+              focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2
+              ${enableReminders ? 'bg-primary-600' : 'bg-gray-200'}
             `}
             role="switch"
             aria-checked={enableReminders}

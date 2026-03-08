@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   CalendarDaysIcon,
   UserGroupIcon,
@@ -22,10 +23,12 @@ export default function Home() {
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
         {/* Background Image with Overlay */}
         <div className="absolute inset-0 z-0">
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1547592180-85f173990554?q=80&w=2070&auto=format&fit=crop"
             alt="Family sharing a meal"
-            className="w-full h-full object-cover"
+            fill
+            priority
+            className="object-cover"
           />
           <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-black/30 backdrop-blur-[2px]" />
         </div>
@@ -148,9 +151,11 @@ export default function Home() {
           <div className="grid lg:grid-cols-2 gap-20 items-center">
             <div className="order-2 lg:order-1 relative">
               <div className="absolute inset-0 bg-gradient-to-tr from-primary/20 to-transparent rounded-[3rem] transform rotate-6 scale-95 opacity-70" />
-              <img
+              <Image
                 src="https://images.unsplash.com/photo-1606787366850-de6330128bfc?q=80&w=2070&auto=format&fit=crop"
                 alt="Delicious home cooked meal"
+                width={1200}
+                height={1600}
                 className="relative rounded-[2.5rem] shadow-2xl w-full object-cover h-[600px] transform hover:-rotate-2 transition-transform duration-500 hover:shadow-primary/20"
               />
 
@@ -190,7 +195,7 @@ export default function Home() {
               </ul>
 
               <div className="pt-8">
-                <Link href="/create" className="text-primary font-medium hover:text-primary/80 inline-flex items-center text-lg group">
+                <Link href="#how-it-works" className="text-primary font-medium hover:text-primary/80 inline-flex items-center text-lg group">
                   Explore all features
                   <ArrowRightIcon className="ml-2 w-5 h-5 group-hover:translate-x-2 transition-transform" />
                 </Link>

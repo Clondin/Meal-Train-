@@ -1,4 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
+import * as Sentry from '@sentry/node';
+import { logger } from '../services/logger.js';
 
 export class AppError extends Error {
   statusCode: number;
@@ -19,14 +21,30 @@ export const errorHandler = (
   res: Response,
   next: NextFunction
 ) => {
+  void next;
+
   if (err instanceof AppError) {
+    if (err.statusCode >= 500) {
+      Sentry.captureException(err);
+    }
     return res.status(err.statusCode).json({
       error: err.message,
+      ...(process.env.NODE_ENV === 'development' && {
+        request: `${req.method} ${req.originalUrl}`,
+      }),
       ...(process.env.NODE_ENV === 'development' && { stack: err.stack }),
     });
   }
 
-  console.error('Unhandled error:', err);
+  logger.error(
+    {
+      method: req.method,
+      url: req.originalUrl,
+      err,
+    },
+    'Unhandled error'
+  );
+  Sentry.captureException(err);
 
   res.status(500).json({
     error: 'Internal server error',

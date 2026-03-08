@@ -22,7 +22,8 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
     },
     ref
   ) => {
-    const textareaId = id || `textarea-${React.useId()}`;
+    const generatedId = React.useId();
+    const textareaId = id || `textarea-${generatedId}`;
     const errorId = `${textareaId}-error`;
     const helperId = `${textareaId}-helper`;
 
@@ -49,7 +50,7 @@ export const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           className={cn(
             'block w-full rounded-md border border-gray-300 shadow-sm',
             'px-3 py-2 text-gray-900 placeholder-gray-400',
-            'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+            'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
             'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',
             'transition-colors resize-vertical',
             error &&

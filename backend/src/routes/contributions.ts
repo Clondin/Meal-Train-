@@ -1,22 +1,20 @@
 import { Router, Response } from 'express';
 import prisma from '../config/database.js';
 import { catchAsync, AppError } from '../middleware/errorHandler.js';
-import { authenticate, optionalAuth, AuthRequest } from '../middleware/auth.js';
+import { optionalAuth, AuthRequest } from '../middleware/auth.js';
 import { body, validationResult } from 'express-validator';
 import { DeliveryStatus, ContributionStatus } from '@prisma/client';
 import { sendDeliveryStatusUpdate } from '../services/email.js';
+import { requireVerifiedGuestSession } from '../utils/guestSessions.js';
 
 const router = Router();
 
-const canUpdateContribution = (contribution: { userId?: string | null; guestEmail?: string | null; guestPhone?: string | null }, req: AuthRequest) => {
+const canUpdateContribution = (
+  contribution: { userId?: string | null; guestEmail?: string | null; guestPhone?: string | null },
+  req: AuthRequest
+) => {
   if (req.user && contribution.userId && contribution.userId === req.user.id) {
     return true;
-  }
-  if (!req.user) {
-    const guestEmail = req.body?.guestEmail;
-    const guestPhone = req.body?.guestPhone;
-    return Boolean(contribution.guestEmail && guestEmail && contribution.guestEmail === guestEmail)
-      || Boolean(contribution.guestPhone && guestPhone && contribution.guestPhone === guestPhone);
   }
   return false;
 };
@@ -50,6 +48,13 @@ router.patch(
 
     if (!contribution) {
       throw new AppError('Contribution not found', 404);
+    }
+
+    if (!req.user && (contribution.guestEmail || contribution.guestPhone)) {
+      await requireVerifiedGuestSession(req, {
+        identifier: contribution.guestEmail || contribution.guestPhone || undefined,
+        identifierType: contribution.guestEmail ? 'email' : 'phone',
+      });
     }
 
     if (!canUpdateContribution(contribution, req)) {

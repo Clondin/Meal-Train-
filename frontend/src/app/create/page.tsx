@@ -13,6 +13,7 @@ import { DonationsStep } from './components/DonationsStep';
 import { PrivacyStep } from './components/PrivacyStep';
 import { ReviewStep } from './components/ReviewStep';
 import api from '@/lib/api';
+import { devLogError } from '@/lib/dev-log';
 
 // Extended form data type to include all wizard fields
 export interface ChesedTrainFormData {
@@ -225,7 +226,7 @@ export default function CreateChesedTrainPage() {
       // Redirect to the chesed train page
       router.push(`/train/${mealTrain.slug}`);
     } catch (error: any) {
-      console.error('Failed to create chesed train:', error);
+      devLogError('Failed to create chesed train:', error);
       toast.error(error.message || 'Failed to create chesed train');
     } finally {
       setIsSubmitting(false);
@@ -355,7 +356,7 @@ export default function CreateChesedTrainPage() {
         <div className="mt-8 text-center">
           <p className="text-sm text-gray-500">
             Need help? Check out our{' '}
-            <a href="/help" className="text-blue-600 hover:text-blue-800">
+            <a href="/help" className="text-primary-600 hover:text-primary-800">
               guide to creating a chesed train
             </a>
           </p>

@@ -24,7 +24,7 @@ interface StatusStep {
 const STATUS_STEPS: StatusStep[] = [
     { status: 'NOT_STARTED', label: 'Not Started', icon: '⏳', color: 'bg-gray-200', activeColor: 'bg-gray-500' },
     { status: 'PREPARING', label: 'Preparing', icon: '👨‍🍳', color: 'bg-yellow-200', activeColor: 'bg-yellow-500' },
-    { status: 'LEAVING_NOW', label: 'Leaving Now', icon: '🚗', color: 'bg-blue-200', activeColor: 'bg-blue-500' },
+    { status: 'LEAVING_NOW', label: 'Leaving Now', icon: '🚗', color: 'bg-primary-200', activeColor: 'bg-primary-500' },
     { status: 'EN_ROUTE', label: 'On the Way', icon: '🛣️', color: 'bg-indigo-200', activeColor: 'bg-indigo-500' },
     { status: 'ARRIVING_SOON', label: 'Arriving Soon', icon: '📍', color: 'bg-purple-200', activeColor: 'bg-purple-500' },
     { status: 'DELIVERED', label: 'Delivered', icon: '✅', color: 'bg-green-200', activeColor: 'bg-green-500' },
@@ -85,7 +85,7 @@ export function DeliveryStatusTracker({
                                         className={`
                       w-10 h-10 rounded-full flex items-center justify-center text-lg transition-all duration-200
                       ${isComplete ? step.activeColor : 'bg-gray-200'}
-                      ${isCurrent ? 'ring-4 ring-offset-2 ring-blue-200 scale-110' : ''}
+                      ${isCurrent ? 'ring-4 ring-offset-2 ring-primary-200 scale-110' : ''}
                       ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:scale-105'}
                     `}
                                     >
@@ -102,7 +102,7 @@ export function DeliveryStatusTracker({
                     {/* Progress line */}
                     <div className="absolute top-5 left-5 right-5 h-1 bg-gray-200 -z-0">
                         <div
-                            className="h-full bg-blue-500 transition-all duration-300"
+                            className="h-full bg-primary-500 transition-all duration-300"
                             style={{ width: `${(currentIndex / (STATUS_STEPS.length - 1)) * 100}%` }}
                         />
                     </div>
@@ -115,7 +115,7 @@ export function DeliveryStatusTracker({
                             type="button"
                             onClick={() => onStatusChange(STATUS_STEPS[currentIndex + 1].status)}
                             disabled={disabled}
-                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+                            className="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-primary-600 text-white rounded-xl font-medium hover:bg-primary-700 transition-colors disabled:opacity-50"
                         >
                             <span>{STATUS_STEPS[currentIndex + 1].icon}</span>
                             <span>Mark as {STATUS_STEPS[currentIndex + 1].label}</span>
@@ -141,7 +141,7 @@ export function DeliveryStatusTracker({
                             value={estimatedArrival || ''}
                             onChange={(e) => onEstimatedArrivalChange(e.target.value)}
                             disabled={disabled}
-                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            className="w-full px-4 py-2 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
                         />
                     </div>
                 )}

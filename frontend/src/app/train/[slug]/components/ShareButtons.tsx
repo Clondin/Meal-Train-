@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ChesedTrain } from '@/types';
 import { Button } from '@/components/ui/Button';
 import toast from 'react-hot-toast';
+import { devLogError } from '@/lib/dev-log';
 import {
   FaFacebook,
   FaTwitter,
@@ -88,7 +89,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
         toast.success('Shared successfully!');
       } catch (error) {
         // User cancelled or share failed
-        console.error('Error sharing:', error);
+        devLogError('Error sharing:', error);
       }
     }
   };
@@ -122,7 +123,7 @@ export default function ShareButtons({ train }: ShareButtonsProps) {
             variant="outline"
             size="sm"
             onClick={handleFacebookShare}
-            leftIcon={<FaFacebook className="text-blue-600" />}
+            leftIcon={<FaFacebook className="text-primary-600" />}
             className="whitespace-nowrap"
             aria-label="Share on Facebook"
           >

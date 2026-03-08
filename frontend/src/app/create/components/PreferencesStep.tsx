@@ -61,7 +61,7 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
               onClick={() => toggle(field as keyof ChesedTrainFormData)}
               className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
                 watch(field as keyof ChesedTrainFormData)
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  ? 'border-primary-500 bg-primary-50 text-primary-700'
                   : 'border-gray-200 bg-gray-50 text-gray-700'
               }`}
             >

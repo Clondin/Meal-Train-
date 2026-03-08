@@ -1,11 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { UseFormRegister, FieldErrors } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { Button } from '@/components/ui/Button';
 import { ChesedTrainFormData } from '../page';
+import { devLogError } from '@/lib/dev-log';
 
 interface RecipientStepProps {
   register: UseFormRegister<ChesedTrainFormData>;
@@ -42,7 +44,7 @@ export const RecipientStep: React.FC<RecipientStepProps> = ({
         const objectUrl = URL.createObjectURL(file);
         onImageUpload(objectUrl);
       } catch (error) {
-        console.error('Upload failed:', error);
+        devLogError('Upload failed:', error);
       } finally {
         setUploading(false);
       }
@@ -137,10 +139,12 @@ export const RecipientStep: React.FC<RecipientStepProps> = ({
         <div className="flex items-start gap-4">
           {imagePreview && (
             <div className="relative w-32 h-32 rounded-lg overflow-hidden border-2 border-gray-300">
-              <img
+              <Image
                 src={imagePreview}
                 alt="Cover preview"
-                className="w-full h-full object-cover"
+                fill
+                unoptimized
+                className="object-cover"
               />
             </div>
           )}

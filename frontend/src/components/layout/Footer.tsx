@@ -10,7 +10,6 @@ import {
 const navigation = {
   product: [
     { name: 'How It Works', href: '#how-it-works' },
-    { name: 'Use Cases', href: '#use-cases' },
     { name: 'Create Chesed Train', href: '/create' },
     { name: 'Find Chesed Train', href: '/search' },
   ],

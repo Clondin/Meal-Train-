@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { FiAlertCircle } from 'react-icons/fi';
 import { Card, CardBody } from '@/components/ui';
@@ -8,10 +8,17 @@ import { Button } from '@/components/ui';
 import { Spinner } from '@/components/ui';
 import { useAuthStore } from '@/stores/auth';
 import toast from 'react-hot-toast';
+import { z } from 'zod';
+import { api } from '@/lib/api';
+import { devLogError } from '@/lib/dev-log';
 
 type CallbackStatus = 'processing' | 'success' | 'error';
 
-export default function OAuthCallbackPage() {
+const callbackParamsSchema = z.object({
+  token: z.string().min(1),
+});
+
+function OAuthCallbackContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { setUser, setToken } = useAuthStore();
@@ -21,10 +28,8 @@ export default function OAuthCallbackPage() {
   useEffect(() => {
     const handleOAuthCallback = async () => {
       try {
-        // Extract token and user data from URL parameters
         const token = searchParams.get('token');
         const error = searchParams.get('error');
-        const userParam = searchParams.get('user');
 
         // Check for errors in the callback
         if (error) {
@@ -34,39 +39,28 @@ export default function OAuthCallbackPage() {
           return;
         }
 
-        // Validate required parameters
-        if (!token || !userParam) {
+        const parsed = callbackParamsSchema.safeParse({ token });
+        if (!parsed.success) {
           setStatus('error');
           setError('Invalid authentication response. Missing credentials.');
           toast.error('Authentication failed');
           return;
         }
 
-        // Parse user data
-        let user;
-        try {
-          user = JSON.parse(decodeURIComponent(userParam));
-        } catch (parseError) {
-          setStatus('error');
-          setError('Invalid user data received');
-          toast.error('Authentication failed');
-          return;
-        }
-
-        // Store authentication data
-        setToken(token);
+        setToken(parsed.data.token);
+        const user = await api.getCurrentUser();
         setUser(user);
 
         // Update status and show success message
         setStatus('success');
-        toast.success(`Welcome back, ${user.name}!`);
+        toast.success(`Welcome back, ${user.firstName || user.email}!`);
 
         // Redirect to dashboard
         setTimeout(() => {
           router.push('/dashboard');
         }, 1000);
       } catch (err: any) {
-        console.error('OAuth callback error:', err);
+        devLogError('OAuth callback error:', err);
         setStatus('error');
         setError(err.message || 'An unexpected error occurred during authentication');
         toast.error('Authentication failed');
@@ -77,13 +71,13 @@ export default function OAuthCallbackPage() {
   }, [searchParams, router, setToken, setUser]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50 flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <Card className="shadow-lg">
           <CardBody className="p-8">
             {status === 'processing' && (
               <div className="text-center py-8">
-                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <div className="w-16 h-16 bg-primary-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <Spinner size="lg" />
                 </div>
                 <h2 className="text-2xl font-bold text-gray-900 mb-2">
@@ -166,5 +160,13 @@ export default function OAuthCallbackPage() {
         </Card>
       </div>
     </div>
+  );
+}
+
+export default function OAuthCallbackPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-gradient-to-br from-primary-50 via-white to-purple-50" />}>
+      <OAuthCallbackContent />
+    </Suspense>
   );
 }

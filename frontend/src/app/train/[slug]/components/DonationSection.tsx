@@ -14,6 +14,7 @@ import toast from 'react-hot-toast';
 import { format } from 'date-fns';
 import { loadStripe } from '@stripe/stripe-js';
 import { Elements, CardElement, useStripe, useElements } from '@stripe/react-stripe-js';
+import { devLogError } from '@/lib/dev-log';
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY || '');
 
@@ -205,7 +206,7 @@ function DonationModal({
         onClose();
       }
     } catch (error: any) {
-      console.error('Error processing donation:', error);
+      devLogError('Error processing donation:', error);
       toast.error(error.message || 'Failed to process donation. Please try again.');
     } finally {
       setIsLoading(false);

@@ -1,204 +1,470 @@
-# App Level-Up Plan
+# App Level Up — Unified Production Readiness Plan
 
-## Context
-
-Chesed Train is a meal coordination platform (like MealTrain) with significant Jewish community-specific features (kosher tracking, Shabbos meals, simcha mode, non-meal chesed tasks). The backend and data model are substantially built (~56 endpoints, 14 models), but the frontend has critical bugs, the create wizard doesn't expose the platform's differentiating features, there's no notification system, and several models/routes are disconnected. This plan takes the app from ~65% to a shippable v1.
+This document merges the Codex security audit findings with a full production readiness audit into a single actionable plan. Work through the tiers in order.
 
 ---
 
-## Phase 1: Fix Critical Bugs (Tier 1)
+## Completed Scope
 
-### 1.1 Fix Dashboard Train Detail Page
-**File:** `frontend/src/app/dashboard/trains/[id]/page.tsx`
-- Lines 41-42 call `api.getMealDates(trainId)` and `api.getParticipants(trainId)` which don't exist
-- Replace with `api.getTaskSlots(trainId)` and `api.getContributions(trainId)` (both exist in api.ts)
-- Update all downstream references from `datesData`/`participantsData` to use TaskSlot/Contribution types
+- Root workspace quality gates are working: `test`, `lint`, and `build`.
+- Backend and frontend task-slot APIs are aligned, including bulk creation and list filtering.
+- Guest session request and verification now use the real guest-session API end to end.
+- Participant approval now notifies the volunteer by email and in-app notification.
+- Notification routes, scheduler jobs, thank-you notes, auth-aware header, dashboard bell, PWA assets, and static support pages are all present.
+- Shared form control hook-order bugs were fixed.
+- Real tests were added for:
+  - backend task-slot bulk creation and filtering
+  - frontend create-train flow
+  - frontend guest-signup verification flow
 
-### 1.2 Fix Legacy Type Mismatches (5 files)
-Each file references `train.dates`, `train.participants`, or lowercase status strings:
+## Verification (run after every tier)
 
-| File | Fix |
-|------|-----|
-| `frontend/src/app/dashboard/trains/page.tsx` (lines 87-90) | `train.dates` -> `train.taskSlots`, `train.participants` -> `train.contributions`, `'claimed'`/`'delivered'` -> `'FILLED'`/`'DELIVERED'` |
-| `frontend/src/app/dashboard/trains/[id]/components/ParticipantManager.tsx` | `participant.name` -> `participant.guestName \|\| participant.user?.firstName`, `d.participantId` -> correct field |
-| `frontend/src/app/train/[slug]/components/TrainHero.tsx` (lines 11-26) | `train.dates` -> `train.taskSlots`, status enums to uppercase |
-| `frontend/src/app/train/[slug]/components/MealCalendar.tsx` | Uses `MealDate` type and `train.dates` -> refactor to use `TaskSlot` and `train.taskSlots`, fix `mealDate.participant?.name` and `mealDate.mealType` |
-| `frontend/src/app/search/page.tsx` | `train._count?.participants` -> `train._count?.contributions` |
+```bash
+npm run test
+npm run lint
+npm run build
+```
 
-### 1.3 Fix Missing TaskTypeSelector Export
-**File:** `frontend/src/components/chesed/index.ts`
-- Remove the `TaskTypeSelector` export (no such component exists), or create a simple one
+## Notes
 
-### 1.4 Make Header Auth-Aware
-**File:** `frontend/src/components/layout/Header.tsx`
-- Import `useAuthStore` from `@/stores/auth`
-- Conditionally show "Dashboard" link + user avatar when authenticated
-- Show "Sign In" / "Get Started" when not authenticated
-- Add logout button to user dropdown
-
-### 1.5 Wire Up Guest Session Backend Routes
-**File (new):** `backend/src/routes/guestSessions.ts`
-- `POST /api/guest-sessions` — create session, generate verification code, set expiry
-- `POST /api/guest-sessions/verify` — verify code, mark session verified
-- Mount in `backend/src/index.ts`
-- The `GuestSession` Prisma model already exists, frontend already calls `api.createGuestSession()` and `api.verifyGuestSession()`
+- The app still intentionally renders a few pages dynamically because they depend on client-side URL state (`searchParams`). That does not block correctness.
 
 ---
 
-## Phase 2: Complete the Core Loop (Tier 2)
+## Tier 1 — Security & Auth Fixes (Ship Blockers)
 
-### 2.1 Level Up Create Wizard
-**Files:** `frontend/src/app/create/page.tsx`, `frontend/src/app/create/components/PreferencesStep.tsx`
+These issues will cause data leaks, auth bypasses, or exploitable vulnerabilities in production. Fix all of these before any deployment.
 
-The create wizard currently uses free-text fields for dietary preferences/allergies and doesn't expose train type, kosher settings, or structured allergies. The backend and display components already support all of these.
+### 1.1 Private train data is exposed (CRITICAL)
 
-**Add to PreferencesStep.tsx:**
-- Meal category acceptance toggles (acceptsMilchig, acceptsFleishig, acceptsPareve)
-- Kashrus requirement checkboxes (requireCholovYisroel, requirePasYisroel, requireYoshon, requireGlatt)
-- Structured allergy checkboxes (nuts, dairy, gluten, eggs, fish, shellfish) + free-text "other"
-- Keep household size, delivery instructions, food likes/dislikes
+**File:** `backend/src/routes/trains.ts` — public train fetch route
 
-**Add new step or extend DonationsStep:**
-- Train type selector (STANDARD, FULL_CHESED, SIMCHA, EVENT) with descriptions
-- For FULL_CHESED: show what non-meal task types will be available
-- For SIMCHA: explain contribution board mode
+**Problem:** The route returns full train data (participants, scheduling, recipient contact info) without checking `train.isPublic`. Anyone with a slug can fetch private train details.
 
-**Fix submission** (`page.tsx` lines 155-168):
-- Currently drops `foodLikes`, `foodDislikes`, `donationsEnabled`, `giftCardsEnabled`, `trainType`, `isPublic`, `requireApproval`, `showParticipants`, `enableReminders`, `reminderHours`
-- Submit ALL form fields to the API
-- Add structured kosher/allergy fields to the submission payload
+**Fix:**
+- Check `train.isPublic` for unauthenticated and non-organizer/non-admin users before returning data.
+- Audit the response shape — strip private recipient fields (phone, address, contact preferences) for unauthorized viewers.
+- Add a test: anonymous GET on a private train slug returns 403.
 
-**Reuse:** The `KosherMetadataForm` component in `frontend/src/components/chesed/KosherMetadataForm.tsx` already handles milchig/fleishig/kashrus UI — adapt it for the organizer-side (train preferences vs contributor preferences)
+### 1.2 Anonymous users can mutate task slots (CRITICAL)
 
-### 2.2 Build Notification Cron System
-**Backend changes:**
+**File:** `backend/src/routes/trains.ts:576-578`
 
-**New dependency:** Add `node-cron` to backend
-**New file:** `backend/src/services/scheduler.ts`
-- Daily job (e.g., 8am): Query TaskSlots where `date = tomorrow` and status != CANCELLED, find confirmed Contributions, call `sendReminderEmail()` for each, update `reminderSent`/`reminderSentAt` on Contribution
-- Daily job (e.g., 7am day-of): For contributions on today's date where `confirmedMealCategory = false`, create `DAY_OF_CONFIRMATION_REQUEST` notification + send email
-- Weekly job (Monday 9am): For each active train organizer, send digest (slots filled this week, upcoming unfilled slots, donation totals)
-- Create Notification records for all sent notifications
+**Problem:** Authorization check resolves to `true` when `req.user` is undefined:
+```typescript
+const isAuthorized = req.user ? isOrganizerOrAdmin(train, req.user.id) : true;
+```
 
-**Wire into `backend/src/index.ts`:** Import and start scheduler after server listen
+**Fix:**
+- Require organizer/admin auth for task-slot creation and updates (POST/PATCH on `/:slug/task-slots`).
+- Contributing to an existing slot (POST on `/:slug/contributions`) can remain open for public trains.
+- Add a regression test proving anonymous users cannot create or overwrite slots.
 
-**Existing resources to reuse:**
-- `sendReminderEmail()` in `backend/src/services/email.ts` (lines 188-250) — already fully implemented with HTML template
-- `Notification` model + `NotificationType` enum in schema — already has `CONTRIBUTION_REMINDER`, `DAY_OF_CONFIRMATION_REQUEST`, `REMINDER` types
-- `Contribution.reminderSent` / `reminderSentAt` fields already exist
+### 1.3 Remove JWT fallback secret (CRITICAL)
 
-### 2.3 Build Notification API Routes
-**New file:** `backend/src/routes/notifications.ts`
-- `GET /api/notifications` — get current user's notifications (paginated, filterable by read/unread)
-- `PATCH /api/notifications/:id/read` — mark as read
-- `POST /api/notifications/read-all` — mark all as read
-- `GET /api/notifications/unread-count` — for badge count
-- Mount in `backend/src/index.ts`
+**File:** `backend/src/utils/jwt.ts:3`
 
-**Frontend:**
-- Add notification methods to `frontend/src/lib/api.ts`
-- Add notification bell component to dashboard layout (`frontend/src/app/dashboard/layout.tsx`)
-- Simple dropdown showing recent notifications with unread count badge
+**Problem:** Hardcoded `'fallback-secret-change-in-production'` means all tokens are signed with a known secret if the env var is missing.
 
-### 2.4 Clean Up Dead Footer Links
-**File:** `frontend/src/components/layout/Footer.tsx`
-- Remove links to non-existent pages OR create minimal static pages for critical ones:
-  - Keep and create: `/about`, `/privacy`, `/terms` (even if placeholder)
-  - Remove: `/pricing`, `/blog`, `/careers`, `/press`, `/partners`, `/cookies`, `/accessibility`, `/guidelines`, `/safety`, `/faq`
-  - `/help` and `/contact` can link to a mailto or GitHub issues for now
+**Fix:**
+```typescript
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET) throw new Error('JWT_SECRET environment variable is required');
+```
+
+### 1.4 Upgrade Next.js — patch critical CVEs
+
+**File:** `frontend/package.json`
+
+**Problem:** Next.js 14.0.4 has 4 DoS vulnerabilities and 1 middleware auth bypass (GHSA-f82v-jwr5-mffw).
+
+**Fix:** `cd frontend && npm install next@14.2.35` (or run `npm audit fix` from root). Verify all pages still render.
+
+### 1.5 Fix OAuth login flow (HIGH)
+
+**Files:**
+- `backend/src/routes/auth.ts` — callback redirect
+- `frontend/src/app/auth/callback/page.tsx` — callback handler
+- `frontend/src/lib/api.ts` — token storage
+- `frontend/src/stores/auth.ts` — auth state
+
+**Problem:** Backend redirects with `token` and `refreshToken` params, but frontend callback expects a `user` param and fails without it. Token storage is split between the auth store and the API client.
+
+**Fix:**
+- Define one callback contract. Backend should redirect with `token` only; frontend fetches `/auth/me` to hydrate user.
+- Unify token persistence — auth store and API client must read/write the same localStorage key.
+- Validate parsed URL params with Zod before storing (currently `JSON.parse(userParam)` trusts the URL blindly at `callback/page.tsx:46-54`).
+- Manually verify Google and Facebook login end-to-end.
+
+### 1.6 Fix guest identity spoofing (HIGH)
+
+**File:** `backend/src/routes/participants.ts:11-22` (and contribution equivalents)
+
+**Problem:** Guests can update/cancel contributions by providing a matching email or phone in the request body. No verification that the request came from the original guest — anyone who knows a guest's email can hijack their contribution.
+
+**Fix:** Require the guest session verification token to authenticate all guest write operations. The flow:
+1. Guest creates session → gets verification code
+2. Guest verifies → gets a token
+3. All subsequent guest actions include this token
+4. Backend validates the token against the GuestSession table
+
+### 1.7 Standardize API base URL handling (HIGH)
+
+**Files:**
+- `frontend/.env.example`
+- `README.md`
+- `frontend/src/lib/api.ts`
+- `frontend/src/app/train/[slug]/page.tsx`
+
+**Problem:** Code expects `NEXT_PUBLIC_API_URL` to include `/api`, but README and `.env.example` define it without `/api`. A production deploy using documented values will send requests to wrong paths.
+
+**Fix:**
+- Pick one convention (recommend: env var does NOT include `/api`, code appends it).
+- Update docs, `.env.example`, `.env.local`, and all fetch call sites to match.
+- Validate by following documented setup steps from scratch in a clean environment.
+
+### 1.8 Add startup env validation (MEDIUM)
+
+**File:** `backend/src/index.ts` (add near top, before any route registration)
+
+**Problem:** App silently runs with missing API keys. SendGrid, Stripe, S3 all fail at request time instead of at boot.
+
+**Fix:** Add a validation block that checks required env vars and exits with a clear error if any are missing:
+
+**Required (crash if missing in production):**
+- `DATABASE_URL`, `JWT_SECRET`, `STRIPE_SECRET_KEY`, `STRIPE_WEBHOOK_SECRET`
+- `SENDGRID_API_KEY` (must start with `SG.`)
+- `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_S3_BUCKET`
+- `FRONTEND_URL`
+
+**Optional (log warning if missing):**
+- `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
+- `FACEBOOK_APP_ID`, `FACEBOOK_APP_SECRET`
+
+### 1.9 Run npm audit fix
+
+**Problem:** 32 vulnerabilities total (2 critical, 26 high, 2 moderate, 2 low). Key items:
+- `next@14.0.4` — critical DoS + auth bypass
+- `fast-xml-parser` via `aws-sdk` — critical DoS
+- `axios` — high DoS via `__proto__`
+
+**Fix:**
+```bash
+npm audit fix          # non-breaking fixes
+npm audit fix --force  # if needed for Next.js
+```
+
+Review breaking changes if `--force` is needed. Also plan aws-sdk v2 → v3 migration (see Tier 3).
 
 ---
 
-## Phase 3: Level Up Beyond MealTrain (Tier 3)
+## Tier 2 — Production Quality (Before Launch)
 
-### 3.1 Thank-You Notes Feature
-Recipients should be able to thank contributors.
+These won't cause immediate security breaches but will cause bugs, poor UX, and operational pain at scale.
 
-**Schema addition:**
-```prisma
-model ThankYouNote {
-  id              String   @id @default(uuid())
-  trainId         String
-  contributionId  String?
-  recipientUserId String   // The train recipient writing the note
-  message         String
-  createdAt       DateTime @default(now())
+### 2.1 Consolidate data models — remove legacy MealDate/Participant
+
+**Problem:** Two parallel architectures coexist:
+- **Legacy:** `MealDate` + `Participant`
+- **New:** `TaskSlot` + `Contribution` (split meals, kosher metadata, delivery tracking, non-meal tasks)
+
+Both have routes; frontend references both inconsistently, causing type mismatches and broken pages.
+
+**Plan:**
+1. Audit every reference to `MealDate` and `Participant` in frontend and backend.
+2. Migrate any remaining frontend pages using the old model to `TaskSlot`/`Contribution`.
+3. Write a data migration script if there's any production data in the old tables.
+4. Remove models from `prisma/schema.prisma`.
+5. Delete `backend/src/routes/participants.ts`.
+6. Remove legacy endpoints from `backend/src/routes/trains.ts` (`/dates` routes).
+7. Remove from `backend/src/index.ts` route registration.
+8. Remove legacy methods from `frontend/src/lib/api.ts` and `frontend/src/types/index.ts`.
+9. Generate new Prisma migration.
+
+**Files affected:**
+- `backend/prisma/schema.prisma`
+- `backend/src/routes/participants.ts` (delete)
+- `backend/src/routes/trains.ts`
+- `backend/src/index.ts`
+- `frontend/src/lib/api.ts`
+- `frontend/src/types/index.ts`
+- `frontend/src/app/dashboard/trains/[id]/` (DateManager component)
+
+### 2.2 Add pagination to all list endpoints
+
+**Problem:** These endpoints return ALL records with no limit:
+- `GET /api/trains/:slug/contributions`
+- `GET /api/trains/:slug/task-slots`
+- `GET /api/trains/:slug/simcha-contributions`
+- `GET /api/users/trains`
+- `GET /api/users/contributions`
+- `GET /api/users/donations`
+
+**Fix:** Accept `?page=1&limit=20` query params. Return:
+```json
+{ "data": [...], "pagination": { "page": 1, "limit": 20, "total": 142, "pages": 8 } }
+```
+
+### 2.3 Fix dashboard data loading
+
+**File:** `frontend/src/app/dashboard/page.tsx:52-70`
+
+**Problem:** Dashboard loops through all user trains making individual API calls for stats — O(N) requests. "Upcoming Deliveries" section (lines 344-378) is a static placeholder with no real data.
+
+**Fix:** Create a backend endpoint `GET /api/users/dashboard-stats` that returns aggregated data in one query:
+```json
+{
+  "totalTrains": 5,
+  "activeTrains": 2,
+  "totalContributions": 23,
+  "totalDonationsAmount": 450.00,
+  "upcomingDeliveries": [...]
 }
 ```
 
-**Backend:** New route `POST /api/trains/:slug/thank-you` + `GET`
-**Frontend:** "Send Thanks" button on train management page, display notes on contributor's participation page
+Wire the frontend to use it.
 
-### 3.2 PWA Setup
-**Files:** `frontend/public/manifest.json`, `frontend/src/app/layout.tsx`
-- Add web app manifest with icons, theme color, display: standalone
-- Add meta tags for iOS/Android
-- Register service worker for offline caching of static assets
-- This enables "Add to Home Screen" on mobile — a lightweight mobile app without React Native
+### 2.4 Add Dockerfiles and docker-compose
 
-### 3.3 Consolidate Duplicate Components
-5 components exist in both `components/chesed/` and `app/train/[slug]/components/`:
-- KosherMetadataForm, SimchaBoard, SplitMealSignup, DeliveryStatusTracker, TaskSlotCalendar
+**Files to create:**
+- `backend/Dockerfile` — Node 18 alpine, multi-stage (deps + prisma generate → dist), port 4000
+- `frontend/Dockerfile` — Node 18 alpine, multi-stage (deps → next build → next start), port 3000
+- `docker-compose.yml` (root) — backend, frontend, postgres:15 with healthcheck and volume
+- `.dockerignore` (root) — node_modules, .next, dist, .env, .git
 
-**Strategy:** Keep the `components/chesed/` versions as the canonical ones with flexible props. Refactor the page-level versions to import and wrap the shared components, passing train-specific data as props. Delete duplicated logic.
+### 2.5 Set up GitHub Actions CI
 
-### 3.4 SMS Notifications (Stretch)
-- Add Twilio SDK to backend
-- New service: `backend/src/services/sms.ts`
-- Send SMS for critical notifications (day-of reminder, delivery status) when user has phone number
-- Especially important for guest users who may not check email
+**File to create:** `.github/workflows/ci.yml`
+
+**Steps:**
+1. Trigger on push to main and PRs
+2. Node 18, install deps
+3. `npm run lint`
+4. `npx tsc --noEmit` (both workspaces)
+5. `npm run build`
+6. `npm test`
+7. `npm audit --audit-level=high`
+
+### 2.6 Add E2E tests for critical flows
+
+**Setup:** Playwright (`npm install -D @playwright/test`), create `e2e/` directory at root.
+
+**Flows to cover:**
+1. Registration → email verification → login
+2. Create a meal train (full wizard)
+3. View public train → sign up as contributor
+4. Guest sign up (no account)
+5. Donation via Stripe test mode
+6. Dashboard loads with correct stats
+7. Update delivery status as contributor
+8. Organizer views participants and donations
+
+### 2.7 Set up error tracking (Sentry)
+
+**Files:**
+- `backend/src/index.ts` — add `@sentry/node` init
+- `frontend/src/app/layout.tsx` — add `@sentry/nextjs`
+- `next.config.js` — wrap with `withSentryConfig`
+
+Capture unhandled exceptions, add user context (userId, email), upload source maps.
+
+### 2.8 Add structured logging
+
+**File:** `backend/src/middleware/requestLogger.ts` (replace current console.log implementation)
+
+Replace with Pino or Winston:
+- JSON format, log levels (error/warn/info/debug)
+- Request ID tracking via `x-request-id` header
+- Include: method, url, status, duration, userId
+
+### 2.9 Add session cleanup cron
+
+**File:** `backend/src/services/scheduler.ts`
+
+**Problem:** Sessions table grows forever — expired refresh tokens never pruned.
+
+**Fix:** Daily cron that deletes sessions where `expiresAt < now()`.
+
+### 2.10 Deploy to staging
+
+- Separate database, Stripe test keys, SendGrid sandbox, S3 `-staging` bucket
+- Matches production infra (same Docker images)
+- Accessible URL for QA testing
 
 ---
 
-## Phase 4: Polish & Infrastructure (Tier 4)
+## Tier 3 — Polish (Post-Launch)
 
-### 4.1 Fix Remaining Technical Debt
-- **S3 ownership check:** Add file ownership tracking to uploads route
-- **AWS SDK v2 -> v3:** Migrate `backend/src/services/s3.ts` from `aws-sdk` to `@aws-sdk/client-s3`
-- **Remove unused `swr` dependency** from frontend package.json
-- **Fix auth pages** (forgot-password, reset-password, verify-email) to use the API client instead of raw axios
+### 3.1 Generate frontend types from Prisma
 
-### 4.2 Seed File Update
-**File:** `backend/prisma/seed.ts`
-- Add TaskSlot, Contribution, SimchaContribution, GiftCard, and Notification seed data
-- Currently only seeds legacy MealDate/Participant models
+**Problem:** `frontend/src/types/index.ts` is manually maintained and drifts from schema.
 
-### 4.3 Basic Test Suite
-- Backend: Auth flow (register/login/refresh), Train CRUD, Contribution flow, Payment webhook handling
-- Frontend: Key page renders, create wizard submission, auth store behavior
-- Use Jest (already a devDependency) + supertest for API tests
+**Options:**
+- Shared `packages/types` workspace importing from `@prisma/client`
+- OpenAPI spec on backend → `openapi-typescript` for frontend
+- Script that runs on build to sync types
+
+### 3.2 Consolidate duplicate components
+
+**Problem:** These exist in both `components/chesed/` AND `app/train/[slug]/components/`:
+- `TaskSlotCalendar`, `KosherMetadataForm`, `SimchaBoard`, `DeliveryStatusTracker`, `SplitMealSignup`
+
+**Fix:** Keep canonical in `components/chesed/`, delete duplicates, update imports.
+
+### 3.3 Add Swagger/OpenAPI docs
+
+Document all 56+ endpoints. Serve at `/api/docs` in dev. Export JSON for frontend type generation.
+
+### 3.4 Add per-endpoint rate limiting
+
+- `/api/auth/login` — 5 attempts per 15 min per IP
+- `/api/auth/register` — 3 per hour per IP
+- `/api/auth/forgot-password` — 3 per hour per email
+- `/api/guest-sessions` — 5 per hour per IP
+
+### 3.5 Fix timezone-aware scheduling
+
+**File:** `backend/src/services/scheduler.ts`
+
+**Problem:** Cron runs at fixed UTC times. US West Coast users get reminders at midnight.
+
+**Fix:** Group trains by timezone, send at appropriate local hour. Or run hourly and check each train's local time.
+
+### 3.6 Migrate aws-sdk v2 → v3
+
+**Problem:** `aws-sdk@2.x` is deprecated with known vulnerabilities (fast-xml-parser DoS).
+
+**Fix:** Replace with `@aws-sdk/client-s3`. Breaking change — requires code updates in `backend/src/services/s3.ts`.
+
+### 3.7 Add CSRF protection
+
+Add `csurf` middleware or double-submit cookie pattern. Protects against future changes and the cookie fallback in `middleware/auth.ts`.
+
+### 3.8 Remove console logs from frontend
+
+~10 instances of `console.log`/`console.error` in production code. Remove or wrap in `if (process.env.NODE_ENV === 'development')`.
+
+### 3.9 Fix file upload validation
+
+**File:** `backend/src/routes/uploads.ts`
+
+**Problem:** Only MIME type checked, not magic bytes.
+
+**Fix:** Use `file-type` library to verify actual file content matches claimed MIME.
+
+### 3.10 Add pre-commit hooks
+
+```bash
+npm install -D husky lint-staged
+npx husky init
+```
+
+Configure lint-staged for ESLint + Prettier on `*.ts`/`*.tsx`.
+
+### 3.11 Remove dead service worker reference
+
+**File:** `frontend/src/providers.tsx:14`
+
+Registers `/sw.js` which doesn't exist. Remove or implement actual PWA support.
+
+### 3.12 Add missing `/help` page
+
+**File:** `frontend/src/app/help/page.tsx` (create)
+
+Referenced at `frontend/src/app/create/page.tsx:358`. Either create a help/FAQ page or remove the reference.
+
+### 3.13 Database backup strategy
+
+- Managed Postgres: enable automated daily backups, 7-day retention
+- Self-hosted: `pg_dump` cron to S3
+- Document and test restore procedure before launch
+
+### 3.14 Clean up lint warnings
+
+- Missing React hook dependencies in several pages
+- Raw `<img>` tags → use `next/image`
+- Client-rendered pages that could be server-rendered
 
 ---
 
-## Implementation Order
+## Verification Checklist (Run After Each Tier)
 
-| Step | What | Est. Scope | Dependencies |
-|------|------|-----------|--------------|
-| 1.1 | Fix dashboard train detail | Small | None |
-| 1.2 | Fix legacy type mismatches (5 files) | Medium | None |
-| 1.3 | Fix TaskTypeSelector export | Tiny | None |
-| 1.4 | Auth-aware header | Small | None |
-| 1.5 | Guest session backend routes | Small | None |
-| 2.1 | Level up create wizard | Large | None |
-| 2.2 | Notification cron system | Medium | None |
-| 2.3 | Notification API + frontend bell | Medium | 2.2 |
-| 2.4 | Clean up footer links | Small | None |
-| 3.1 | Thank-you notes | Medium | None |
-| 3.2 | PWA setup | Small | None |
-| 3.3 | Consolidate duplicate components | Medium | 1.2 |
-| 3.4 | SMS notifications | Medium | 2.2 |
-| 4.1 | Technical debt fixes | Small | None |
-| 4.2 | Seed file update | Small | None |
-| 4.3 | Basic test suite | Large | All above |
+### Security (after Tier 1)
+- [ ] Anonymous user cannot access private train data
+- [ ] Anonymous user cannot create or modify task slots
+- [ ] Organizer and admin flows still work after auth fixes
+- [ ] Google login works end to end
+- [ ] Facebook login works end to end
+- [ ] Guest signup works end to end
+- [ ] Guest cannot spoof another guest's identity
+- [ ] Authenticated API calls succeed after email/password and OAuth login
+- [ ] Fresh deploy using documented env vars works without manual patching
+- [ ] App crashes on startup if required env vars are missing
+- [ ] `npm audit` shows no critical or high vulnerabilities
+
+### Functionality (after Tier 2)
+- [ ] Stripe donation flow works in test mode
+- [ ] Gift card checkout flow works in test mode
+- [ ] Email flows send correctly or fail explicitly
+- [ ] Dashboard loads stats in one request, shows real upcoming deliveries
+- [ ] Pagination works on all list endpoints
+- [ ] No references to legacy MealDate/Participant model remain
+- [ ] CI pipeline passes on a clean PR
+- [ ] Docker containers build and run successfully
+- [ ] E2E tests pass for all critical flows
+
+### Quality (after Tier 3)
+- [ ] Frontend types auto-generated from backend schema
+- [ ] No duplicate components
+- [ ] API docs accessible at `/api/docs`
+- [ ] Reminders sent at correct local time per timezone
+- [ ] No console.log in production frontend bundle
+- [ ] Pre-commit hooks catch lint/type errors
+- [ ] Database backups verified with test restore
 
 ---
 
-## Verification
+## Environment Variables Reference
 
-After each phase:
-1. `npm run dev` — both frontend (localhost:3000) and backend (localhost:4000) start without errors
-2. `npx prisma migrate dev` — any schema changes migrate cleanly
-3. Manual test: create a train via wizard -> verify all new fields save -> sign up as volunteer -> verify calendar/contributions work -> test delivery status flow
-4. Verify notification cron fires (can use short interval for testing)
-5. Check all dashboard pages load without console errors
-6. Test guest signup flow end-to-end
+### Backend — Required
+```
+DATABASE_URL=postgresql://...
+JWT_SECRET=<random 64+ char string>
+STRIPE_SECRET_KEY=sk_live_...
+STRIPE_WEBHOOK_SECRET=whsec_...
+SENDGRID_API_KEY=SG....
+AWS_ACCESS_KEY_ID=...
+AWS_SECRET_ACCESS_KEY=...
+AWS_S3_BUCKET=...
+AWS_REGION=us-east-1
+FRONTEND_URL=https://your-domain.com
+API_URL=https://api.your-domain.com
+NODE_ENV=production
+PORT=4000
+```
+
+### Backend — Optional
+```
+GOOGLE_CLIENT_ID=...
+GOOGLE_CLIENT_SECRET=...
+GOOGLE_CALLBACK_URL=https://api.your-domain.com/api/auth/google/callback
+FACEBOOK_APP_ID=...
+FACEBOOK_APP_SECRET=...
+FACEBOOK_CALLBACK_URL=https://api.your-domain.com/api/auth/facebook/callback
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+FROM_EMAIL=noreply@your-domain.com
+FROM_NAME=Chesed Train
+```
+
+### Frontend — Required
+```
+NEXT_PUBLIC_API_URL=https://api.your-domain.com
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_live_...
+```
+
+### Frontend — Optional
+```
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=...
+NEXT_PUBLIC_FACEBOOK_APP_ID=...
+```

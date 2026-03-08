@@ -1,14 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { Card } from '@/components/ui/Card';
 import { Input } from '@/components/ui/Input';
 import { Button } from '@/components/ui/Button';
 import { api } from '@/lib/api';
 import toast from 'react-hot-toast';
+import { writeStoredGuestSession } from '@/lib/guest-session';
 
-export default function GuestSignupPage() {
+function GuestSignupContent() {
     const router = useRouter();
     const searchParams = useSearchParams();
     const returnUrl = searchParams.get('returnUrl') || '/';
@@ -23,7 +24,7 @@ export default function GuestSignupPage() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            await api.post('/auth/guest/request', { identifier, identifierType: type });
+            await api.createGuestSession({ identifier, identifierType: type });
             setStep('verify');
             toast.success('Verification code sent!');
         } catch (error: any) {
@@ -37,15 +38,13 @@ export default function GuestSignupPage() {
         e.preventDefault();
         setIsLoading(true);
         try {
-            const response = await api.post<{ token: string }>('/auth/guest/verify', {
+            const session = await api.verifyGuestSession({
                 identifier,
                 identifierType: type,
                 verificationCode: code
             });
 
-            // Store guest token
-            localStorage.setItem('auth-token', response.data.token);
-            localStorage.setItem('is-guest', 'true');
+            writeStoredGuestSession(session);
 
             toast.success('Successfully verified!');
             router.push(returnUrl);
@@ -138,5 +137,13 @@ export default function GuestSignupPage() {
                 </div>
             </Card>
         </div>
+    );
+}
+
+export default function GuestSignupPage() {
+    return (
+        <Suspense fallback={<div className="min-h-screen bg-gray-50" />}>
+            <GuestSignupContent />
+        </Suspense>
     );
 }

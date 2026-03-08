@@ -2,6 +2,7 @@ import { Router, Response } from 'express';
 import { body, validationResult } from 'express-validator';
 import prisma from '../config/database.js';
 import { catchAsync, AppError } from '../middleware/errorHandler.js';
+import { generateGuestSessionToken } from '../utils/guestSessions.js';
 
 const router = Router();
 
@@ -110,7 +111,16 @@ router.post(
       },
     });
 
-    res.json(session);
+    const token = generateGuestSessionToken({
+      sessionId: session.id,
+      identifier: session.identifier,
+      identifierType: session.identifierType as 'email' | 'phone',
+    });
+
+    res.json({
+      ...session,
+      token,
+    });
   })
 );
 

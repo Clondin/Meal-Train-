@@ -11,7 +11,7 @@ export default function TermsPage() {
           <p>By using Chesed Train, you agree to use the platform lawfully, provide accurate information, and respect the privacy and dignity of recipients, organizers, and contributors.</p>
           <p>You are responsible for the content you post, the commitments you make, and compliance with any applicable local laws or community norms.</p>
           <p>Payments are processed by third-party providers. Chesed Train may update or suspend features as the service evolves.</p>
-          <p>Questions about these terms can be sent to <a className="text-blue-600 hover:text-blue-700" href="mailto:hello@chesedtrain.com">hello@chesedtrain.com</a>.</p>
+          <p>Questions about these terms can be sent to <a className="text-primary-600 hover:text-primary-700" href="mailto:hello@chesedtrain.com">hello@chesedtrain.com</a>.</p>
         </div>
       </main>
       <Footer />

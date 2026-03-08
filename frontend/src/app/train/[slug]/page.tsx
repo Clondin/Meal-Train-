@@ -6,17 +6,19 @@ import ParticipantList from './components/ParticipantList';
 import DonationSection from './components/DonationSection';
 import GiftCardSection from './components/GiftCardSection';
 import ShareButtons from './components/ShareButtons';
+import { getApiBaseUrl } from '@/lib/config';
+import { devLogError } from '@/lib/dev-log';
 
 interface PageProps {
-  params: {
+  params: Promise<{
     slug: string;
-  };
+  }>;
 }
 
 // Fetch chesed train data on the server
 async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+    const apiUrl = getApiBaseUrl();
     const response = await fetch(`${apiUrl}/chesed-trains/${slug}`, {
       cache: 'no-store', // Always get fresh data
     });
@@ -28,13 +30,14 @@ async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
     const data = await response.json();
     return data.train ?? data;
   } catch (error) {
-    console.error('Error fetching chesed train:', error);
+    devLogError('Error fetching chesed train:', error);
     return null;
   }
 }
 
 export default async function TrainPage({ params }: PageProps) {
-  const train = await getChesedTrain(params.slug);
+  const { slug } = await params;
+  const train = await getChesedTrain(slug);
 
   if (!train) {
     notFound();
@@ -128,7 +131,7 @@ function TabNavigation({ trainId }: { trainId: string }) {
         <button
           key={tab.id}
           onClick={() => scrollToSection(tab.id)}
-          className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-700 hover:text-blue-600 hover:border-blue-600 border-b-2 border-transparent transition-colors whitespace-nowrap"
+          className="flex items-center gap-2 px-6 py-4 text-sm font-medium text-gray-700 hover:text-primary-600 hover:border-primary-600 border-b-2 border-transparent transition-colors whitespace-nowrap"
         >
           <span>{tab.icon}</span>
           <span>{tab.label}</span>
@@ -140,7 +143,8 @@ function TabNavigation({ trainId }: { trainId: string }) {
 
 // Generate metadata for the page
 export async function generateMetadata({ params }: PageProps) {
-  const train = await getChesedTrain(params.slug);
+  const { slug } = await params;
+  const train = await getChesedTrain(slug);
 
   if (!train) {
     return {

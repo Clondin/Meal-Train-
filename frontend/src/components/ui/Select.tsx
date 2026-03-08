@@ -31,7 +31,8 @@ export const Select: React.FC<SelectProps> = ({
   disabled = false,
   id,
 }) => {
-  const selectId = id || `select-${React.useId()}`;
+  const generatedId = React.useId();
+  const selectId = id || `select-${generatedId}`;
   const errorId = `${selectId}-error`;
   const helperId = `${selectId}-helper`;
 
@@ -59,7 +60,7 @@ export const Select: React.FC<SelectProps> = ({
               )}
               className={cn(
                 'relative w-full cursor-default rounded-md border border-gray-300 bg-white py-2 pl-3 pr-10 text-left shadow-sm',
-                'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500',
+                'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-primary-500',
                 'disabled:bg-gray-100 disabled:text-gray-500 disabled:cursor-not-allowed',
                 'transition-colors',
                 error &&
@@ -108,7 +109,7 @@ export const Select: React.FC<SelectProps> = ({
                     className={({ active, disabled }) =>
                       cn(
                         'relative cursor-default select-none py-2 pl-3 pr-9',
-                        active && !disabled && 'bg-blue-600 text-white',
+                        active && !disabled && 'bg-primary-600 text-white',
                         !active && 'text-gray-900',
                         disabled && 'opacity-50 cursor-not-allowed'
                       )
@@ -128,7 +129,7 @@ export const Select: React.FC<SelectProps> = ({
                           <span
                             className={cn(
                               'absolute inset-y-0 right-0 flex items-center pr-4',
-                              active ? 'text-white' : 'text-blue-600'
+                              active ? 'text-white' : 'text-primary-600'
                             )}
                           >
                             <svg

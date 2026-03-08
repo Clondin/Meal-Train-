@@ -5,16 +5,17 @@ import { Card } from '@/components/ui/Card';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { format } from 'date-fns';
+import { getApiBaseUrl } from '@/lib/config';
 
 interface PageProps {
-    params: {
+    params: Promise<{
         slug: string;
-    };
+    }>;
 }
 
 async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
     try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
+        const apiUrl = getApiBaseUrl();
         const response = await fetch(`${apiUrl}/chesed-trains/${slug}`, {
             cache: 'no-store',
         });
@@ -27,7 +28,8 @@ async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
 }
 
 export default async function TasksPage({ params }: PageProps) {
-    const train = await getChesedTrain(params.slug);
+    const { slug } = await params;
+    const train = await getChesedTrain(slug);
 
     if (!train) {
         notFound();

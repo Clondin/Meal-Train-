@@ -3,6 +3,7 @@ import jwt from 'jsonwebtoken';
 import prisma from '../config/database.js';
 import { AppError } from './errorHandler.js';
 import { User } from '@prisma/client';
+import { getJwtSecret } from '../utils/env.js';
 
 export interface AuthRequest extends Request {
   user?: User;
@@ -29,10 +30,7 @@ export const authenticate = async (
       throw new AppError('Authentication required', 401);
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'fallback-secret'
-    ) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -70,10 +68,7 @@ export const optionalAuth = async (
       return next();
     }
 
-    const decoded = jwt.verify(
-      token,
-      process.env.JWT_SECRET || 'fallback-secret'
-    ) as JwtPayload;
+    const decoded = jwt.verify(token, getJwtSecret()) as JwtPayload;
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.userId },
@@ -84,7 +79,7 @@ export const optionalAuth = async (
     }
 
     next();
-  } catch (error) {
+  } catch {
     // Ignore token errors for optional auth
     next();
   }

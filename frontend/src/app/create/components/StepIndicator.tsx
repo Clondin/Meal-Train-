@@ -31,7 +31,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep
               <div
                 className={cn(
                   'absolute top-4 left-1/2 w-full h-0.5 -z-10',
-                  currentStep > step.id ? 'bg-blue-600' : 'bg-gray-300'
+                  currentStep > step.id ? 'bg-primary-600' : 'bg-gray-300'
                 )}
                 aria-hidden="true"
               />
@@ -43,9 +43,9 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep
                 className={cn(
                   'flex items-center justify-center w-8 h-8 rounded-full border-2 transition-colors bg-white',
                   currentStep > step.id &&
-                    'border-blue-600 bg-blue-600 text-white',
+                    'border-primary-600 bg-primary-600 text-white',
                   currentStep === step.id &&
-                    'border-blue-600 text-blue-600',
+                    'border-primary-600 text-primary-600',
                   currentStep < step.id &&
                     'border-gray-300 text-gray-500'
                 )}
@@ -72,7 +72,7 @@ export const StepIndicator: React.FC<StepIndicatorProps> = ({ steps, currentStep
               <span
                 className={cn(
                   'mt-2 text-xs font-medium text-center whitespace-nowrap',
-                  currentStep >= step.id ? 'text-blue-600' : 'text-gray-500'
+                  currentStep >= step.id ? 'text-primary-600' : 'text-gray-500'
                 )}
               >
                 {step.label}
