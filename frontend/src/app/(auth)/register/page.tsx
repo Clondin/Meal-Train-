@@ -78,9 +78,10 @@ export default function RegisterPage() {
     try {
       clearError();
       await registerUser({
-        name: `${data.firstName} ${data.lastName}`,
         email: data.email,
         password: data.password,
+        firstName: data.firstName,
+        lastName: data.lastName,
       });
       toast.success('Account created successfully!');
       router.push('/dashboard');
@@ -91,7 +92,7 @@ export default function RegisterPage() {
 
   const handleOAuthRegister = (provider: 'google' | 'facebook') => {
     // Redirect to OAuth provider
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api').replace(/\/api$/, '');
     window.location.href = `${baseUrl}/api/auth/${provider}`;
   };
 

@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { UseFormRegister, FieldErrors } from 'react-hook-form';
+import { UseFormRegister, FieldErrors, UseFormWatch, UseFormSetValue } from 'react-hook-form';
 import { Input } from '@/components/ui/Input';
 import { Textarea } from '@/components/ui/Textarea';
 import { ChesedTrainFormData } from '../page';
@@ -9,12 +9,20 @@ import { ChesedTrainFormData } from '../page';
 interface PreferencesStepProps {
   register: UseFormRegister<ChesedTrainFormData>;
   errors: FieldErrors<ChesedTrainFormData>;
+  watch: UseFormWatch<ChesedTrainFormData>;
+  setValue: UseFormSetValue<ChesedTrainFormData>;
 }
 
 export const PreferencesStep: React.FC<PreferencesStepProps> = ({
   register,
   errors,
+  watch,
+  setValue,
 }) => {
+  const toggle = (field: keyof ChesedTrainFormData) => {
+    setValue(field, !watch(field), { shouldDirty: true });
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -38,6 +46,53 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
         />
       </div>
 
+      <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <h3 className="text-base font-semibold text-gray-900">Accepted meal categories</h3>
+        <p className="mt-1 text-sm text-gray-600">Tell contributors what kinds of meals work for this household.</p>
+        <div className="mt-4 grid gap-3 md:grid-cols-3">
+          {[
+            ['acceptsMilchig', 'Milchig'],
+            ['acceptsFleishig', 'Fleishig'],
+            ['acceptsPareve', 'Pareve'],
+          ].map(([field, label]) => (
+            <button
+              key={field}
+              type="button"
+              onClick={() => toggle(field as keyof ChesedTrainFormData)}
+              className={`rounded-lg border px-4 py-3 text-left text-sm font-medium transition ${
+                watch(field as keyof ChesedTrainFormData)
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 bg-gray-50 text-gray-700'
+              }`}
+            >
+              {label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <h3 className="text-base font-semibold text-gray-900">Kashrus requirements</h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {[
+            ['requireCholovYisroel', 'Require Cholov Yisroel'],
+            ['requirePasYisroel', 'Require Pas Yisroel'],
+            ['requireYoshon', 'Require Yoshon'],
+            ['requireGlatt', 'Require Glatt'],
+          ].map(([field, label]) => (
+            <label key={field} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <input
+                type="checkbox"
+                checked={Boolean(watch(field as keyof ChesedTrainFormData))}
+                onChange={() => toggle(field as keyof ChesedTrainFormData)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <span className="text-sm font-medium text-gray-800">{label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+
       <Textarea
         label="Dietary Preferences"
         {...register('dietaryPreferences')}
@@ -47,13 +102,46 @@ export const PreferencesStep: React.FC<PreferencesStepProps> = ({
         helperText="Any dietary restrictions or preferences"
       />
 
+      <div className="rounded-lg border border-gray-200 bg-white p-5">
+        <h3 className="text-base font-semibold text-gray-900">Structured allergies</h3>
+        <div className="mt-4 grid gap-3 md:grid-cols-2">
+          {[
+            ['allergyNuts', 'Nuts'],
+            ['allergyDairy', 'Dairy'],
+            ['allergyGluten', 'Gluten'],
+            ['allergyEggs', 'Eggs'],
+            ['allergyFish', 'Fish'],
+            ['allergyShellfish', 'Shellfish'],
+            ['allergySoy', 'Soy'],
+          ].map(([field, label]) => (
+            <label key={field} className="flex items-center gap-3 rounded-lg border border-gray-200 bg-gray-50 px-4 py-3">
+              <input
+                type="checkbox"
+                checked={Boolean(watch(field as keyof ChesedTrainFormData))}
+                onChange={() => toggle(field as keyof ChesedTrainFormData)}
+                className="h-4 w-4 rounded border-gray-300"
+              />
+              <span className="text-sm font-medium text-gray-800">{label}</span>
+            </label>
+          ))}
+        </div>
+        <div className="mt-4">
+          <Input
+            label="Other allergy details"
+            {...register('allergyOther')}
+            error={errors.allergyOther?.message}
+            placeholder="Sesame, fragrance sensitivity, etc."
+          />
+        </div>
+      </div>
+
       <Textarea
-        label="Allergies"
+        label="Allergies summary"
         {...register('allergies')}
         error={errors.allergies?.message}
-        placeholder="Peanuts, shellfish, tree nuts, etc."
+        placeholder="Cross-contamination concerns, severity notes, or anything contributors should know."
         rows={3}
-        helperText="Important allergy information"
+        helperText="Optional narrative details in addition to the structured allergy fields"
       />
 
       <Textarea

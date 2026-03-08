@@ -29,7 +29,8 @@ export interface LoginCredentials {
 export interface RegisterData {
   email: string;
   password: string;
-  name: string;
+  firstName?: string;
+  lastName?: string;
   phone?: string;
 }
 
@@ -37,7 +38,7 @@ export interface RegisterData {
 // ENUMS
 // ============================================
 
-export type TrainType = 'STANDARD' | 'FULL_CHESED' | 'SIMCHA' | 'EVENT';
+export type TrainType = 'STANDARD' | 'POTLUCK' | 'FULL_CHESED' | 'SIMCHA' | 'EVENT';
 
 export type TrainStatus = 'DRAFT' | 'ACTIVE' | 'PAUSED' | 'COMPLETED' | 'CANCELLED';
 
@@ -245,9 +246,12 @@ export interface CreateChesedTrainData {
   // Dietary preferences
   dietaryPreferences?: string;
   allergies?: string;
+  foodLikes?: string;
+  foodDislikes?: string;
   householdSize?: number;
   defaultDeliveryTime?: string;
   deliveryInstructions?: string;
+  coverImage?: string;
 
   // Kosher settings
   requireMilchigFleishig?: boolean;
@@ -276,17 +280,15 @@ export interface CreateChesedTrainData {
   allowDonations?: boolean;
   allowGiftCards?: boolean;
   allowNonMealTasks?: boolean;
-}
-
-export interface UpdateChesedTrainData extends Partial<CreateChesedTrainData> {
-  story?: string;
-  foodLikes?: string;
-  foodDislikes?: string;
   donationGoal?: number | null;
   requireApproval?: boolean;
   showParticipantList?: boolean;
   enableReminders?: boolean;
   reminderHours?: number;
+}
+
+export interface UpdateChesedTrainData extends Partial<CreateChesedTrainData> {
+  story?: string;
   status?: TrainStatus;
 }
 
@@ -378,6 +380,7 @@ export interface Contribution {
   status: ContributionStatus;
   reminderSent: boolean;
   reminderSentAt?: string;
+  thankYouNotes?: ThankYouNote[];
 
   createdAt: string;
   updatedAt: string;
@@ -541,6 +544,16 @@ export interface Notification {
   read: boolean;
   sent: boolean;
   sentAt?: string;
+  createdAt: string;
+}
+
+export interface ThankYouNote {
+  id: string;
+  trainId: string;
+  contributionId?: string;
+  recipientUserId: string;
+  recipientUser?: User;
+  message: string;
   createdAt: string;
 }
 

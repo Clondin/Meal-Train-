@@ -14,12 +14,13 @@ interface PageProps {
 
 async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
     try {
-        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
         const response = await fetch(`${apiUrl}/chesed-trains/${slug}`, {
             cache: 'no-store',
         });
         if (!response.ok) return null;
-        return response.json();
+        const data = await response.json();
+        return data.train ?? data;
     } catch (error) {
         return null;
     }

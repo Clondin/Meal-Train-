@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { ChesedTrain, MealDate } from '@/types';
+import { ChesedTrain, TaskSlot, TASK_TYPE_LABELS } from '@/types';
 import {
   format,
   startOfMonth,
@@ -40,8 +40,8 @@ export default function MealCalendar({ train }: MealCalendarProps) {
   }, [currentMonth]);
 
   // Get meal date for a specific day
-  const getMealDateForDay = (day: Date): MealDate | undefined => {
-    return train.dates?.find((mealDate) =>
+  const getMealDateForDay = (day: Date): TaskSlot | undefined => {
+    return train.taskSlots?.find((mealDate) =>
       isSameDay(new Date(mealDate.date), day)
     );
   };
@@ -53,7 +53,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
 
     if (!mealDate) return 'none';
     if (isPast) return 'past';
-    if (mealDate.status === 'claimed' || mealDate.status === 'delivered') {
+    if (mealDate.status === 'FILLED' || mealDate.status === 'PARTIALLY_FILLED') {
       return 'filled';
     }
     return 'available';
@@ -185,11 +185,11 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                     >
                       {status === 'available' && 'Open'}
                       {status === 'filled' &&
-                        (mealDate.participant?.name || 'Claimed')}
+                        (mealDate.contributions?.[0]?.guestName || mealDate.contributions?.[0]?.user?.firstName || 'Claimed')}
                       {status === 'past' && 'Past'}
                     </Badge>
                     <div className="text-xs text-gray-600 truncate">
-                      {mealDate.mealType}
+                      {TASK_TYPE_LABELS[mealDate.taskType]}
                     </div>
                   </div>
                 )}
@@ -207,13 +207,13 @@ export default function MealCalendar({ train }: MealCalendarProps) {
       <div className="mt-6 lg:hidden">
         <h4 className="font-semibold text-gray-900 mb-3">Available Dates</h4>
         <div className="space-y-2">
-          {train.dates
+          {train.taskSlots
             ?.filter((mealDate) => {
               const day = new Date(mealDate.date);
               return (
                 isSameMonth(day, currentMonth) &&
                 !isBefore(day, today) &&
-                mealDate.status === 'available'
+                mealDate.status === 'AVAILABLE'
               );
             })
             .map((mealDate) => (
@@ -230,7 +230,7 @@ export default function MealCalendar({ train }: MealCalendarProps) {
                     {format(new Date(mealDate.date), 'EEEE, MMMM d')}
                   </div>
                   <div className="text-sm text-gray-600 capitalize">
-                    {mealDate.mealType}
+                    {TASK_TYPE_LABELS[mealDate.taskType]}
                   </div>
                 </div>
                 <Badge variant="success">Available</Badge>

@@ -7,6 +7,30 @@ import { body, validationResult } from 'express-validator';
 
 const router = Router();
 
+const contributionInclude = {
+  train: {
+    select: {
+      id: true,
+      slug: true,
+      title: true,
+      recipientName: true,
+      recipientAddress: true,
+      recipientCity: true,
+      recipientState: true,
+      recipientZip: true,
+    },
+  },
+  slot: true,
+  thankYouNotes: {
+    include: {
+      recipientUser: {
+        select: { id: true, firstName: true, lastName: true, email: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
+} as const;
+
 // Get user profile
 router.get(
   '/profile',
@@ -130,10 +154,18 @@ router.get(
             participants: true,
           },
         },
+        taskSlots: {
+          include: {
+            contributions: true,
+          },
+        },
+        contributions: true,
         _count: {
           select: {
             donations: true,
             participants: true,
+            contributions: true,
+            taskSlots: true,
           },
         },
       },
@@ -146,26 +178,28 @@ router.get(
 
 // Get user's participations
 router.get(
+  '/contributions',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const contributions = await prisma.contribution.findMany({
+      where: { userId: req.user!.id },
+      include: contributionInclude,
+      orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
+    });
+
+    res.json({ contributions });
+  })
+);
+
+// Get user's participations
+router.get(
   '/participations',
   authenticate,
   catchAsync(async (req: AuthRequest, res: Response) => {
-    const participations = await prisma.participant.findMany({
+    const participations = await prisma.contribution.findMany({
       where: { userId: req.user!.id },
-      include: {
-        train: {
-          select: {
-            id: true,
-            slug: true,
-            title: true,
-            recipientName: true,
-            recipientAddress: true,
-            recipientCity: true,
-            recipientState: true,
-          },
-        },
-        date: true,
-      },
-      orderBy: { createdAt: 'desc' },
+      include: contributionInclude,
+      orderBy: [{ slot: { date: 'desc' } }, { createdAt: 'desc' }],
     });
 
     res.json({ participations });
@@ -207,9 +241,19 @@ router.delete(
     await prisma.$transaction([
       prisma.session.deleteMany({ where: { userId } }),
       prisma.notification.deleteMany({ where: { userId } }),
+      prisma.thankYouNote.deleteMany({ where: { recipientUserId: userId } }),
       prisma.oAuthProvider.deleteMany({ where: { userId } }),
       // Anonymize participations instead of deleting
       prisma.participant.updateMany({
+        where: { userId },
+        data: {
+          userId: null,
+          guestName: 'Deleted User',
+          guestEmail: null,
+          guestPhone: null,
+        },
+      }),
+      prisma.contribution.updateMany({
         where: { userId },
         data: {
           userId: null,

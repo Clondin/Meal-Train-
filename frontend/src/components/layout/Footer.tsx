@@ -13,27 +13,17 @@ const navigation = {
     { name: 'Use Cases', href: '#use-cases' },
     { name: 'Create Chesed Train', href: '/create' },
     { name: 'Find Chesed Train', href: '/search' },
-    { name: 'Pricing', href: '/pricing' },
   ],
   support: [
-    { name: 'Help Center', href: '/help' },
-    { name: 'FAQs', href: '/faq' },
-    { name: 'Contact Us', href: '/contact' },
-    { name: 'Community Guidelines', href: '/guidelines' },
-    { name: 'Safety Tips', href: '/safety' },
+    { name: 'Help', href: 'mailto:support@chesedtrain.com' },
+    { name: 'Contact', href: 'mailto:hello@chesedtrain.com' },
   ],
   company: [
     { name: 'About Us', href: '/about' },
-    { name: 'Blog', href: '/blog' },
-    { name: 'Careers', href: '/careers' },
-    { name: 'Press Kit', href: '/press' },
-    { name: 'Partners', href: '/partners' },
   ],
   legal: [
     { name: 'Privacy Policy', href: '/privacy' },
     { name: 'Terms of Service', href: '/terms' },
-    { name: 'Cookie Policy', href: '/cookies' },
-    { name: 'Accessibility', href: '/accessibility' },
   ],
 };
 
@@ -110,12 +100,15 @@ export default function Footer() {
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.product.map((item) => (
                     <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
-                      >
-                        {item.name}
-                      </Link>
+                      {item.href.startsWith('mailto:') ? (
+                        <a href={item.href} className="text-sm leading-6 text-background/70 hover:text-primary transition-colors">
+                          {item.name}
+                        </a>
+                      ) : (
+                        <Link href={item.href} className="text-sm leading-6 text-background/70 hover:text-primary transition-colors">
+                          {item.name}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -127,12 +120,15 @@ export default function Footer() {
                 <ul role="list" className="mt-6 space-y-4">
                   {navigation.support.map((item) => (
                     <li key={item.name}>
-                      <Link
-                        href={item.href}
-                        className="text-sm leading-6 text-background/70 hover:text-primary transition-colors"
-                      >
-                        {item.name}
-                      </Link>
+                      {item.href.startsWith('mailto:') ? (
+                        <a href={item.href} className="text-sm leading-6 text-background/70 hover:text-primary transition-colors">
+                          {item.name}
+                        </a>
+                      ) : (
+                        <Link href={item.href} className="text-sm leading-6 text-background/70 hover:text-primary transition-colors">
+                          {item.name}
+                        </Link>
+                      )}
                     </li>
                   ))}
                 </ul>

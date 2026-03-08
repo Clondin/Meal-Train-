@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { api } from '@/lib/api';
 import { Card, Button, Badge, Spinner } from '@/components/ui';
-import { ChesedTrain, MealDate, Participant, Donation } from '@/types';
+import { ChesedTrain, TaskSlot, Contribution, Donation } from '@/types';
 import { cn } from '@/lib/utils';
 import DateManager from './components/DateManager';
 import ParticipantManager from './components/ParticipantManager';
@@ -20,8 +20,8 @@ export default function TrainDetailPage() {
   const trainId = params.id as string;
 
   const [train, setTrain] = useState<ChesedTrain | null>(null);
-  const [dates, setDates] = useState<MealDate[]>([]);
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [dates, setDates] = useState<TaskSlot[]>([]);
+  const [participants, setParticipants] = useState<Contribution[]>([]);
   const [donations, setDonations] = useState<Donation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -38,8 +38,8 @@ export default function TrainDetailPage() {
 
       const [trainData, datesData, participantsData, donationsData] = await Promise.all([
         api.getChesedTrain(trainId),
-        api.getMealDates(trainId),
-        api.getParticipants(trainId),
+        api.getTaskSlots(trainId),
+        api.getContributions(trainId),
         api.getDonations(trainId),
       ]);
 
@@ -69,7 +69,7 @@ export default function TrainDetailPage() {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount / 100);
+    }).format(Number(amount));
   };
 
   const getTrainStatus = () => {
@@ -85,12 +85,12 @@ export default function TrainDetailPage() {
 
   const getStats = () => {
     const totalDates = dates.length;
-    const claimedDates = dates.filter((d) => d.status === 'claimed' || d.status === 'delivered').length;
-    const deliveredDates = dates.filter((d) => d.status === 'delivered').length;
+    const claimedDates = dates.filter((d) => d.status === 'FILLED' || d.status === 'PARTIALLY_FILLED').length;
+    const deliveredDates = participants.filter((participant) => participant.deliveryStatus === 'DELIVERED').length;
     const totalParticipants = participants.length;
     const totalDonations = donations
-      .filter((d) => d.status === 'completed')
-      .reduce((sum, d) => sum + d.amount, 0);
+      .filter((d) => d.status === 'COMPLETED')
+      .reduce((sum, d) => sum + Number(d.amount), 0);
 
     return {
       totalDates,
@@ -99,7 +99,7 @@ export default function TrainDetailPage() {
       availableDates: totalDates - claimedDates,
       totalParticipants,
       totalDonations,
-      donationCount: donations.filter((d) => d.status === 'completed').length,
+      donationCount: donations.filter((d) => d.status === 'COMPLETED').length,
     };
   };
 
@@ -167,7 +167,7 @@ export default function TrainDetailPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Link href={`/trains/${trainId}`}>
+            <Link href={`/train/${train.slug}`}>
               <Button variant="outline" size="sm">
                 <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -248,7 +248,9 @@ export default function TrainDetailPage() {
                   </div>
                   <div>
                     <dt className="text-sm font-medium text-gray-500">Address</dt>
-                    <dd className="text-sm text-gray-900 mt-1">{train.recipientAddress}</dd>
+                      <dd className="text-sm text-gray-900 mt-1">
+                        {[train.recipientAddress, train.recipientCity, train.recipientState, train.recipientZip].filter(Boolean).join(', ')}
+                      </dd>
                   </div>
                   {train.recipientPhone && (
                     <div>
@@ -310,11 +312,11 @@ export default function TrainDetailPage() {
             <Card>
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Recent Activity</h2>
               <div className="space-y-3">
-                {dates.filter(d => d.status === 'claimed').slice(0, 5).map((date) => (
+                {dates.filter((d) => d.status === 'FILLED' || d.status === 'PARTIALLY_FILLED').slice(0, 5).map((date) => (
                   <div key={date.id} className="flex items-center justify-between py-2 border-b border-gray-100 last:border-0">
                     <div className="flex-1">
                       <p className="text-sm font-medium text-gray-900">
-                        {date.participant?.name || 'Unknown'} claimed {date.mealType}
+                        {(date.contributions?.[0]?.guestName || date.contributions?.[0]?.user?.firstName || 'Unknown')} claimed {date.taskTitle || date.taskType}
                       </p>
                       <p className="text-xs text-gray-500">
                         {formatDate(date.date)}
@@ -323,7 +325,7 @@ export default function TrainDetailPage() {
                     <Badge variant="success" size="sm">Claimed</Badge>
                   </div>
                 ))}
-                {dates.filter(d => d.status === 'claimed').length === 0 && (
+                {dates.filter((d) => d.status === 'FILLED' || d.status === 'PARTIALLY_FILLED').length === 0 && (
                   <p className="text-sm text-gray-500 text-center py-4">No recent activity</p>
                 )}
               </div>

@@ -37,6 +37,21 @@ const isOrganizerOrAdmin = (train: { organizerId: string; admins?: { userId: str
   return isOrganizer || isAdmin;
 };
 
+const contributionInclude = {
+  slot: true,
+  user: {
+    select: { id: true, firstName: true, lastName: true, email: true, phone: true },
+  },
+  thankYouNotes: {
+    include: {
+      recipientUser: {
+        select: { id: true, firstName: true, lastName: true, email: true },
+      },
+    },
+    orderBy: { createdAt: 'desc' as const },
+  },
+} satisfies Prisma.ContributionInclude;
+
 // Create a new meal train
 router.post(
   '/',
@@ -250,10 +265,7 @@ router.get(
         },
       },
       contributions: {
-        include: {
-          slot: true,
-          user: { select: { id: true, firstName: true, lastName: true, email: true } },
-        },
+        include: contributionInclude,
         orderBy: { createdAt: 'asc' },
       },
       simchaContributions: {
@@ -502,6 +514,45 @@ router.delete(
   })
 );
 
+// Get task slots for a train
+router.get(
+  '/:slug/task-slots',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    const isAuthorized = req.user
+      ? isOrganizerOrAdmin(train, req.user.id) || train.isPublic
+      : train.isPublic;
+
+    if (!isAuthorized) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const taskSlots = await prisma.taskSlot.findMany({
+      where: { trainId: train.id },
+      include: {
+        contributions: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true, email: true },
+            },
+          },
+          orderBy: { createdAt: 'asc' },
+        },
+      },
+      orderBy: [{ date: 'asc' }, { taskType: 'asc' }],
+    });
+
+    res.json({ taskSlots });
+  })
+);
+
 // Create or fetch a task slot
 router.post(
   '/:slug/task-slots',
@@ -567,6 +618,137 @@ router.post(
     });
 
     res.status(201).json(slot);
+  })
+);
+
+router.get(
+  '/:slug/task-slots/:slotId',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug, slotId } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    const slot = await prisma.taskSlot.findUnique({
+      where: { id: slotId },
+      include: {
+        contributions: {
+          include: {
+            user: {
+              select: { id: true, firstName: true, lastName: true, email: true },
+            },
+          },
+        },
+      },
+    });
+
+    if (!slot || slot.trainId !== train.id) {
+      throw new AppError('Task slot not found', 404);
+    }
+
+    res.json({ taskSlot: slot });
+  })
+);
+
+router.patch(
+  '/:slug/task-slots/:slotId',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug, slotId } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const taskSlot = await prisma.taskSlot.findUnique({ where: { id: slotId } });
+    if (!taskSlot || taskSlot.trainId !== train.id) {
+      throw new AppError('Task slot not found', 404);
+    }
+
+    const updated = await prisma.taskSlot.update({
+      where: { id: taskSlot.id },
+      data: {
+        date: req.body.date ? new Date(req.body.date) : undefined,
+        startTime: req.body.startTime,
+        endTime: req.body.endTime,
+        taskType: req.body.taskType,
+        allowSplit: req.body.allowSplit,
+        maxContributors: req.body.maxContributors,
+        taskTitle: req.body.taskTitle,
+        taskDescription: req.body.taskDescription,
+        estimatedDuration: req.body.estimatedDuration,
+        location: req.body.location,
+        notes: req.body.notes,
+        status: req.body.status,
+      },
+      include: {
+        contributions: true,
+      },
+    });
+
+    res.json({ taskSlot: updated });
+  })
+);
+
+router.delete(
+  '/:slug/task-slots/:slotId',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug, slotId } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const taskSlot = await prisma.taskSlot.findUnique({ where: { id: slotId } });
+    if (!taskSlot || taskSlot.trainId !== train.id) {
+      throw new AppError('Task slot not found', 404);
+    }
+
+    await prisma.taskSlot.delete({ where: { id: taskSlot.id } });
+    res.json({ message: 'Task slot deleted successfully' });
+  })
+);
+
+router.get(
+  '/:slug/contributions',
+  optionalAuth,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    const isAuthorized = req.user
+      ? isOrganizerOrAdmin(train, req.user.id) || train.isPublic
+      : train.isPublic;
+
+    if (!isAuthorized) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const contributions = await prisma.contribution.findMany({
+      where: { trainId: train.id },
+      include: contributionInclude,
+      orderBy: { createdAt: 'asc' },
+    });
+
+    res.json({ contributions });
   })
 );
 
@@ -647,10 +829,7 @@ router.post(
         notes,
         status,
       },
-      include: {
-        slot: true,
-        user: { select: { id: true, firstName: true, lastName: true, email: true } },
-      },
+      include: contributionInclude,
     });
 
     const totalContributions = slot.contributions.length + 1;
@@ -667,6 +846,129 @@ router.post(
     });
 
     res.status(201).json({ contribution });
+  })
+);
+
+router.get(
+  '/:slug/thank-you',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const { slug } = req.params;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    const notes = await prisma.thankYouNote.findMany({
+      where: { trainId: train.id },
+      include: {
+        contribution: {
+          include: contributionInclude,
+        },
+        recipientUser: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    res.json({ notes });
+  })
+);
+
+router.post(
+  '/:slug/thank-you',
+  authenticate,
+  [
+    body('message').trim().isLength({ min: 1, max: 2000 }),
+    body('contributionId').optional().isString(),
+    body('recipientUserId').optional().isString(),
+  ],
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      throw new AppError(errors.array()[0].msg, 400);
+    }
+
+    const { slug } = req.params;
+    const { contributionId, recipientUserId, message } = req.body;
+    const train = await findTrainByIdentifier(slug, { admins: true });
+
+    if (!train) {
+      throw new AppError('Meal train not found', 404);
+    }
+
+    if (!isOrganizerOrAdmin(train, req.user!.id)) {
+      throw new AppError('Not authorized', 403);
+    }
+
+    if (!contributionId && !recipientUserId) {
+      throw new AppError('Contribution or recipient is required', 400);
+    }
+
+    let resolvedContributionId: string | null = null;
+    let resolvedRecipientUserId = recipientUserId as string | undefined;
+
+    if (contributionId) {
+      const contribution = await prisma.contribution.findUnique({
+        where: { id: contributionId },
+        include: { user: true },
+      });
+
+      if (!contribution || contribution.trainId !== train.id) {
+        throw new AppError('Contribution not found', 404);
+      }
+
+      if (!contribution.userId) {
+        throw new AppError('Thank-you notes can only be sent to registered contributors', 400);
+      }
+
+      resolvedContributionId = contribution.id;
+      resolvedRecipientUserId = contribution.userId;
+    }
+
+    if (!resolvedRecipientUserId) {
+      throw new AppError('Recipient is required', 400);
+    }
+
+    const note = await prisma.thankYouNote.create({
+      data: {
+        trainId: train.id,
+        contributionId: resolvedContributionId,
+        recipientUserId: resolvedRecipientUserId,
+        message,
+      },
+      include: {
+        contribution: {
+          include: contributionInclude,
+        },
+        recipientUser: {
+          select: { id: true, firstName: true, lastName: true, email: true },
+        },
+      },
+    });
+
+    await prisma.notification.create({
+      data: {
+        userId: resolvedRecipientUserId,
+        trainId: train.id,
+        type: 'ADMIN_MESSAGE',
+        title: 'New thank-you note',
+        message,
+        data: {
+          noteId: note.id,
+          contributionId: resolvedContributionId,
+          trainSlug: train.slug,
+        },
+      },
+    });
+
+    res.status(201).json({ note });
   })
 );
 

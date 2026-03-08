@@ -66,7 +66,7 @@ export default function DashboardPage() {
         const donations = await api.getDonations(train.id);
         totalDonations += donations
           .filter((d) => d.status === 'COMPLETED')
-          .reduce((sum, d) => sum + d.amount, 0);
+          .reduce((sum, d) => sum + Number(d.amount), 0);
       }
 
       setStats({
@@ -86,7 +86,7 @@ export default function DashboardPage() {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount / 100);
+    }).format(Number(amount));
   };
 
   const formatDate = (dateString: string) => {
@@ -110,7 +110,7 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">
-          Welcome back, {user?.name}!
+          Welcome back, {user?.firstName || user?.email || 'there'}!
         </h1>
         <p className="mt-2 text-gray-600">
           Here's what's happening with your chesed trains
@@ -263,7 +263,7 @@ export default function DashboardPage() {
           </CardHeader>
           <CardBody>
             <div className="flex flex-wrap gap-4">
-              <Link href="/trains/create">
+              <Link href="/create">
                 <Button variant="primary">
                   <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -303,7 +303,7 @@ export default function DashboardPage() {
                 <p className="text-gray-500 mb-4">
                   You haven't organized any chesed trains yet
                 </p>
-                <Link href="/trains/create">
+                <Link href="/create">
                   <Button size="sm">Create Your First Train</Button>
                 </Link>
               </div>

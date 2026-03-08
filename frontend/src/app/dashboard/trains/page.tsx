@@ -84,10 +84,10 @@ export default function TrainsPage() {
   };
 
   const getTrainStats = (train: ChesedTrain) => {
-    const totalDates = train.dates?.length || 0;
-    const claimedDates = train.dates?.filter((d) => d.status === 'claimed' || d.status === 'delivered').length || 0;
-    const participants = train.participants?.length || 0;
-    const donations = train.donations?.filter((d) => d.status === 'completed').reduce((sum, d) => sum + d.amount, 0) || 0;
+    const totalDates = train.taskSlots?.length || train._count?.taskSlots || 0;
+    const claimedDates = train.taskSlots?.filter((d) => d.status === 'FILLED' || d.status === 'PARTIALLY_FILLED').length || 0;
+    const participants = train.contributions?.length || train._count?.contributions || 0;
+    const donations = train.donations?.filter((d) => d.status === 'COMPLETED').reduce((sum, d) => sum + Number(d.amount), 0) || 0;
 
     return { totalDates, claimedDates, participants, donations };
   };
@@ -96,7 +96,7 @@ export default function TrainsPage() {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount / 100);
+    }).format(Number(amount));
   };
 
   if (loading) {
@@ -118,7 +118,7 @@ export default function TrainsPage() {
               Manage all your organized chesed trains
             </p>
           </div>
-          <Link href="/trains/create">
+          <Link href="/create">
             <Button variant="primary">
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -195,7 +195,7 @@ export default function TrainsPage() {
                 : 'Get started by creating your first chesed train'}
             </p>
             {!searchQuery && statusFilter === 'all' && (
-              <Link href="/trains/create">
+              <Link href="/create">
                 <Button>Create Your First Train</Button>
               </Link>
             )}

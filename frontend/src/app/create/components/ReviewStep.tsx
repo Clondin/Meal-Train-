@@ -185,6 +185,48 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
               </dd>
             </div>
           )}
+          {(formData.acceptsMilchig || formData.acceptsFleishig || formData.acceptsPareve) && (
+            <div>
+              <dt className="font-medium text-gray-700">Accepted categories:</dt>
+              <dd className="text-gray-900">
+                {[
+                  formData.acceptsMilchig && 'Milchig',
+                  formData.acceptsFleishig && 'Fleishig',
+                  formData.acceptsPareve && 'Pareve',
+                ].filter(Boolean).join(', ')}
+              </dd>
+            </div>
+          )}
+          {(formData.requireCholovYisroel || formData.requirePasYisroel || formData.requireYoshon || formData.requireGlatt) && (
+            <div>
+              <dt className="font-medium text-gray-700">Kashrus requirements:</dt>
+              <dd className="text-gray-900">
+                {[
+                  formData.requireCholovYisroel && 'Cholov Yisroel',
+                  formData.requirePasYisroel && 'Pas Yisroel',
+                  formData.requireYoshon && 'Yoshon',
+                  formData.requireGlatt && 'Glatt',
+                ].filter(Boolean).join(', ')}
+              </dd>
+            </div>
+          )}
+          {(formData.allergyNuts || formData.allergyDairy || formData.allergyGluten || formData.allergyEggs || formData.allergyFish || formData.allergyShellfish || formData.allergySoy || formData.allergyOther) && (
+            <div>
+              <dt className="font-medium text-gray-700">Structured allergies:</dt>
+              <dd className="text-gray-900">
+                {[
+                  formData.allergyNuts && 'Nuts',
+                  formData.allergyDairy && 'Dairy',
+                  formData.allergyGluten && 'Gluten',
+                  formData.allergyEggs && 'Eggs',
+                  formData.allergyFish && 'Fish',
+                  formData.allergyShellfish && 'Shellfish',
+                  formData.allergySoy && 'Soy',
+                  formData.allergyOther,
+                ].filter(Boolean).join(', ')}
+              </dd>
+            </div>
+          )}
           {formData.deliveryInstructions && (
             <div>
               <dt className="font-medium text-gray-700">Delivery Instructions:</dt>
@@ -215,7 +257,7 @@ export const ReviewStep: React.FC<ReviewStepProps> = ({
           <div>
             <dt className="font-medium text-gray-700">Train Type:</dt>
             <dd className="text-gray-900">
-              {formData.trainType === 'potluck' ? 'Potluck' : 'Standard'}
+              {formData.trainType || 'STANDARD'}
             </dd>
           </div>
           <div>

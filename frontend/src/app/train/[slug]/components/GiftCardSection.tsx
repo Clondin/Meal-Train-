@@ -39,7 +39,7 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
   // Get gift cards
   const giftCards = train.giftCards || [];
   const sentGiftCards = giftCards.filter(
-    (card) => card.status === 'sent' || card.status === 'received'
+    (card) => card.status === 'COMPLETED'
   );
 
   const recentGiftCards = sentGiftCards
@@ -94,11 +94,11 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
                   <div className="flex-1">
                     <div className="flex items-center gap-3 mb-2">
                       <h4 className="font-semibold text-gray-900">
-                        {giftCard.donorName}
+                        {giftCard.purchaserName}
                       </h4>
-                      <Badge variant="success">${giftCard.amount.toFixed(2)}</Badge>
+                      <Badge variant="success">${Number(giftCard.amount).toFixed(2)}</Badge>
                       <Badge variant="info" className="capitalize">
-                        {giftCard.retailer.replace('-', ' ')}
+                        {giftCard.vendor.replace('-', ' ')}
                       </Badge>
                     </div>
                     {giftCard.message && (
@@ -111,10 +111,10 @@ export default function GiftCardSection({ train }: GiftCardSectionProps) {
                         {format(new Date(giftCard.createdAt), 'MMMM d, yyyy')}
                       </p>
                       <Badge
-                        variant={giftCard.status === 'received' ? 'success' : 'info'}
+                        variant="success"
                         size="sm"
                       >
-                        {giftCard.status === 'received' ? 'Received' : 'Sent'}
+                        Delivered
                       </Badge>
                     </div>
                   </div>
@@ -181,8 +181,6 @@ function GiftCardModal({
   // Form state
   const [retailer, setRetailer] = useState('amazon');
   const [amount, setAmount] = useState('');
-  const [cardNumber, setCardNumber] = useState('');
-  const [pin, setPin] = useState('');
   const [donorName, setDonorName] = useState('');
   const [donorEmail, setDonorEmail] = useState('');
   const [message, setMessage] = useState('');
@@ -198,15 +196,19 @@ function GiftCardModal({
         return;
       }
 
-      await api.createGiftCard(train.id, {
-        retailer,
+      const response = await api.post<{ sessionUrl?: string; giftCardId?: string }>('/gift-cards', {
+        trainId: train.id,
+        vendor: RETAILERS.find((option) => option.value === retailer)?.label || 'Amazon',
         amount: giftCardAmount,
-        cardNumber,
-        pin,
-        donorName,
-        donorEmail,
+        purchaserName: donorName,
+        purchaserEmail: donorEmail,
         message,
       });
+
+      if (response.data.sessionUrl) {
+        window.location.href = response.data.sessionUrl;
+        return;
+      }
 
       toast.success('Gift card sent successfully!');
       router.refresh();
@@ -273,22 +275,6 @@ function GiftCardModal({
             ))}
           </div>
         </div>
-
-        {/* Card Number */}
-        <Input
-          label="Gift Card Number (Optional)"
-          placeholder="Enter gift card number if already purchased"
-          value={cardNumber}
-          onChange={(e) => setCardNumber(e.target.value)}
-        />
-
-        {/* PIN */}
-        <Input
-          label="PIN (Optional)"
-          placeholder="Enter PIN if applicable"
-          value={pin}
-          onChange={(e) => setPin(e.target.value)}
-        />
 
         {/* Donor Name */}
         <Input

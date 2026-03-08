@@ -40,6 +40,7 @@ model User {
   sessions          Session[]
   notifications     Notification[]
   simchaContributions SimchaContribution[]
+  thankYouNotes     ThankYouNote[]
 
   @@map("users")
 }
@@ -176,6 +177,7 @@ model MealTrain {
   giftCards           GiftCard[]
   notifications       Notification[]
   simchaContributions SimchaContribution[]
+  thankYouNotes       ThankYouNote[]
 
   @@index([slug])
   @@index([organizerId])
@@ -417,6 +419,8 @@ model Contribution {
   
   createdAt       DateTime            @default(now())
   updatedAt       DateTime            @updatedAt
+
+  thankYouNotes   ThankYouNote[]
   
   @@index([slotId])
   @@index([trainId])
@@ -648,4 +652,21 @@ enum NotificationType {
   // General
   REMINDER
   ADMIN_MESSAGE
+}
+
+model ThankYouNote {
+  id              String       @id @default(uuid())
+  trainId         String
+  train           MealTrain    @relation(fields: [trainId], references: [id], onDelete: Cascade)
+  contributionId  String?
+  contribution    Contribution? @relation(fields: [contributionId], references: [id], onDelete: SetNull)
+  recipientUserId String
+  recipientUser   User         @relation(fields: [recipientUserId], references: [id], onDelete: Cascade)
+  message         String
+  createdAt       DateTime     @default(now())
+
+  @@index([trainId])
+  @@index([contributionId])
+  @@index([recipientUserId])
+  @@map("thank_you_notes")
 }

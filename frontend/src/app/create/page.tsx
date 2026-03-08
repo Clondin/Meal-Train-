@@ -41,6 +41,21 @@ export interface ChesedTrainFormData {
   foodDislikes?: string;
   deliveryInstructions?: string;
   householdSize?: number;
+  acceptsMilchig?: boolean;
+  acceptsFleishig?: boolean;
+  acceptsPareve?: boolean;
+  requireCholovYisroel?: boolean;
+  requirePasYisroel?: boolean;
+  requireYoshon?: boolean;
+  requireGlatt?: boolean;
+  allergyNuts?: boolean;
+  allergyDairy?: boolean;
+  allergyGluten?: boolean;
+  allergyEggs?: boolean;
+  allergyFish?: boolean;
+  allergyShellfish?: boolean;
+  allergySoy?: boolean;
+  allergyOther?: string;
 
   // Donations
   donationsEnabled?: boolean;
@@ -81,7 +96,7 @@ export default function CreateChesedTrainPage() {
     defaultValues: {
       defaultDeliveryTime: '18:00',
       timezone: 'America/New_York',
-      trainType: 'standard',
+      trainType: 'STANDARD',
       donationsEnabled: false,
       giftCardsEnabled: false,
       isPublic: true,
@@ -90,6 +105,10 @@ export default function CreateChesedTrainPage() {
       enableReminders: true,
       reminderHours: 24,
       householdSize: 4,
+      acceptsMilchig: true,
+      acceptsFleishig: true,
+      acceptsPareve: true,
+      requireGlatt: true,
     },
   });
 
@@ -153,18 +172,50 @@ export default function CreateChesedTrainPage() {
     try {
       // Transform form data to match API CreateChesedTrainData interface
       const mealTrainData = {
+        title: data.title,
         recipientName: data.recipientName,
         recipientEmail: data.recipientEmail,
         recipientPhone: data.recipientPhone,
-        recipientAddress: `${data.recipientAddress}, ${data.city}, ${data.state} ${data.zip}`,
+        recipientAddress: data.recipientAddress,
+        recipientCity: data.city,
+        recipientState: data.state,
+        recipientZip: data.zip,
+        coverImage: data.coverImage,
         startDate: data.startDate,
         endDate: data.endDate,
         description: data.description,
         dietaryPreferences: data.dietaryPreferences,
         allergies: data.allergies,
+        foodLikes: data.foodLikes,
+        foodDislikes: data.foodDislikes,
         householdSize: data.householdSize,
         defaultDeliveryTime: data.defaultDeliveryTime,
         deliveryInstructions: data.deliveryInstructions,
+        allowDonations: data.donationsEnabled,
+        donationGoal: data.donationGoal,
+        allowGiftCards: data.giftCardsEnabled,
+        trainType: data.trainType as any,
+        allowNonMealTasks: data.trainType === 'FULL_CHESED',
+        isPublic: data.isPublic,
+        requireApproval: data.requireApproval,
+        showParticipantList: data.showParticipants,
+        enableReminders: data.enableReminders,
+        reminderHours: data.reminderHours,
+        acceptsMilchig: data.acceptsMilchig,
+        acceptsFleishig: data.acceptsFleishig,
+        acceptsPareve: data.acceptsPareve,
+        requireCholovYisroel: data.requireCholovYisroel,
+        requirePasYisroel: data.requirePasYisroel,
+        requireYoshon: data.requireYoshon,
+        requireGlatt: data.requireGlatt,
+        allergyNuts: data.allergyNuts,
+        allergyDairy: data.allergyDairy,
+        allergyGluten: data.allergyGluten,
+        allergyEggs: data.allergyEggs,
+        allergyFish: data.allergyFish,
+        allergyShellfish: data.allergyShellfish,
+        allergySoy: data.allergySoy,
+        allergyOther: data.allergyOther,
       };
 
       const mealTrain = await api.createChesedTrain(mealTrainData);
@@ -172,7 +223,7 @@ export default function CreateChesedTrainPage() {
       toast.success('Chesed Train created successfully!');
 
       // Redirect to the chesed train page
-      router.push(`/train/${mealTrain.id}`);
+      router.push(`/train/${mealTrain.slug}`);
     } catch (error: any) {
       console.error('Failed to create chesed train:', error);
       toast.error(error.message || 'Failed to create chesed train');
@@ -205,6 +256,8 @@ export default function CreateChesedTrainPage() {
           <PreferencesStep
             register={register}
             errors={errors}
+            watch={watch}
+            setValue={setValue}
           />
         );
       case 4:

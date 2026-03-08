@@ -26,11 +26,11 @@ export default function DonationSection({ train }: DonationSectionProps) {
 
   // Calculate totals
   const completedDonations = train.donations?.filter(
-    (donation) => donation.status === 'completed'
+    (donation) => donation.status === 'COMPLETED'
   ) || [];
 
   const totalDonations = completedDonations.reduce(
-    (sum, donation) => sum + donation.amount,
+    (sum, donation) => sum + Number(donation.amount),
     0
   );
 
@@ -44,7 +44,7 @@ export default function DonationSection({ train }: DonationSectionProps) {
       <Card>
         <div className="text-center">
           <div className="text-4xl font-bold text-gray-900 mb-2">
-            ${totalDonations.toFixed(2)}
+            ${Number(totalDonations).toFixed(2)}
           </div>
           <p className="text-gray-600 mb-4">
             Raised from {completedDonations.length} donation{completedDonations.length !== 1 ? 's' : ''}
@@ -70,7 +70,7 @@ export default function DonationSection({ train }: DonationSectionProps) {
                       <h4 className="font-semibold text-gray-900">
                         {donation.donorName}
                       </h4>
-                      <Badge variant="success">${donation.amount.toFixed(2)}</Badge>
+                      <Badge variant="success">${Number(donation.amount).toFixed(2)}</Badge>
                     </div>
                     {donation.message && (
                       <p className="text-sm text-gray-600 italic">
@@ -175,10 +175,12 @@ function DonationModal({
 
     try {
       // Create payment intent
-      const { clientSecret } = await api.createDonationPaymentIntent(
-        train.id,
-        donationAmount
-      );
+      const { clientSecret, donation } = await api.createDonationPaymentIntent(train.id, {
+        donorName,
+        donorEmail,
+        amount: donationAmount,
+        message,
+      });
 
       // Confirm payment with Stripe
       const { error, paymentIntent } = await stripe.confirmCardPayment(clientSecret, {
@@ -196,13 +198,7 @@ function DonationModal({
       }
 
       if (paymentIntent?.status === 'succeeded') {
-        // Create donation record
-        await api.createDonation(train.id, {
-          donorName,
-          donorEmail,
-          amount: donationAmount,
-          message,
-        });
+        await api.confirmDonation(train.id, donation.id);
 
         toast.success('Thank you for your donation!');
         router.refresh();

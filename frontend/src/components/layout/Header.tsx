@@ -4,9 +4,22 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { Bars3Icon, XMarkIcon } from '@heroicons/react/24/outline';
 import { HeartIcon } from '@heroicons/react/24/solid';
+import { useRouter } from 'next/navigation';
+import { Avatar } from '@/components/ui';
+import { useAuthStore } from '@/stores/auth';
 
 export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const router = useRouter();
+  const { isAuthenticated, user, logout } = useAuthStore();
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'User';
+
+  const handleLogout = () => {
+    logout();
+    setUserMenuOpen(false);
+    router.push('/');
+  };
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/40 transition-all duration-300">
@@ -41,12 +54,21 @@ export default function Header() {
                 {item}
               </Link>
             ))}
-            <Link
-              href="/login"
-              className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
-            >
-              Sign In
-            </Link>
+            {isAuthenticated ? (
+              <Link
+                href="/dashboard"
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              >
+                Dashboard
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className="text-sm font-medium text-foreground/80 hover:text-primary transition-colors"
+              >
+                Sign In
+              </Link>
+            )}
           </div>
 
           {/* Desktop CTA Buttons */}
@@ -57,12 +79,42 @@ export default function Header() {
             >
               Find a Chesed Train
             </Link>
-            <Link
-              href="/create"
-              className="px-6 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-full hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md shadow-primary/20"
-            >
-              Start a Chesed Train
-            </Link>
+            {isAuthenticated ? (
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen((open) => !open)}
+                  className="flex items-center gap-3 rounded-full border border-border/60 bg-white/70 px-3 py-2 text-sm font-medium text-foreground shadow-sm"
+                >
+                  <Avatar name={displayName} src={user?.avatar} size="sm" />
+                  <span className="max-w-32 truncate">{displayName}</span>
+                </button>
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 rounded-xl border border-gray-200 bg-white p-2 shadow-xl">
+                    <Link href="/dashboard" className="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Dashboard
+                    </Link>
+                    <Link href="/dashboard/profile" className="block rounded-lg px-3 py-2 text-sm text-gray-700 hover:bg-gray-50">
+                      Profile
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleLogout}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                    >
+                      Log out
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/create"
+                className="px-6 py-2 text-sm font-medium text-primary-foreground bg-primary rounded-full hover:bg-primary/90 hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 shadow-md shadow-primary/20"
+              >
+                Get Started
+              </Link>
+            )}
           </div>
 
           {/* Mobile menu button */}
@@ -102,13 +154,23 @@ export default function Header() {
               >
                 Use Cases
               </Link>
-              <Link
-                href="/login"
-                className="block text-base font-medium text-foreground hover:text-primary"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Sign In
-              </Link>
+              {isAuthenticated ? (
+                <Link
+                  href="/dashboard"
+                  className="block text-base font-medium text-foreground hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Dashboard
+                </Link>
+              ) : (
+                <Link
+                  href="/login"
+                  className="block text-base font-medium text-foreground hover:text-primary"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  Sign In
+                </Link>
+              )}
               <div className="pt-4 grid gap-3">
                 <Link
                   href="/search"
@@ -117,13 +179,26 @@ export default function Header() {
                 >
                   Find a Chesed Train
                 </Link>
-                <Link
-                  href="/create"
-                  className="block w-full text-center px-4 py-3 text-sm font-medium text-primary-foreground bg-primary rounded-lg shadow-lg"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  Start a Chesed Train
-                </Link>
+                {isAuthenticated ? (
+                  <button
+                    type="button"
+                    className="block w-full rounded-lg bg-primary px-4 py-3 text-center text-sm font-medium text-primary-foreground shadow-lg"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    Log out
+                  </button>
+                ) : (
+                  <Link
+                    href="/create"
+                    className="block w-full text-center px-4 py-3 text-sm font-medium text-primary-foreground bg-primary rounded-lg shadow-lg"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Get Started
+                  </Link>
+                )}
               </div>
             </div>
           </div>

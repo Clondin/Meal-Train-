@@ -8,21 +8,21 @@ interface TrainHeroProps {
 
 export default function TrainHero({ train }: TrainHeroProps) {
   // Calculate stats
-  const totalMealDates = train.dates?.length || 0;
-  const claimedMeals = train.dates?.filter(
-    (date) => date.status === 'claimed' || date.status === 'delivered'
+  const totalMealDates = train.taskSlots?.length || 0;
+  const claimedMeals = train.taskSlots?.filter(
+    (date) => date.status === 'FILLED' || date.status === 'PARTIALLY_FILLED'
   ).length || 0;
-  const deliveredMeals = train.dates?.filter(
-    (date) => date.status === 'delivered'
+  const deliveredMeals = train.contributions?.filter(
+    (contribution) => contribution.deliveryStatus === 'DELIVERED'
   ).length || 0;
 
   const totalDonations = train.donations?.reduce(
-    (sum, donation) => sum + (donation.status === 'completed' ? donation.amount : 0),
+    (sum, donation) => sum + (donation.status === 'COMPLETED' ? Number(donation.amount) : 0),
     0
   ) || 0;
 
   const totalGiftCards = train.giftCards?.filter(
-    (card) => card.status === 'sent' || card.status === 'received'
+    (card) => card.status === 'COMPLETED'
   ).length || 0;
 
   return (

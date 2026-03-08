@@ -177,6 +177,27 @@ router.get(
   })
 );
 
+router.post(
+  '/resend-verification',
+  authenticate,
+  catchAsync(async (req: AuthRequest, res: Response) => {
+    if (req.user!.emailVerified) {
+      return res.json({ message: 'Email is already verified.' });
+    }
+
+    const verificationToken = uuidv4();
+
+    await prisma.user.update({
+      where: { id: req.user!.id },
+      data: { verificationToken },
+    });
+
+    await sendVerificationEmail(req.user!.email, verificationToken, req.user!.firstName || undefined);
+
+    res.json({ message: 'Verification email resent successfully.' });
+  })
+);
+
 // Forgot password
 router.post(
   '/forgot-password',

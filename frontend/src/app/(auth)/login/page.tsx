@@ -64,7 +64,7 @@ export default function LoginPage() {
 
   const handleOAuthLogin = (provider: 'google' | 'facebook') => {
     // Redirect to OAuth provider
-    const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001';
+    const baseUrl = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api').replace(/\/api$/, '');
     window.location.href = `${baseUrl}/api/auth/${provider}`;
   };
 

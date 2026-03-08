@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { useAuthStore } from '@/stores/auth';
 import { Avatar, Button } from '@/components/ui';
 import { cn } from '@/lib/utils';
+import NotificationBell from '@/components/layout/NotificationBell';
 
 interface NavItem {
   name: string;
@@ -62,6 +63,7 @@ export default function DashboardLayout({
   const router = useRouter();
   const pathname = usePathname();
   const { isAuthenticated, user, logout, isLoading } = useAuthStore();
+  const displayName = [user?.firstName, user?.lastName].filter(Boolean).join(' ') || user?.email || 'User';
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -144,7 +146,7 @@ export default function DashboardLayout({
 
           {/* Create New Train Button */}
           <div className="p-4 border-t border-gray-200">
-            <Link href="/trains/create">
+            <Link href="/create">
               <Button className="w-full" onClick={() => setSidebarOpen(false)}>
                 <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
@@ -173,14 +175,15 @@ export default function DashboardLayout({
             <div className="flex-1" />
 
             {/* User menu */}
-            <div className="relative">
+            <div className="relative flex items-center gap-3">
+              <NotificationBell />
               <button
                 onClick={() => setUserMenuOpen(!userMenuOpen)}
                 className="flex items-center space-x-3 focus:outline-none"
               >
-                <Avatar name={user?.name || 'User'} size="sm" />
+                <Avatar name={displayName} src={user?.avatar} size="sm" />
                 <div className="hidden text-left md:block">
-                  <p className="text-sm font-medium text-gray-700">{user?.name}</p>
+                  <p className="text-sm font-medium text-gray-700">{displayName}</p>
                   <p className="text-xs text-gray-500">{user?.email}</p>
                 </div>
                 <svg

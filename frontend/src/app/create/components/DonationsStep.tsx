@@ -14,8 +14,10 @@ interface DonationsStepProps {
 }
 
 const trainTypeOptions = [
-  { value: 'standard', label: 'Standard - Traditional meal delivery' },
-  { value: 'potluck', label: 'Potluck - Multiple contributors per day' },
+  { value: 'STANDARD', label: 'Standard - Traditional meal delivery' },
+  { value: 'FULL_CHESED', label: 'Full Chesed - Meals plus practical help' },
+  { value: 'SIMCHA', label: 'Simcha - Contribution board for events' },
+  { value: 'EVENT', label: 'Event - One-time event coordination' },
 ];
 
 export const DonationsStep: React.FC<DonationsStepProps> = ({
@@ -26,7 +28,7 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
 }) => {
   const donationsEnabled = watch('donationsEnabled');
   const giftCardsEnabled = watch('giftCardsEnabled');
-  const trainType = watch('trainType') || 'standard';
+  const trainType = watch('trainType') || 'STANDARD';
 
   const handleToggle = (field: 'donationsEnabled' | 'giftCardsEnabled') => {
     const currentValue = watch(field);
@@ -38,22 +40,24 @@ export const DonationsStep: React.FC<DonationsStepProps> = ({
       <div>
         <h2 className="text-2xl font-bold text-gray-900 mb-2">Donations & Settings</h2>
         <p className="text-sm text-gray-600">
-          Configure donation options and chesed train type
+          Configure donation options and choose the support mode that fits this page
         </p>
       </div>
 
       <Select
         label="Chesed Train Type"
         value={trainType}
-        onChange={(value) => {
-          const event = {
-            target: { name: 'trainType', value: value as string },
-          } as any;
-          register('trainType').onChange(event);
-        }}
+        onChange={(value) => setValue('trainType', String(value), { shouldDirty: true })}
         options={trainTypeOptions}
-        helperText="Standard allows one meal per day, Potluck allows multiple contributors"
+        helperText="Choose between standard meals, broader chesed support, simcha contributions, or a one-time event"
       />
+
+      <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 text-sm text-blue-900">
+        {trainType === 'STANDARD' && 'Standard trains focus on classic meal scheduling.'}
+        {trainType === 'FULL_CHESED' && 'Full Chesed adds non-meal tasks like rides, babysitting, errands, and household help.'}
+        {trainType === 'SIMCHA' && 'Simcha mode is optimized for contribution boards for kiddushim and celebrations.'}
+        {trainType === 'EVENT' && 'Event mode fits one-day or one-week coordination around a specific gathering.'}
+      </div>
 
       {/* Enable Donations Toggle */}
       <div className="border border-gray-300 rounded-lg p-4 bg-white">

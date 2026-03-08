@@ -19,7 +19,7 @@ export default function DonationReport({ trainId, donations, onUpdate }: Donatio
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
-    }).format(amount / 100);
+    }).format(Number(amount));
   };
 
   const formatDate = (dateString: string) => {

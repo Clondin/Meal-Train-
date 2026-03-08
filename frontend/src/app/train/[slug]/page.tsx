@@ -16,7 +16,7 @@ interface PageProps {
 // Fetch chesed train data on the server
 async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
   try {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4000/api';
     const response = await fetch(`${apiUrl}/chesed-trains/${slug}`, {
       cache: 'no-store', // Always get fresh data
     });
@@ -25,7 +25,8 @@ async function getChesedTrain(slug: string): Promise<ChesedTrain | null> {
       return null;
     }
 
-    return response.json();
+    const data = await response.json();
+    return data.train ?? data;
   } catch (error) {
     console.error('Error fetching chesed train:', error);
     return null;

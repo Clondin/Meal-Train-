@@ -9,10 +9,8 @@ import { FiMail, FiArrowLeft, FiCheck, FiAlertCircle } from 'react-icons/fi';
 import { Card, CardBody } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
-import axios from 'axios';
+import api from '@/lib/api';
 import toast from 'react-hot-toast';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Validation schema
 const forgotPasswordSchema = z.object({
@@ -43,9 +41,7 @@ export default function ForgotPasswordPage() {
   const onSubmit = async (data: ForgotPasswordFormData) => {
     try {
       setError(null);
-      await axios.post(`${API_BASE_URL}/auth/forgot-password`, {
-        email: data.email,
-      });
+      await api.forgotPassword(data.email);
       setIsSuccess(true);
       toast.success('Password reset email sent!');
     } catch (err: any) {
@@ -61,7 +57,7 @@ export default function ForgotPasswordPage() {
     const email = getValues('email');
     if (email) {
       try {
-        await axios.post(`${API_BASE_URL}/auth/forgot-password`, { email });
+        await api.forgotPassword(email);
         toast.success('Reset email resent!');
       } catch (err: any) {
         toast.error('Failed to resend email. Please try again.');

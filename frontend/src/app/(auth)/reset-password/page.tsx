@@ -9,10 +9,8 @@ import { FiLock, FiAlertCircle, FiCheck } from 'react-icons/fi';
 import { Card, CardBody } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Input } from '@/components/ui';
-import axios from 'axios';
+import api from '@/lib/api';
 import toast from 'react-hot-toast';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 // Validation schema
 const resetPasswordSchema = z
@@ -76,10 +74,7 @@ export default function ResetPasswordPage() {
 
     try {
       setError(null);
-      await axios.post(`${API_BASE_URL}/auth/reset-password`, {
-        token,
-        password: data.password,
-      });
+      await api.resetPassword(token, data.password);
       setIsSuccess(true);
       toast.success('Password reset successful!');
 

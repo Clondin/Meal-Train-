@@ -6,10 +6,8 @@ import { FiCheck, FiAlertCircle, FiMail } from 'react-icons/fi';
 import { Card, CardBody } from '@/components/ui';
 import { Button } from '@/components/ui';
 import { Spinner } from '@/components/ui';
-import axios from 'axios';
+import api from '@/lib/api';
 import toast from 'react-hot-toast';
-
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api';
 
 type VerificationStatus = 'loading' | 'success' | 'error';
 
@@ -32,7 +30,7 @@ export default function VerifyEmailPage() {
       }
 
       try {
-        await axios.post(`${API_BASE_URL}/auth/verify-email`, { token });
+        await api.verifyEmail(token);
         setStatus('success');
         toast.success('Email verified successfully!');
 
@@ -64,7 +62,7 @@ export default function VerifyEmailPage() {
 
   const handleResendVerification = async () => {
     try {
-      await axios.post(`${API_BASE_URL}/auth/resend-verification`);
+      await api.resendVerification();
       toast.success('Verification email sent! Please check your inbox.');
     } catch (err: any) {
       toast.error('Failed to resend verification email. Please try again.');
