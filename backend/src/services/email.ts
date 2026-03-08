@@ -1,7 +1,10 @@
 import sgMail from '@sendgrid/mail';
 
-if (process.env.SENDGRID_API_KEY) {
-  sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY;
+const hasValidSendgridKey = Boolean(SENDGRID_API_KEY?.startsWith('SG.'));
+
+if (hasValidSendgridKey && SENDGRID_API_KEY) {
+  sgMail.setApiKey(SENDGRID_API_KEY);
 }
 
 const FROM_EMAIL = process.env.FROM_EMAIL || 'noreply@mealtrain.com';
@@ -16,7 +19,7 @@ interface EmailOptions {
 }
 
 export async function sendEmail(options: EmailOptions): Promise<boolean> {
-  if (!process.env.SENDGRID_API_KEY) {
+  if (!hasValidSendgridKey) {
     console.log('SendGrid not configured. Email would be sent:', options);
     return true;
   }
